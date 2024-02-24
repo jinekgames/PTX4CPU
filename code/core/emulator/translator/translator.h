@@ -1,7 +1,11 @@
 #pragma once
 
-#include <translator_interface.h>
 
+#include <vector>
+#include <utility>
+
+#include <translator_interface.h>
+#include <parser.h>
 
 namespace PTX2ASM {
 
@@ -9,15 +13,14 @@ class Translator : public ITranslator {
 
 public:
 
-    void SetSource(const std::string& source);
-    bool Translate() override;
-    std::string GetResult() const override;
+    // void SetSource(const std::string& source);
+    void ExecuteFunc(const std::string& funcName, ...) override {};
 
 private:
-    /**
-     * Set invalid state for traslation
-    */
-    void InvalidateTranslation();
+    // /**
+    //  * Set invalid state for traslation
+    // */
+    // void InvalidateTranslation();
 
 public:
     Translator();
@@ -26,16 +29,15 @@ public:
     */
     Translator(const std::string& source);
     Translator(const Translator&) = delete;
-    Translator(Translator&&) = delete;
+    Translator(Translator&&)      = delete;
     ~Translator() = default;
 
     Translator operator = (const Translator&) = delete;
-    Translator operator = (Translator&&) = delete;
+    Translator operator = (Translator&&)      = delete;
 
 private:
-    std::string m_PtxIn;
-    std::string m_AsmOut;
-    bool m_IsPtxTranslated;
+
+    Parser m_Parser;
 
 };
 

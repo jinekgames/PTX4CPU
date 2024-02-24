@@ -25,8 +25,9 @@
 /**
  * Create translator object
  * 
- * @param translator pointer to poiner where object will be put
+ * @param translator  pointer to poiner where object will be put
+ * @param source      source code of a PTX
 */
 extern "C" EMULATOR_EXPORT_API void EMULATOR_CC
-EMULATOR_CreateTranslator(PTX2ASM::ITranslator** translator, const std::string& path);
+EMULATOR_CreateTranslator(PTX2ASM::ITranslator** translator, const std::string& source);
 

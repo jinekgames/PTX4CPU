@@ -3,8 +3,8 @@
 #include <translator.h>
 
 extern "C" EMULATOR_EXPORT_API void EMULATOR_CC
-EMULATOR_CreateTranslator(PTX2ASM::ITranslator** translator, const std::string& path) {
+EMULATOR_CreateTranslator(PTX2ASM::ITranslator** translator, const std::string& source) {
 
-    *translator = new PTX2ASM::Translator(path);
+    *translator = new PTX2ASM::Translator(source);
 }
 

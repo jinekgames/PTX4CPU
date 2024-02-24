@@ -1,0 +1,8 @@
+.version 8.2
+// he \
+he
+.entry foo()
+{
+	ret; // comment
+}
+
