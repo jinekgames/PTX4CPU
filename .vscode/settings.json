@@ -57,6 +57,13 @@
         "xlocbuf": "cpp",
         "xlocmes": "cpp",
         "xlocmon": "cpp",
-        "xloctime": "cpp"
+        "xloctime": "cpp",
+        "chrono": "cpp",
+        "filesystem": "cpp",
+        "forward_list": "cpp",
+        "iomanip": "cpp",
+        "ratio": "cpp",
+        "map": "cpp",
+        "xtree": "cpp"
     }
 }

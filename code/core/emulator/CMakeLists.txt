@@ -33,6 +33,7 @@ set(includes
     ${emulator_api_includes}
     ${EMULATOR_DIR}
     ${EMULATOR_UTILS_DIR}
+    ${UTILS_DIR}/logger
 )
 
 

@@ -1,4 +1,6 @@
 .version 8.2
+.target sm_52
+.address_size 64
 // he \
 he
 .entry foo()

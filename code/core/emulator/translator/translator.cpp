@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <sstream>
 
+#include <logger.h>
 #include <translator.h>
 #include <utils/string_utils.h>
 
@@ -14,7 +15,7 @@ Translator::Translator() {
     // InvalidateTranslation();
 }
 
-Translator::Translator(const std::string& source) 
+Translator::Translator(const std::string& source)
     : m_Parser(source) {
 
     // InvalidateTranslation();
@@ -56,7 +57,7 @@ Translator::Translator(const std::string& source)
 //     if (m_State != State::Preprocessed)
 //         return false;
 
-    
+
 
 //     // @todo a lot of shit (from m_PtxIn to m_AsmOut), set false if not translated
 //     m_CppOut = m_PtxIn;

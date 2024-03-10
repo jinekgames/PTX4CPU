@@ -1,5 +1,6 @@
 #include <parser.h>
 
+#include <logger.h>
 #include <string_utils.h>
 
 
@@ -17,15 +18,27 @@ Parser::Parser(const std::string& source) {
 
 Result Parser::Load(const std::string& source) {
 
-    auto code = source;
-    // @todo optimiation: replace with list of chars
+    auto rawCode = source;
+    // @todo optimization: replace with list of chars
+    // @todo optimization: replace string references with pointers
+    //                     to empty memory then
+    // @todo implementation: add logging on non-supported dirictives
 
-    ProcessLineTransfer(code);
-    ClearCodeComments(code);
-    auto preprocCode = ConvertCode(code);
+    ProcessLineTransfer(rawCode);
+    ClearCodeComments(rawCode);
+    auto code = ConvertCode(rawCode);
 
-    // PreprocessCode(code);
-    // Parse() // @todo implement: find fucntions and store them
+    PreprocessCode(code);
+    m_Data = ConvertCode(code);
+
+    if (!m_PtxProps.IsValid()) {
+        PRINT_E("Missing PTX properties");
+    }
+    PRINT_I("PTX props: ver %d.%d sm_%d address size %d",
+            m_PtxProps.version.first, m_PtxProps.version.second,
+            m_PtxProps.target, m_PtxProps.addressSize);
+
+    InitVTable();
 
     return ResultCode::Fail;
 }
@@ -122,105 +135,163 @@ Parser::PreprocessData Parser::ConvertCode(std::string& code) const {
     return ret;
 }
 
-Data Parser::PreprocessCode(PreprocessData& code) const {
+Parser::Data Parser::ConvertCode(const PreprocessData& code) const {
 
-    // @todo implement
-    // this stage should parse ptx props (copy below)
-    // and process other dirictives
+    return {code.begin(), code.end()};
 }
 
-//     // Convert to Translation type
-//     std::stringstream ss(m_PtxIn);
-//     std::string buf;
-//     m_TrIn.clear();
-//     while(std::getline(ss, buf, LINE_ENDING.back())) {
-//         m_TrIn.push_back(buf);
-//     }
+void Parser::PreprocessCode(PreprocessData& code) const {
 
-//     // Clear empty lines
-//     for (size_t i = 0; i < m_TrIn.size();) {
-//         bool toClear = true;
-//         for (auto c : m_TrIn[i]) {
-//             if (!std::isspace(c)) {
-//                 toClear = false;
-//                 break;
-//             }
-//         }
-//         if (toClear) {
-//             m_TrIn.erase(m_TrIn.begin() + i);
-//         } else {
-//             ++i;
-//         }
-//     }
+    // Parce properties' directives
+    for (auto iter = code.begin(); iter != code.end();) {
+        if (iter->find(".version") != std::string::npos) {
+            auto i = std::find_if(iter->begin(), iter->end(), [](const char c) {
+                return std::isdigit(c);
+            });
+            if (i == iter->end())
+                continue;
+            size_t startIdx = i - iter->begin();
 
-//     // Parce properties' directives
-//     for (auto iter = m_TrIn.begin(); iter != m_TrIn.end();) {
-//         if (iter->find(".version") != -1) {
-//             auto i = std::find_if(iter->begin(), iter->end(), [](const char c) {
-//                 return std::isdigit(c);
-//             });
-//             if (i == iter->end())
-//                 continue;
-//             size_t startIdx = i - iter->begin();
+            size_t dotIdx = iter->find(".", 9);
+            if (dotIdx == std::string::npos)
+                continue;
 
-//             size_t dotIdx = iter->find(".", 9);
-//             if (dotIdx == -1)
-//                 continue;
+            auto ri = std::find_if(iter->rbegin(), iter->rend(), [](const char c) {
+                return std::isdigit(c);
+            });
+            if (ri == iter->rend())
+                continue;
+            size_t endIdx = iter->rend() - ri;
 
-//             auto ri = std::find_if(iter->rbegin(), iter->rend(), [](const char c) {
-//                 return std::isdigit(c);
-//             });
-//             if (ri == iter->rend())
-//                 continue;
-//             size_t endIdx = iter->rend() - ri;
+            int8_t versionMajor = std::atoi(iter->substr(startIdx, dotIdx - startIdx).c_str());
+            int8_t versionMinor = std::atoi(iter->substr(dotIdx + 1, endIdx - dotIdx - 1).c_str());
+            m_PtxProps.version = { versionMajor, versionMinor };
+            iter = code.erase(iter);
+        } else if (iter->find(".target") != std::string::npos) {
+            size_t delimIdx = iter->find("_", 9);
+            if (delimIdx == std::string::npos)
+                break;
 
-//             int versionMajor = std::atoi(iter->substr(startIdx, dotIdx - startIdx).c_str());
-//             int versionMinor = std::atoi(iter->substr(dotIdx + 1, endIdx - dotIdx - 1).c_str());
-//             m_PtxProps.version = { versionMajor, versionMinor };
-//             iter = m_TrIn.erase(iter);
-//         } else if (iter->find(".target") != -1) {
-//             size_t delimIdx = iter->find("_", 9);
-//             if (delimIdx == -1)
-//                 break;
+            auto ri = std::find_if(iter->rbegin(), iter->rend(), [](const char c) {
+                return std::isdigit(c);
+            });
+            if (ri == iter->rend())
+                continue;
+            size_t endIdx = iter->rend() - ri;
 
-//             auto ri = std::find_if(iter->rbegin(), iter->rend(), [](const char c) {
-//                 return std::isdigit(c);
-//             });
-//             if (ri == iter->rend())
-//                 continue;
-//             size_t endIdx = iter->rend() - ri;
+            m_PtxProps.target = std::atoi(iter->substr(delimIdx + 1, endIdx - delimIdx - 1).c_str());
+            iter = code.erase(iter);
+        } else if (iter->find(".address_size") != std::string::npos) {
+            auto i = std::find_if(iter->begin(), iter->end(), [](const char c) {
+                return std::isdigit(c);
+            });
+            if (i == iter->end())
+                continue;
+            size_t startIdx = i - iter->begin();
 
-//             m_PtxProps.target = std::atoi(iter->substr(delimIdx + 1, endIdx - delimIdx - 1).c_str());
-//             iter = m_TrIn.erase(iter);
-//         } else if (iter->find(".address_size") != -1) {
-//             auto i = std::find_if(iter->begin(), iter->end(), [](const char c) {
-//                 return std::isdigit(c);
-//             });
-//             if (i == iter->end())
-//                 continue;
-//             size_t startIdx = i - iter->begin();
+            auto ri = std::find_if(iter->rbegin(), iter->rend(), [](const char c) {
+                return std::isdigit(c);
+            });
+            if (ri == iter->rend())
+                continue;
+            size_t endIdx = iter->rend() - ri;
 
-//             auto ri = std::find_if(iter->rbegin(), iter->rend(), [](const char c) {
-//                 return std::isdigit(c);
-//             });
-//             if (ri == iter->rend())
-//                 continue;
-//             size_t endIdx = iter->rend() - ri;
+            m_PtxProps.addressSize = std::atoi(iter->substr(startIdx, startIdx - endIdx).c_str());
+            iter = code.erase(iter);
+        } else {
+            ++iter;
+        }
 
-//             m_PtxProps.addressSize = std::atoi(iter->substr(startIdx, startIdx - endIdx).c_str());
-//             iter = m_TrIn.erase(iter);
-//         } else {
-//             ++iter;
-//         }
+        if (m_PtxProps.IsValid())
+            break;
+    }
 
-//         if (m_PtxProps.version != PtxProperties().version &&
-//             m_PtxProps.target != PtxProperties().target &&
-//             m_PtxProps.addressSize != PtxProperties().addressSize)
-//             break;
-//     }
+    m_State = State::Preprocessed;
+}
 
-//     m_State = State::Preprocessed;
-// }
+void Parser::InitVTable() {
+
+    // Parse functions
+    for (auto iter = m_Data.begin(); iter < m_Data.end(); ++iter) {
+
+        auto& line = *iter;
+        const SmartIterator lineIter{line};
+
+        bool isFunc = false;
+        std::string buf;
+        while(!(buf = lineIter.ExtractWord()).empty()) {
+            if (std::find(m_FuncDefDirictives.begin(), m_FuncDefDirictives.end(), buf) != m_FuncDefDirictives.end()) {
+                isFunc = true;
+                break;
+            }
+        }
+
+        if (!isFunc)
+            continue;
+
+        Function func;
+
+        // get returns, name and arguments
+        lineIter.GoToNextNonSpace();
+        lineIter.EnterBracket();
+        // we're now located at eigther returns or name (due to ended on a special dirictive)
+        if (lineIter.IsInBracket()) {
+            // returns
+            auto startIter = lineIter.GetIter();
+            auto endIter   = lineIter.ExitBracket();
+            std::string name;
+            VarPtxType type;
+            std::tie(name, type) = ParsePtxVar({startIter, endIter});
+            func.returns.emplace(name, type);
+        }
+        // now it is the name
+        func.name = lineIter.ExtractWord();
+        // and right after the name we got the arguments
+        lineIter.GoToNextNonSpace();
+        lineIter.EnterBracket();
+        if (lineIter.IsInBracket()) {
+            // arguments
+            auto startIter = lineIter.GetIter();
+            auto endIter   = lineIter.ExitBracket();
+            auto args = Split({startIter, endIter}, ',');
+            for (auto arg : args) {
+                std::string name;
+                VarPtxType type;
+                std::tie(name, type) = ParsePtxVar(arg);
+                func.arguments.emplace(name, type);
+            }
+        }
+
+        // parse dirictives
+        lineIter.Reset();
+        for(;;) {
+            if (lineIter.IsInBracket())
+                lineIter.ExitBracket();
+            buf = lineIter.ExtractWord();
+            if (buf.empty())
+                break;
+            if (buf.front() == '.') {
+                auto& attribute = func.attributes[buf];
+                buf = lineIter.ExtractWord(true);
+                if (buf.front() != '.')
+                    attribute = buf;
+            }
+        }
+    }
+}
+
+std::tuple<std::string, Parser::VarPtxType> Parser::ParsePtxVar(const std::string& entry) {
+
+    std::string name;
+    Parser::VarPtxType type;
+    // Sample string:
+    // .reg .f64 dbl
+    const SmartIterator iter{entry};
+    type.attributes.push_back(iter.ExtractWord()); // contains memory location only
+    type.type = iter.ExtractWord();
+    name = iter.ExtractWord();
+    return std::make_tuple(name, type);
+}
 
 
 };  // namespace PTX2ASM

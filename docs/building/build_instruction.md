@@ -1,1 +1,3 @@
-idk
+```
+python .\tools\build\build.py
+```
