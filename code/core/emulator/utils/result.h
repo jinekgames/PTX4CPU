@@ -13,10 +13,15 @@ enum class ResultCode : uint32_t {
 
 struct Result {
 
+    Result() : code(ResultCode::Ok) {};
     Result(ResultCode _code) : code(_code) {};
     Result(std::string _msg)
         : code(ResultCode::Fail)
         , msg(_msg) {};
+
+    operator bool () {
+        return (code == ResultCode::Ok);
+    }
 
     ResultCode code = ResultCode::Fail;
     std::string msg;

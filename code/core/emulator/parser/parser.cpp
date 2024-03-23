@@ -6,17 +6,26 @@
 
 namespace PTX2ASM {
 
+using namespace ParserInternal;
+
+
 // Constructors and Destructors
 
 Parser::Parser(const std::string& source) {
 
     auto res = Load(source);
+    if (!res) {
+        PRINT_E(res.msg.c_str());
+    }
+    PRINT_I("PTX file is loaded and ready for execution");
 }
 
 
 // Private realizations
 
 Result Parser::Load(const std::string& source) {
+
+    m_State = State::NotLoaded;
 
     auto rawCode = source;
     // @todo optimization: replace with list of chars
@@ -29,21 +38,27 @@ Result Parser::Load(const std::string& source) {
     auto code = ConvertCode(rawCode);
 
     PreprocessCode(code);
-    m_Data = ConvertCode(code);
+    auto data = ConvertCode(code);
+    m_DataIter.SwapData(std::move(data));
 
-    if (!m_PtxProps.IsValid()) {
-        PRINT_E("Missing PTX properties");
-    }
+    if (!m_PtxProps.IsValid())
+        return {"The source PTX file is missing PTX properties"};
+
     PRINT_I("PTX props: ver %d.%d sm_%d address size %d",
             m_PtxProps.version.first, m_PtxProps.version.second,
             m_PtxProps.target, m_PtxProps.addressSize);
 
-    InitVTable();
+    if(!InitVTable())
+        return {"Failed to init included functions table"};
 
-    return ResultCode::Fail;
+    // @todo implementation: add global vars processing if existed
+
+    m_State = State::Loaded;
+
+    return {};
 }
 
-void Parser::ClearCodeComments(std::string& code) const {
+void Parser::ClearCodeComments(std::string& code) {
 
     bool inSingLineComm = false;
     bool inMultLineComm = false;
@@ -81,7 +96,7 @@ void Parser::ClearCodeComments(std::string& code) const {
     }
 }
 
-void Parser::ProcessLineTransfer(std::string& code) const {
+void Parser::ProcessLineTransfer(std::string& code) {
 
     for (auto i = code.begin(); i < code.end();) {
         if (*i == '\\' && *(i + 1) == '\n') {
@@ -93,7 +108,7 @@ void Parser::ProcessLineTransfer(std::string& code) const {
     }
 }
 
-Parser::PreprocessData Parser::ConvertCode(std::string& code) const {
+Parser::PreprocessData Parser::ConvertCode(std::string& code) {
 
     // Hack: wrap all {} symbols inside a ; to treat them as instruction
     std::string symbList = "{}";
@@ -135,7 +150,7 @@ Parser::PreprocessData Parser::ConvertCode(std::string& code) const {
     return ret;
 }
 
-Parser::Data Parser::ConvertCode(const PreprocessData& code) const {
+Data Parser::ConvertCode(const PreprocessData& code) {
 
     return {code.begin(), code.end()};
 }
@@ -209,17 +224,22 @@ void Parser::PreprocessCode(PreprocessData& code) const {
     m_State = State::Preprocessed;
 }
 
-void Parser::InitVTable() {
+bool Parser::InitVTable() {
+
+    if (m_State != State::Preprocessed) {
+        PRINT_E("Initing a virtual functions table for non-preprocessed code");
+        return false;
+    }
 
     // Parse functions
-    for (auto iter = m_Data.begin(); iter < m_Data.end(); ++iter) {
+    for (; m_DataIter.IsValid(); m_DataIter.Next()) {
 
-        auto& line = *iter;
-        const SmartIterator lineIter{line};
+        auto& line = *m_DataIter.GetIter();
+        const StringIteration::SmartIterator lineIter{line};
 
         bool isFunc = false;
         std::string buf;
-        while(!(buf = lineIter.ExtractWord()).empty()) {
+        while(!(buf = lineIter.ReadWord2()).empty()) {
             if (std::find(m_FuncDefDirictives.begin(), m_FuncDefDirictives.end(), buf) != m_FuncDefDirictives.end()) {
                 isFunc = true;
                 break;
@@ -236,7 +256,7 @@ void Parser::InitVTable() {
         lineIter.EnterBracket();
         // we're now located at eigther returns or name (due to ended on a special dirictive)
         if (lineIter.IsInBracket()) {
-            // returns
+            // return (it is single)
             auto startIter = lineIter.GetIter();
             auto endIter   = lineIter.ExitBracket();
             std::string name;
@@ -245,15 +265,16 @@ void Parser::InitVTable() {
             func.returns.emplace(name, type);
         }
         // now it is the name
-        func.name = lineIter.ExtractWord();
+        func.name = lineIter.ReadWord2();
         // and right after the name we got the arguments
         lineIter.GoToNextNonSpace();
         lineIter.EnterBracket();
         if (lineIter.IsInBracket()) {
             // arguments
             auto startIter = lineIter.GetIter();
-            auto endIter   = lineIter.ExitBracket();
-            auto args = Split({startIter, endIter}, ',');
+            auto endIter   = lineIter.ExitBracket() - 1;
+            const std::string str {startIter, endIter};
+            auto args = Split(str, ',');
             for (auto arg : args) {
                 std::string name;
                 VarPtxType type;
@@ -267,17 +288,38 @@ void Parser::InitVTable() {
         for(;;) {
             if (lineIter.IsInBracket())
                 lineIter.ExitBracket();
-            buf = lineIter.ExtractWord();
+            buf = lineIter.ReadWord2();
             if (buf.empty())
                 break;
             if (buf.front() == '.') {
                 auto& attribute = func.attributes[buf];
-                buf = lineIter.ExtractWord(true);
+                buf = lineIter.ReadWord2(true);
                 if (buf.front() != '.')
                     attribute = buf;
             }
         }
+
+        // Next to the function declaration we eigther get a body or nothing
+        m_DataIter.Next();
+        if (m_DataIter.IsBlockStart()) {
+            m_DataIter.Next();
+            // We are inside the body
+            func.start = m_DataIter.GetOffset();
+            m_DataIter.ExitBlock();
+            func.end   = m_DataIter.GetOffset() - 1;
+        }
+
+        auto funcFound = std::find_if(m_FuncsList.begin(), m_FuncsList.end(), [&func](const Function& f) {
+            return (f.name == func.name);
+        });
+        if(funcFound != m_FuncsList.end()) {
+            // @todo implementation: maybe better to merge values, not remove olds
+            m_FuncsList.erase(std::move(funcFound));
+        }
+        m_FuncsList.push_back(std::move(func));
     }
+
+    return true;
 }
 
 std::tuple<std::string, Parser::VarPtxType> Parser::ParsePtxVar(const std::string& entry) {
@@ -286,10 +328,10 @@ std::tuple<std::string, Parser::VarPtxType> Parser::ParsePtxVar(const std::strin
     Parser::VarPtxType type;
     // Sample string:
     // .reg .f64 dbl
-    const SmartIterator iter{entry};
-    type.attributes.push_back(iter.ExtractWord()); // contains memory location only
-    type.type = iter.ExtractWord();
-    name = iter.ExtractWord();
+    const StringIteration::SmartIterator iter{entry};
+    type.attributes.push_back(iter.ReadWord2()); // contains memory location only
+    type.type = iter.ReadWord2();
+    name = iter.ReadWord2();
     return std::make_tuple(name, type);
 }
 

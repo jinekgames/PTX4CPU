@@ -3,8 +3,7 @@
 .address_size 64
 // he \
 he
-.entry foo()
-{
+.entry foo() {
 	ret; // comment
 }
 

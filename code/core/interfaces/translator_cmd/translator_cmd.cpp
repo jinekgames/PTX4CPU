@@ -3,6 +3,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <memory>
 #include <sstream>
 
 int main(size_t argc, char** argv) {
@@ -17,6 +18,7 @@ Commands:
    --test-load - do a test load of a .ptx file
                  Example:  TranslatorCmd.exe --test-load input_file.ptx
 )";
+        return 0;
     } else if (args.Contains("test-load")) {
         std::string inputPath = args["test-load"];
 
@@ -29,58 +31,29 @@ Commands:
         std::stringstream input;
         input << sin.rdbuf();
 
-        PTX2ASM::ITranslator* translator = nullptr;
-        EMULATOR_CreateTranslator(&translator, input.str());
-        if (!translator) {
-            std::cout << "ERROR: Failed to create Translator object";
+        std::unique_ptr<PTX2ASM::ITranslator> pTranslator;
+
+        {
+            PTX2ASM::ITranslator* rawPtr = nullptr;
+            EMULATOR_CreateTranslator(&rawPtr, input.str());
+
+            decltype(pTranslator) swapPtr{rawPtr};
+            pTranslator.swap(swapPtr);
+        }
+
+        if (!pTranslator) {
+            std::cout << "ERROR: Failed to create a Translator object";
             return 1;
         }
 
         std::cout << "Translator was successfully created";
         return 0;
-
-        delete translator;
-        translator = nullptr;
     }
 
+        std::cout <<
+R"(No run command was specified.
 
-
-    // else if() {
-        // if (!args.Contains("output")) {
-        //     std::cout << "ERROR: Incorrect arguement. \"convert\" command must contain \"--output\" argument. "
-        //                  "See \"--help\"";
-        //     return 1;
-        // }
-        // std::string inputPath = args["convert"];
-        // std::string outputPath = args["output"];
-
-        // std::ifstream sin(inputPath);
-        // if(!sin.is_open()) {
-        //     std::cout << "ERROR: Input file opening failed";
-        // }
-        // std::ofstream sout(outputPath);
-        // if(!sout.is_open()) {
-        //     std::cout << "ERROR: Output file opening failed";
-        // }
-
-        // std::stringstream input;
-        // input << sin.rdbuf();
-
-        // PTX2ASM::ITranslator* translator = nullptr;
-        // EMULATOR_CreateTranslator(&translator, input.str());
-        // if (!translator) {
-        //     std::cout << "ERROR: Failed to create Translator object";
-        //     return 1;
-        // }
-
-        // if (!translator->Translate()) {
-        //     std::cout << "ERROR: Transation failed";
-        // }
-        // sout << translator->GetResult();
-
-        // delete translator;
-        // translator = nullptr;
-    // }
-
-    return 0;
+Run with '--help' to see available commands
+)";
+        return 1;
 }

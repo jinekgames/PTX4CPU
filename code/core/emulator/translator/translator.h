@@ -14,7 +14,7 @@ class Translator : public ITranslator {
 public:
 
     // void SetSource(const std::string& source);
-    void ExecuteFunc(const std::string& funcName, ...) override {};
+    void ExecuteFunc(const std::string& funcName) override {};
 
 private:
     // /**
@@ -29,11 +29,18 @@ public:
     */
     Translator(const std::string& source);
     Translator(const Translator&) = delete;
-    Translator(Translator&&)      = delete;
+    Translator(Translator&& right)
+        : m_Parser(std::move(right.m_Parser)) {
+
+        right.m_Parser = {};
+    }
     ~Translator() = default;
 
     Translator operator = (const Translator&) = delete;
-    Translator operator = (Translator&&)      = delete;
+    Translator operator = (Translator&& right) {
+        m_Parser = std::move(right.m_Parser);
+        right.m_Parser = {};
+    }
 
 private:
 

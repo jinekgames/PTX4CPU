@@ -6,9 +6,9 @@
 #include <string>
 #include <tuple>
 #include <vector>
-#include <unordered_map>
 
 #include <result.h>
+#include <parser_types.h>
 
 
 namespace PTX2ASM {
@@ -18,12 +18,19 @@ namespace PTX2ASM {
 */
 class Parser {
 
-// Interating code type (base work) (each instruction into one line)
-typedef std::vector<std::string> Data;
-// Preprocessing code type (each instruction into one line)
-typedef std::list<std::string> PreprocessData;
-
 public:
+
+    using Data            = ParserInternal::Data;
+    using DataIterator    = ParserInternal::DataIterator;
+    using Function        = ParserInternal::Function;
+    using PtxProperties   = ParserInternal::PtxProperties;
+    using VarsTable       = ParserInternal::VarsTable;
+    using VirtualVar      = ParserInternal::VirtualVar;
+    using VirtualVarsList = ParserInternal::VirtualVarsList;
+    using VarPtxType      = ParserInternal::VarPtxType;
+
+    // Preprocessing code type (each instruction into one line)
+    using PreprocessData = std::list<std::string>;
 
     Parser() = default;
     /**
@@ -31,11 +38,32 @@ public:
     */
     Parser(const std::string& source);
     Parser(const Parser&) = delete;
-    Parser(Parser&&)      = delete;
+    Parser(Parser&& right)
+        : m_DataIter   (std::move(right.m_DataIter))
+        , m_State      (std::move(right.m_State))
+        , m_PtxProps   (std::move(right.m_PtxProps))
+        , m_VarsTable  (std::move(right.m_VarsTable))
+        , m_FuncsList  (std::move(right.m_FuncsList)) {
+
+        right.m_State      = State::NotLoaded;
+    }
     ~Parser() = default;
 
-    Parser operator = (const Parser&) = delete;
-    Parser operator = (Parser&&)      = delete;
+    Parser& operator = (const Parser&) = delete;
+    Parser& operator = (Parser&& right) {
+        if (&right == this)
+            return *this;
+
+        m_DataIter  = std::move(right.m_DataIter);
+        m_State     = std::move(right.m_State);
+        m_PtxProps  = std::move(right.m_PtxProps);
+        std::swap(m_VarsTable, right.m_VarsTable);
+        m_FuncsList = std::move(right.m_FuncsList);
+
+        right.m_State      = State::NotLoaded;
+
+        return *this;
+    }
 
 public:
 
@@ -53,27 +81,27 @@ private:
     /**
      * Clears comments in a source file
     */
-    void ClearCodeComments(std::string& code) const;
+    static void ClearCodeComments(std::string& code);
 
     /**
      * Process "\" operators
     */
-    void ProcessLineTransfer(std::string& code) const;
+    static void ProcessLineTransfer(std::string& code);
 
     /**
      * Convert string code into list of instructions
     */
-    PreprocessData ConvertCode(std::string& code) const;
+    static PreprocessData ConvertCode(std::string& code);
     /**
      * Convert list of instructions into vector type
     */
-    Data ConvertCode(const PreprocessData& code) const;
+    static Data ConvertCode(const PreprocessData& code);
 
     /**
      * Preprocessing code
      * Includes:
      * - PTX props parcing
-     * @todo Tobe implemented:
+     *  @todo implementation: encrease support by:
      * - C-style directive processing
      * - include files processing
     */
@@ -84,41 +112,27 @@ private:
      * global defined variables
      * and defined funtions with their own virtual tables
     */
-    void InitVTable();
+    bool InitVTable();
 
-    class VarsTable;
-
-    static void AllocateMemory(VarsTable& vtable);
+    /**
+     * Allocates the memory for the functions arguments
+    */
+    static void AllocateFunctionsMemory() {};
 
 private:
 
-    Data m_Data;
+    DataIterator m_DataIter;
 
     enum class State {
         // Source is not loaded
         NotLoaded,
-        // Code is loaded, ready for processing
-        Loaded,
         // Preprocessing stage passed
         Preprocessed,
-        // Code is translated and ready to be gotten
-        Translated
+        // Code is ready for processing
+        Loaded,
     };
 
     mutable State m_State = State::NotLoaded;
-
-    struct PtxProperties {
-        std::pair<int8_t, int8_t> version = { 0, 0 };
-        int32_t target      = 0;
-        int32_t addressSize = 0;
-
-        bool IsValid() {
-            return (version.first || version.second) &&
-                   version.first >= 0 && version.second >= 0 &&
-                   target      > 0 &&
-                   addressSize > 0;
-        }
-    };
 
     mutable PtxProperties m_PtxProps;
 
@@ -128,10 +142,13 @@ private:
         ".target",
         ".address_size",
         // debug dirictives
-        // "@@DWARF", // @todo non-implemented
-        // ".loc", // @todo non-implemented
+        // @todo imlementation: @@DWARF dirictive
+        // "@@DWARF",
+        // @todo imlementation: .loc dirictive
+        // ".loc",
         // C-style preprocessor dirictives
-        // "#", // @todo non-implemented
+        // @todo imlementation: C-style dirictives
+        // "#",
     };
 
     // list of dirictives which are efining a fucntion
@@ -139,50 +156,18 @@ private:
         ".entry",
         ".func",
         ".function",
-        // ".callprototype", // @todo non-implemented
-        // ".alias", // @todo non-implemented
-    };
-
-    struct VirtualVar {
-        std::string ptxType;
-        std::unique_ptr<void*> data = nullptr;
-    };
-
-    // PTX variable name to it's data
-    typedef std::map<std::string, VirtualVar> VirtualVarsList;
-
-    class VarsTable : public VirtualVarsList {
-    private:
-        const VarsTable* parent = nullptr;
+        // @todo imlementation: .callprototype dirictive
+        // ".callprototype",
+        // @todo imlementation: .alias dirictive
+        // ".alias",
     };
 
     VarsTable m_VarsTable;
 
-    struct VarPtxType {
-        std::vector<std::string> attributes;
-        std::string type;
-    };
-
     static std::tuple<std::string, VarPtxType> ParsePtxVar(const std::string& entry);
 
-    struct Function
-    {
-        std::string name;
-        // function attribute to it's optional value
-        std::unordered_map<std::string, std::string> attributes;
-        // argument name to it's type
-        std::unordered_map<std::string, VarPtxType> arguments;
-        // returning value name to it's type
-        std::unordered_map<std::string, VarPtxType> returns;
-        // Index of m_Data pointed to the first instruction of the function body
-        Data::size_type start = -1;
-        // Index of m_Data pointed to the first index after the last instruction of the function body
-        Data::size_type end   = -1;
-        VarsTable vtable;
-    };
-
-    std::vector<Function> m_FuncsTable;
-
+    // A list of functions stated in the PTX
+    std::vector<Function> m_FuncsList;
 
 };
 

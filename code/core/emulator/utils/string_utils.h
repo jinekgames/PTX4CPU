@@ -14,6 +14,10 @@ const std::string LINE_ENDING =
     "\n";
 #endif
 
+// @todo refactoring: move concepts into the special file
+
+template<class T>
+concept String = std::is_same_v<std::remove_all_extents_t<T>, std::string>;
 template<class T>
 concept StringIter = std::is_same_v<T, std::string::iterator>               ||
                      std::is_same_v<T, std::string::const_iterator>         ||
@@ -66,90 +70,172 @@ bool ContainsFrom(const StringIter& from, const StringIter& end, const std::stri
 /**
  * Splits a sting with a delimiter
 */
-std::vector<std::string> Split(const std::string& str, char delimiter) ;//{
+template<class String>
+std::vector<String> Split(const String& str, char delimiter) {
 
-//   std::vector<std::string> ret;
-//   std::stringstream ss(str);
-//   std::string item;
-//   while (std::getline(ss, item, delimiter)) {
-//     ret.push_back(std::move(item));
-//   }
-//   return ret;
-// }
+  std::vector<std::string> ret;
+  std::stringstream ss(str);
+  std::string item;
+  while (std::getline(ss, item, delimiter)) {
+    ret.push_back(std::move(item));
+  }
+  return ret;
+}
+
+// @todo refactoring: move following into the speciel files and add comments
+
+namespace StringIteration {
+
+enum class Bracket {
+    No = 0,
+    Circle,
+    Square,
+    Figure,
+};
+
+enum CloseType {
+    Close,
+    Open
+};
+
+inline static const std::map<char, std::pair<Bracket, CloseType>> bracketsTable = {
+    { '(', { Bracket::Circle, Open  } },
+    { ')', { Bracket::Circle, Close } },
+    { '[', { Bracket::Square, Open  } },
+    { ']', { Bracket::Square, Close } },
+    { '{', { Bracket::Figure, Open  } },
+    { '}', { Bracket::Figure, Close } },
+};
+
+enum WordDelimiter {
+
+    NoDelim       = 0,
+
+    // Base types
+
+    // Any space symbol (w/out newlines)
+    Space         = 1,
+    // New lines
+    NewLine       = 1 << 1,
+    // Punct/Colon/Semicolon
+    Punct         = 1 << 2,
+    // Dot symbol
+    Dot           = 1 << 3,
+    // Any bracket
+    Brackets      = 1 << 4,
+    // Math operators
+    MathOperators = 1 << 5,
+    // Backward slash
+    BackSlash     = 1 << 6,
+
+    // Predefined combinations
+
+    // All spaces (basic spaces + new lines)
+    AllSpaces          = Space | NewLine,
+    // Default for code (excluding a dot, cos it is a part of a number and dirictives)
+    CodeDelimiter      = AllSpaces | Punct | Brackets | MathOperators,
+    // For basic text iteration (all non-alpha symbols)
+    AllTextPunctuation = CodeDelimiter | Dot | BackSlash,
+    // Any known delimiter
+    Any                = ~NoDelim,
+
+};
+
+// Base delim type to it's possible chars
+inline static const std::unordered_map<WordDelimiter, std::string> baseDelimsTable = {
+
+    { Space,         " \t" },
+    { NewLine,       "\n\r" },
+    { Punct,         ",:;" },
+    { Dot,           "." },
+    { Brackets,      "()[]{}" },
+    { MathOperators, "+-/*^><=" },
+    { BackSlash,     "\\" },
+
+};
+
+inline WordDelimiter operator & (WordDelimiter a, WordDelimiter b) {
+    return static_cast<WordDelimiter>(static_cast<int>(a) & static_cast<int>(b));
+}
+inline WordDelimiter operator | (WordDelimiter a, WordDelimiter b) {
+    return static_cast<WordDelimiter>(static_cast<int>(a) | static_cast<int>(b));
+}
+
+inline bool IsDelimiter(char symbol, WordDelimiter delimiter) {
+    for (const auto& delimData : baseDelimsTable) {
+        if (delimData.first & delimiter &&
+            delimData.second.find(symbol) != std::string::npos) {
+                return true;
+        }
+    }
+    return false;
+}
 
 template<class String>
 class SmartIterator {
 
 public:
 
-    enum class Bracket {
-        No,
-        Circle,
-        Square,
-        Figure,
-    };
+    using StrType    = String;
+    using SizeType   = StrType::size_type;
+    using RawStrType = std::remove_cvref_t<StrType>;
+    using IterType = std::conditional<std::is_const_v<StrType>,
+                                      typename StrType::const_iterator,
+                                      typename StrType::iterator>::type;
 
-    enum CloseType {
-        Close,
-        Open
-    };
-
-    typedef std::remove_all_extents_t<String> DecorFreeString;
-    typedef std::conditional<std::is_const_v<String>,
-                             String::const_iterator,
-                             String::iterator>::type Type;
-    // typedef String::iterator Type;
-    typedef std::vector<Bracket> BracketStack;
-    typedef String::size_type SizeType;
+    using BracketStack = std::vector<Bracket>;
 
     SmartIterator() = delete;
-    SmartIterator(String& str, SizeType offset = 0)
+    // @todo refactoring: make a string rvalue
+    SmartIterator(StrType& str, SizeType offset = 0)
         : m_Str{str}
         , m_CurIter{m_Str.begin() + offset}
     {}
     ~SmartIterator() = default;
 
-    const Type Begin() const { return m_Str.begin(); }
-    const Type End()   const { return m_Str.end(); }
+    const IterType Begin() const { return m_Str.begin(); }
+    const IterType End()   const { return m_Str.end(); }
 
-    const Type Next() const {
+    const IterType Next() const {
         if (IsBracket(m_CurIter)) {
-            auto bracket = m_BracketTable.at(*m_CurIter);
-            constexpr auto openType = ReverseStringIter<Type> ? Close : Open;
+            auto bracket = bracketsTable.at(*m_CurIter);
+            constexpr auto openType = ReverseStringIter<IterType> ? Close : Open;
             if (bracket.second == openType)
                 m_BracketsStack.push_back(bracket.first);
-            else
+            else if (!m_BracketsStack.empty())
                 m_BracketsStack.pop_back();
         }
-        ++m_CurIter;
+        if(IsValid())
+            ++m_CurIter;
         return m_CurIter;
     }
-    const Type Prev() const {
+    const IterType Prev() const {
         if (IsBracket(m_CurIter)) {
-            auto bracket = m_BracketTable.at(*m_CurIter);
-            constexpr auto openType = ReverseStringIter<Type> ? Open : Close;
+            auto bracket = bracketsTable.at(*m_CurIter);
+            constexpr auto openType = ReverseStringIter<IterType> ? Open : Close;
             if (bracket.second == openType)
                 m_BracketsStack.push_back(bracket.first);
-            else
+            else if (!m_BracketsStack.empty())
                 m_BracketsStack.pop_back();
         }
-        --m_CurIter;
+        if(IsValid())
+            --m_CurIter;
         return m_CurIter;
     }
 
-    const Type Erase() {
+    const IterType Erase() {
         m_CurIter = m_Str.erase(m_CurIter);
         return m_CurIter;
     }
 
-    const Type GetIter() const {
+    const IterType GetIter() const {
         return m_CurIter;
     }
 
     SizeType GetOffset() const { return m_CurIter - Begin(); }
 
-    static bool IsBracket(const Type& iter) {
-        return m_BracketTable.find(*iter) != m_BracketTable.end();
+    static bool IsBracket(const IterType& iter) {
+        return bracketsTable.find(*iter) != bracketsTable.end();
     }
 
     bool IsInBracket() const { return !m_BracketsStack.empty(); }
@@ -170,9 +256,9 @@ public:
         return m_CurIter >= Begin() && m_CurIter < End();
     }
 
-    const Type Shift(int64_t offset) const {
-        auto adbOffset = std::abs(offset);
-        for (int64_t i = 0; IsValid() && i < adbOffset; ++i) {
+    const IterType Shift(int64_t offset) const {
+        auto absOffset = std::abs(offset);
+        for (int64_t i = 0; IsValid() && i < absOffset; ++i) {
             if (offset > 0)
                 Next();
             else
@@ -181,24 +267,29 @@ public:
         return m_CurIter;
     }
 
-    const Type Reset() const {
+    const IterType Reset() const {
         m_CurIter = Begin();
         m_BracketsStack.clear();
         return m_CurIter;
     }
 
-    const Type GoToNextSpace() const {
+    // @todo refactoring: delete depricated
+
+    // depricated
+    const IterType GoToNextSpace() const {
         while(IsValid() && !IsSpace())
             Next();
         return m_CurIter;
     }
-    const Type GoToNextNonSpace() const {
+    // depricated
+    const IterType GoToNextNonSpace() const {
         while(IsValid() && IsSpace())
             Next();
         return m_CurIter;
     }
 
-    const Type EnterBracket(bool reverse = false, bool recursive = false) const {
+    // depricated
+    const IterType EnterBracket(bool reverse = false, bool recursive = false) const {
         while (IsValid() && IsBracket(m_CurIter)) {
             if (reverse)
                 Prev();
@@ -210,17 +301,18 @@ public:
         return m_CurIter;
     }
 
-    const Type ExitBracket() const {
+    const IterType ExitBracket() const {
         if (!IsInBracket())
             return m_CurIter;
-        auto targetLvl = GetBracketLvl() - 1;
+        const auto targetLvl = GetBracketLvl() - 1;
         while (IsValid() && GetBracketLvl() != targetLvl)
             Next();
         return m_CurIter;
     }
 
-    std::string ExtractWord(bool keepLocation = false, bool ignoreBrackets = true) const {
-        std::string ret;
+    // depricated
+    RawStrType ReadWord(bool keepLocation = false, bool ignoreBrackets = true) const {
+        RawStrType ret;
         auto oldIter = m_CurIter;
         GoToNextNonSpace();
         if (ignoreBrackets)
@@ -231,6 +323,33 @@ public:
             EnterBracket(true, true);
         auto endIter = m_CurIter;
         if (oldIter < m_CurIter && IsValid())
+            ret = RawStrType{startIter, endIter};
+        if (keepLocation)
+            Shift(oldIter - m_CurIter);
+        return ret;
+    }
+
+    const IterType GoTo(WordDelimiter delimiter) const {
+        while(IsValid() && !IsDelimiter(*m_CurIter, delimiter))
+            Next();
+        return m_CurIter;
+    }
+    const IterType Skip(WordDelimiter delimiter) const {
+        while(IsValid() && IsDelimiter(*m_CurIter, delimiter))
+            Next();
+        return m_CurIter;
+    }
+
+    RawStrType ReadWord2(bool keepLocation = false,
+                         WordDelimiter delimiter = CodeDelimiter) const {
+
+        RawStrType ret;
+        auto oldIter = m_CurIter;
+        Skip(delimiter);
+        auto startIter = m_CurIter;
+        GoTo(delimiter);
+        auto endIter = m_CurIter;
+        if (oldIter < m_CurIter && IsValid())
             ret = {startIter, endIter};
         if (keepLocation)
             Shift(oldIter - m_CurIter);
@@ -239,19 +358,12 @@ public:
 
 private:
 
-    String& m_Str;
+    StrType& m_Str;
 
-    mutable Type m_CurIter;
-
-    inline static const std::map<char, std::pair<Bracket, CloseType>> m_BracketTable = {
-        { '(', { Bracket::Circle, Open } },
-        { ')', { Bracket::Circle, Close } },
-        { '[', { Bracket::Square, Open } },
-        { ']', { Bracket::Square, Close } },
-        { '{', { Bracket::Figure, Open } },
-        { '}', { Bracket::Figure, Close } },
-    };
+    mutable IterType m_CurIter;
 
     mutable BracketStack m_BracketsStack;
 
-};
+}; // class SmartIterator
+
+} // namespace StringIteration

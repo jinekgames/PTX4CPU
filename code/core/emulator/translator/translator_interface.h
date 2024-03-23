@@ -9,13 +9,13 @@ struct ITranslator {
 
     /**
      * Execute named function from the loaded PTX
-     * 
+     *
      * @param funcName  compiled name of function
      * @param ...       execution args
-     * 
+     *
      * @return void
     */
-    virtual void ExecuteFunc(const std::string& funcName, ...) = 0;
+    virtual void ExecuteFunc(const std::string& funcName) = 0;
 
 };
 
