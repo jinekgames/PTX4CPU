@@ -9,16 +9,14 @@
             "type": "cppvsdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/bin/Debug/TranslatorCmd.exe",
-            "args": [
-                "--convert",
-                "C:/Users/ujinv/Desktop/repos/PTX2ASM/ext/cuda_ptx_samples/rel_add_op.ptx",
-                "--output",
-                "C:/Users/ujinv/Desktop/repos/PTX2ASM/ext/cuda_ptx_samples/rel_add_op.asm"
+                        "args": [
+                "--test-load",
+                "C:\\REPOS\\PTX2ASM\\ext\\cuda_ptx_samples\\rel_add_op.ptx",
             ],
             "stopAtEntry": false,
-            "cwd": "${fileDirname}",
+            "cwd": "${workspaceFolder}/build/bin/Debug/",
             "environment": [],
-            "console": "integratedTerminal"
+                        "console": "integratedTerminal"
         }
     ]
 }

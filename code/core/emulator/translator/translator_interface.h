@@ -8,17 +8,14 @@ namespace PTX2ASM {
 struct ITranslator {
 
     /**
-     * Translate loaded PTX to ASM code
-     * 
-     * @returns true if suceeded; false, if translation failed
+     * Execute named function from the loaded PTX
+     *
+     * @param funcName  compiled name of function
+     * @param ...       execution args
+     *
+     * @return void
     */
-    virtual bool Translate() = 0;
-    /**
-     * Returns translated code string
-     * 
-     * @returns string with translated code if PTX has been loaded and translated, empty string in the other case
-    */
-    virtual std::string GetResult() const = 0;
+    virtual void ExecuteFunc(const std::string& funcName) = 0;
 
 };
 

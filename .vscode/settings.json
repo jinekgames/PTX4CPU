@@ -48,6 +48,22 @@
         "xlocinfo": "cpp",
         "xlocnum": "cpp",
         "fstream": "cpp",
-        "sstream": "cpp"
+        "sstream": "cpp",
+        "algorithm": "cpp",
+        "optional": "cpp",
+        "charconv": "cpp",
+        "format": "cpp",
+        "locale": "cpp",
+        "xlocbuf": "cpp",
+        "xlocmes": "cpp",
+        "xlocmon": "cpp",
+        "xloctime": "cpp",
+        "chrono": "cpp",
+        "filesystem": "cpp",
+        "forward_list": "cpp",
+        "iomanip": "cpp",
+        "ratio": "cpp",
+        "map": "cpp",
+        "xtree": "cpp"
     }
 }
