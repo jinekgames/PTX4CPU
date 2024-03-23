@@ -157,6 +157,8 @@ Data Parser::ConvertCode(const PreprocessData& code) {
 
 void Parser::PreprocessCode(PreprocessData& code) const {
 
+    // @todo refactoring: use SmartIterator
+
     // Parce properties' directives
     for (auto iter = code.begin(); iter != code.end();) {
         if (iter->find(".version") != std::string::npos) {
@@ -226,6 +228,8 @@ void Parser::PreprocessCode(PreprocessData& code) const {
 
 bool Parser::InitVTable() {
 
+    using namespace StringIteration;
+
     if (m_State != State::Preprocessed) {
         PRINT_E("Initing a virtual functions table for non-preprocessed code");
         return false;
@@ -235,7 +239,7 @@ bool Parser::InitVTable() {
     for (; m_DataIter.IsValid(); m_DataIter.Next()) {
 
         auto& line = *m_DataIter.GetIter();
-        const StringIteration::SmartIterator lineIter{line};
+        const SmartIterator lineIter{line};
 
         bool isFunc = false;
         std::string buf;
@@ -259,34 +263,24 @@ bool Parser::InitVTable() {
             // return (it is single)
             auto startIter = lineIter.GetIter();
             auto endIter   = lineIter.ExitBracket();
-            std::string name;
-            VarPtxType type;
-            std::tie(name, type) = ParsePtxVar({startIter, endIter});
-            func.returns.emplace(name, type);
+            func.returns.emplace(ParsePtxVar({startIter, endIter}));
         }
         // now it is the name
         func.name = lineIter.ReadWord2();
         // and right after the name we got the arguments
         lineIter.GoToNextNonSpace();
         lineIter.EnterBracket();
-        if (lineIter.IsInBracket()) {
-            // arguments
-            auto startIter = lineIter.GetIter();
-            auto endIter   = lineIter.ExitBracket() - 1;
-            const std::string str {startIter, endIter};
-            auto args = Split(str, ',');
-            for (auto arg : args) {
-                std::string name;
-                VarPtxType type;
-                std::tie(name, type) = ParsePtxVar(arg);
-                func.arguments.emplace(name, type);
-            }
+        // arguments
+        while(lineIter.IsInBracket() && lineIter.IsValid()) {
+            auto argStr = lineIter.ReadWord2(false, Brackets | Punct);
+            func.arguments.emplace(ParsePtxVar(argStr));
+            lineIter.Skip(AllSpaces | Brackets);
         }
 
-        // parse dirictives
+        // parse attributes
         lineIter.Reset();
         for(;;) {
-            if (lineIter.IsInBracket())
+            if (lineIter.IsBracket())
                 lineIter.ExitBracket();
             buf = lineIter.ReadWord2();
             if (buf.empty())
@@ -322,7 +316,7 @@ bool Parser::InitVTable() {
     return true;
 }
 
-std::tuple<std::string, Parser::VarPtxType> Parser::ParsePtxVar(const std::string& entry) {
+std::pair<std::string, Parser::VarPtxType> Parser::ParsePtxVar(const std::string& entry) {
 
     std::string name;
     Parser::VarPtxType type;
@@ -332,7 +326,7 @@ std::tuple<std::string, Parser::VarPtxType> Parser::ParsePtxVar(const std::strin
     type.attributes.push_back(iter.ReadWord2()); // contains memory location only
     type.type = iter.ReadWord2();
     name = iter.ReadWord2();
-    return std::make_tuple(name, type);
+    return {name, type};
 }
 
 

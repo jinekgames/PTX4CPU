@@ -246,11 +246,12 @@ public:
     }
     BracketStack::size_type GetBracketLvl() const { return m_BracketsStack.size(); }
 
-    bool IsSpace() const { return std::isspace(*m_CurIter); }
-    bool IsAlpha() const { return std::isalpha(*m_CurIter); }
-    bool IsUpper() const { return std::isupper(*m_CurIter); }
-    bool IsLower() const { return std::islower(*m_CurIter); }
-    bool IsDigit() const { return std::isdigit(*m_CurIter); }
+    bool IsSpace()   const { return std::isspace(*m_CurIter); }
+    bool IsAlpha()   const { return std::isalpha(*m_CurIter); }
+    bool IsUpper()   const { return std::isupper(*m_CurIter); }
+    bool IsLower()   const { return std::islower(*m_CurIter); }
+    bool IsDigit()   const { return std::isdigit(*m_CurIter); }
+    bool IsBracket() const { return IsBracket(m_CurIter); }
 
     bool IsValid() const {
         return m_CurIter >= Begin() && m_CurIter < End();
@@ -302,8 +303,11 @@ public:
     }
 
     const IterType ExitBracket() const {
+        auto startIter = m_CurIter;
+        if (IsBracket())
+            EnterBracket();
         if (!IsInBracket())
-            return m_CurIter;
+            return Shift(m_CurIter - startIter);
         const auto targetLvl = GetBracketLvl() - 1;
         while (IsValid() && GetBracketLvl() != targetLvl)
             Next();
@@ -349,7 +353,7 @@ public:
         auto startIter = m_CurIter;
         GoTo(delimiter);
         auto endIter = m_CurIter;
-        if (oldIter < m_CurIter && IsValid())
+        if (oldIter < m_CurIter)
             ret = {startIter, endIter};
         if (keepLocation)
             Shift(oldIter - m_CurIter);

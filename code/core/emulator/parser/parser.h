@@ -164,7 +164,7 @@ private:
 
     VarsTable m_VarsTable;
 
-    static std::tuple<std::string, VarPtxType> ParsePtxVar(const std::string& entry);
+    static std::pair<std::string, VarPtxType> ParsePtxVar(const std::string& entry);
 
     // A list of functions stated in the PTX
     std::vector<Function> m_FuncsList;
