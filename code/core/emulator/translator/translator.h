@@ -13,8 +13,8 @@ class Translator : public ITranslator {
 
 public:
 
-    // void SetSource(const std::string& source);
-    void ExecuteFunc(const std::string& funcName) override {};
+    // Execute a kernel with the given name from the loaded PTX
+    Result ExecuteFunc(const std::string& funcName) override;
 
 private:
     // /**

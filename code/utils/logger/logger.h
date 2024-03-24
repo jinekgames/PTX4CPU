@@ -37,14 +37,24 @@ static std::unordered_map<LogType, const char*> logsTypeStrings = {
 
 template<class... Args>
 void _app_log_message(LogType type, const char* tag, const char* file, int line, Args... args) {
-    static const size_t bufSize = 200;
+    static const size_t bufSize = _MAX_PATH;
+    static const size_t fileStrMinLen = 30;
+
     char buf[bufSize];
     auto msgSize = std::snprintf(buf, bufSize, args...);
+
+    std::string fileStr = std::vformat("({}:{})", std::make_format_args(
+                                           std::filesystem::path(file).filename().string(),
+                                           line));
+    size_t spacesCount = (fileStr.length() < fileStrMinLen)
+                         ? fileStrMinLen - fileStr.length()
+                         : 1u;
+    std::string spaces(spacesCount, ' ');
+
     std::string output =
-        std::vformat("{}  ({}:{})\t{}{}\t: {}{}",
-                     std::make_format_args(tag, std::filesystem::path(file).filename().string(),
-                         line, logsTypeColors[type], logsTypeStrings[type],
-                         std::string_view(buf, buf + msgSize), COLOR_RESET));
+        std::vformat("{}  {}{}{}{}\t: {}{}",
+                     std::make_format_args(tag, fileStr, spaces, logsTypeColors[type],
+                         logsTypeStrings[type], std::string_view(buf, buf + msgSize), COLOR_RESET));
 
     std::printf("%s\n", output.c_str());
 }

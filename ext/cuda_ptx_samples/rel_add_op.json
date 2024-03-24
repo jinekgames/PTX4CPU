@@ -1,0 +1,21 @@
+{
+    "kernel": "_Z9addKernelPiPKiS1_",
+    "arguments": [
+        {
+            "type": "u64",
+            "value": 1
+        },
+        {
+            "type": "ps64",
+            "value": [
+                1
+            ]
+        },
+        {
+            "type": "ps64",
+            "value": [
+                1
+            ]
+        }
+    ]
+}

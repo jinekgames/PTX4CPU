@@ -32,6 +32,15 @@ public:
     // Preprocessing code type (each instruction into one line)
     using PreprocessData = std::list<std::string>;
 
+    enum class State {
+        // Source is not loaded
+        NotLoaded,
+        // Preprocessing stage passed
+        Preprocessed,
+        // Code is ready for processing
+        Ready,
+    };
+
     Parser() = default;
     /**
      * @param source source code of a PTX
@@ -75,6 +84,8 @@ public:
      * TODO: directives and includes processing
     */
     Result Load(const std::string& source);
+
+    State GetState() { return m_State; }
 
 private:
 
@@ -122,15 +133,6 @@ private:
 private:
 
     DataIterator m_DataIter;
-
-    enum class State {
-        // Source is not loaded
-        NotLoaded,
-        // Preprocessing stage passed
-        Preprocessed,
-        // Code is ready for processing
-        Loaded,
-    };
 
     mutable State m_State = State::NotLoaded;
 

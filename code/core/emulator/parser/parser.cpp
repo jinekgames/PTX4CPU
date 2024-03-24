@@ -53,7 +53,7 @@ Result Parser::Load(const std::string& source) {
 
     // @todo implementation: add global vars processing if existed
 
-    m_State = State::Loaded;
+    m_State = State::Ready;
 
     return {};
 }

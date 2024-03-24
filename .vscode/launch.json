@@ -5,13 +5,29 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "(msvc) TranslatorCmd",
+            "name": "(msvc) TranslatorCmd Test Parse",
             "type": "cppvsdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/bin/Debug/TranslatorCmd.exe",
                         "args": [
                 "--test-load",
                 "C:\\REPOS\\PTX2ASM\\ext\\cuda_ptx_samples\\rel_add_op.ptx",
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/build/bin/Debug/",
+            "environment": [],
+                        "console": "integratedTerminal"
+        },
+        {
+            "name": "(msvc) TranslatorCmd Test Run",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/Debug/TranslatorCmd.exe",
+                        "args": [
+                "--test-run",
+                "C:\\REPOS\\PTX2ASM\\ext\\cuda_ptx_samples\\rel_add_op.ptx",
+                "--kernel",
+                "_Z9addKernelPiPKiS1_",
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/build/bin/Debug/",

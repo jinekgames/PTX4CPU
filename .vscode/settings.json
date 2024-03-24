@@ -64,6 +64,7 @@
         "iomanip": "cpp",
         "ratio": "cpp",
         "map": "cpp",
-        "xtree": "cpp"
+        "xtree": "cpp",
+        "stdfloat": "cpp"
     }
 }

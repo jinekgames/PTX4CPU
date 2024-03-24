@@ -2,10 +2,14 @@
 
 #include <string>
 
+#include <utils/result.h>
+
 
 namespace PTX2ASM {
 
 struct ITranslator {
+
+    ITranslator();
 
     /**
      * Execute named function from the loaded PTX
@@ -13,9 +17,9 @@ struct ITranslator {
      * @param funcName  compiled name of function
      * @param ...       execution args
      *
-     * @return void
+     * @return Result
     */
-    virtual void ExecuteFunc(const std::string& funcName) = 0;
+    virtual Result ExecuteFunc(const std::string& funcName) = 0;
 
 };
 

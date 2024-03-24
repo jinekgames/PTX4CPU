@@ -154,11 +154,11 @@ inline static const std::unordered_map<WordDelimiter, std::string> baseDelimsTab
 
 };
 
-inline WordDelimiter operator & (WordDelimiter a, WordDelimiter b) {
-    return static_cast<WordDelimiter>(static_cast<int>(a) & static_cast<int>(b));
+inline WordDelimiter operator & (WordDelimiter left, WordDelimiter right) {
+    return static_cast<WordDelimiter>(static_cast<int>(left) & static_cast<int>(right));
 }
-inline WordDelimiter operator | (WordDelimiter a, WordDelimiter b) {
-    return static_cast<WordDelimiter>(static_cast<int>(a) | static_cast<int>(b));
+inline WordDelimiter operator | (WordDelimiter left, WordDelimiter right) {
+    return static_cast<WordDelimiter>(static_cast<int>(left) | static_cast<int>(right));
 }
 
 inline bool IsDelimiter(char symbol, WordDelimiter delimiter) {
