@@ -5,42 +5,48 @@
 
 
 namespace PTX2ASM {
-namespace ParserInternal {
+namespace Data {
 
 // Interating code type (base work) (each instruction into one line)
-using Data           = std::vector<std::string>;
+using Type = std::vector<std::string>;
 
 // @todo refactoring: move realizations into a separate file and add comments
 // @todo refactoring: make a parent base class for all iterators
-class DataIterator {
+class Iterator {
 
 public:
 
-    using Iter      = Data::iterator;
-    using ConstIter = Data::const_iterator;
+    using Iter      = Type::iterator;
+    using ConstIter = Type::const_iterator;
 
-    using Size = Data::size_type;
+    using Size = Type::size_type;
     inline static const Size Npos = static_cast<Size>(-1l);
 
-    DataIterator() : m_Data{} {
+    Iterator() {
         Reset();
     }
-    DataIterator(Data&& data) : m_Data(data) {
+    Iterator(Type&& data) : m_Data(new Type(std::move(data))) {
         Reset();
     }
-    DataIterator(const DataIterator&) = delete;
-    DataIterator(DataIterator&& right)
-        : m_Data            (right.m_Data)
+    Iterator(const Iterator& right)
+        : m_Data (right.m_Data) {
+
+        Reset();
+    }
+    Iterator(Iterator&& right)
+        : m_Data            (std::move(right.m_Data))
         , m_CurIter         (right.m_CurIter)
         , m_BlocksFallCount (right.m_BlocksFallCount) {
 
-        right.m_Data            = {};
-        right.m_CurIter         = right.m_Data.begin();
-        right.m_BlocksFallCount = 0;
+        right.Reset();
     }
-    ~DataIterator() = default;
-    DataIterator& operator = (const DataIterator&) = delete;
-    DataIterator& operator = (DataIterator&& right) {
+    ~Iterator() = default;
+    Iterator& operator = (const Iterator& right) {
+        m_Data = right.m_Data;
+
+        Reset();
+    }
+    Iterator& operator = (Iterator&& right) {
         if (&right == this)
             return *this;
 
@@ -48,21 +54,15 @@ public:
         m_CurIter         = right.m_CurIter;
         m_BlocksFallCount = right.m_BlocksFallCount;
 
-        right.m_CurIter         = right.m_Data.begin();
-        right.m_BlocksFallCount = 0;
+        right.Reset();
 
         return *this;
     }
 
-    void SwapData(Data&& data) {
-        m_Data = data;
-        Reset();
-    }
+    const Type& GetData() const { return *m_Data; }
 
-    const Data& GetData() const { return m_Data; }
-
-    ConstIter Begin() const { return m_Data.begin(); }
-    ConstIter End()   const { return m_Data.end(); }
+    ConstIter Begin() const { return m_Data->begin(); }
+    ConstIter End()   const { return m_Data->end(); }
 
     ConstIter Next()  const {
         if (IsBlockStart())
@@ -85,7 +85,7 @@ public:
 
     ConstIter GetIter() { return m_CurIter; }
 
-    Size GetOffset() { return m_CurIter - Begin(); }
+    Size GetOffset() const { return m_CurIter - Begin(); }
 
     bool IsInBlock() const { return m_BlocksFallCount; }
 
@@ -104,7 +104,7 @@ public:
     int64_t GetBracketLvl() const { return m_BlocksFallCount; }
 
     bool IsValid() const {
-        return m_CurIter >= Begin() && m_CurIter < End();
+        return m_Data && m_CurIter >= Begin() && m_CurIter < End();
     }
 
     ConstIter Shift(int64_t offset) const {
@@ -118,15 +118,20 @@ public:
         return m_CurIter;
     }
 
-    ConstIter Reset() {
-        m_CurIter = m_Data.begin();
+    ConstIter Reset() const {
+        if (m_Data)
+            m_CurIter = m_Data->begin();
         m_BlocksFallCount = 0;
         return m_CurIter;
     }
 
+    const std::string& ReadInstruction() const {
+        return *m_CurIter;
+    }
+
 private:
 
-    Data m_Data;
+    std::shared_ptr<Type> m_Data;
 
     mutable Iter m_CurIter;
 
@@ -137,5 +142,5 @@ private:
     inline static const std::string CLOSE_BLOCK = "}";
 };
 
-}  // namespace ParserInternal
+}  // namespace Data
 }  // namespace PTX2ASM

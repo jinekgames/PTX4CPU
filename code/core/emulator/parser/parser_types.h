@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdfloat>
 #include <string>
 #include <unordered_map>
 
@@ -8,7 +9,7 @@
 
 
 namespace PTX2ASM {
-namespace ParserInternal {
+namespace Types {
 
 struct PtxProperties {
     std::pair<int8_t, int8_t> version = { 0, 0 };
@@ -23,82 +24,82 @@ struct PtxProperties {
     }
 };
 
-// @todo refactoring: move types to another file
+// enum PTXTypeQualifires {
+//     PTXTypeBit       = 1 << 0,
+//     PTXTypeSigned    = 1 << 1,
+//     PTXTypeUnsigned  = 1 << 2,
+//     PTXTypeFloat     = 1 << 3,
+//     PTXTypePred      = 1 << 4,
 
-enum PTXTypeQualifires {
-    PTXTypeBit       = 1 << 0,
-    PTXTypeSigned    = 1 << 1,
-    PTXTypeUnsigned  = 1 << 2,
-    PTXTypeFloat     = 1 << 3,
-    PTXTypePred      = 1 << 4,
-
-    PTXType8         = 1 << 8,
-    PTXType16        = 1 << 9,
-    PTXType16X2      = 1 << 10,
-    PTXType32        = 1 << 11,
-    PTXType64        = 1 << 12,
-    PTXType128       = 1 << 13,
-};
+//     PTXType8         = 1 << 8,
+//     PTXType16        = 1 << 9,
+//     PTXType16X2      = 1 << 10,
+//     PTXType32        = 1 << 11,
+//     PTXType64        = 1 << 12,
+//     PTXType128       = 1 << 13,
+// };
 
 enum class PTXType : int32_t {
     None = 0,
 
     // untyped bits 8-bit
-    B8   = PTXTypeBit | PTXType8,
+    B8,//   = PTXTypeBit | PTXType8,
     // untyped bits 16-bit
-    B16  = PTXTypeBit | PTXType16,
+    B16,//  = PTXTypeBit | PTXType16,
     // untyped bits 32-bit
-    B32  = PTXTypeBit | PTXType32,
+    B32,//  = PTXTypeBit | PTXType32,
     // untyped bits 64-bit
-    B64  = PTXTypeBit | PTXType64,
+    B64,//  = PTXTypeBit | PTXType64,
     // untyped bits 128-bit
-    B128 = PTXTypeBit | PTXType128,
+    B128,// = PTXTypeBit | PTXType128,
 
     // signed integer 8-bit
-    S8  = PTXTypeSigned | PTXType8,
+    S8,//  = PTXTypeSigned | PTXType8,
     // signed integer 16-bit
-    S16 = PTXTypeSigned | PTXType16,
+    S16,// = PTXTypeSigned | PTXType16,
     // signed integer 32-bit
-    S32 = PTXTypeSigned | PTXType32,
+    S32,// = PTXTypeSigned | PTXType32,
     // signed integer 64-bit
-    S64 = PTXTypeSigned | PTXType64,
+    S64,// = PTXTypeSigned | PTXType64,
 
     // unsigned integer 8-bit
-    U8  = PTXTypeUnsigned | PTXType8,
+    U8,//  = PTXTypeUnsigned | PTXType8,
     // unsigned integer 16-bit
-    U16 = PTXTypeUnsigned | PTXType16,
+    U16,// = PTXTypeUnsigned | PTXType16,
     // unsigned integer 32-bit
-    U32 = PTXTypeUnsigned | PTXType32,
+    U32,// = PTXTypeUnsigned | PTXType32,
     // unsigned integer 64-bit
-    U64 = PTXTypeUnsigned | PTXType64,
+    U64,// = PTXTypeUnsigned | PTXType64,
 
     // floating-point 16-bit
-    F16   = PTXTypeFloat | PTXType16,
+    F16,//   = PTXTypeFloat | PTXType16,
     // floating-point 16-bit half precision
-    F16X2 = PTXTypeFloat | PTXType16X2,
+    F16X2,// = PTXTypeFloat | PTXType16X2,
     // floating-point 32-bit
-    F32   = PTXTypeFloat | PTXType32,
+    F32,//   = PTXTypeFloat | PTXType32,
     // floating-point 64-bit
-    F64   = PTXTypeFloat | PTXType64,
+    F64,//   = PTXTypeFloat | PTXType64,
 
     // Predicate
-    Pred = PTXTypePred,
+    Pred,// = PTXTypePred,
+
+    Size,
 };
 
 inline PTXType operator & (PTXType left, PTXType right) {
     return static_cast<PTXType>(static_cast<int32_t>(left) & static_cast<int32_t>(right));
 }
 
-inline int32_t operator & (PTXType left, PTXTypeQualifires right) {
-    return static_cast<int32_t>(left) & static_cast<int32_t>(right);
-}
+// inline int32_t operator & (PTXType left, PTXTypeQualifires right) {
+//     return static_cast<int32_t>(left) & static_cast<int32_t>(right);
+// }
 
-inline static std::unordered_map<std::string, PTXType> PTXTypesStrTable = {
+inline static const std::unordered_map<std::string, PTXType> PTXTypesStrTable = {
     { ".b8",    PTXType::B8    },
     { ".b16",   PTXType::B16   },
     { ".b32",   PTXType::B32   },
     { ".b64",   PTXType::B64   },
-    { ".b128",  PTXType::B128  },
+    // { ".b128",  PTXType::B128  }, // unsupported
 
     { ".s8",    PTXType::S8    },
     { ".s16",   PTXType::S16   },
@@ -115,194 +116,236 @@ inline static std::unordered_map<std::string, PTXType> PTXTypesStrTable = {
     { ".f32",   PTXType::F32   },
     { ".f64",   PTXType::F64   },
 
-    { ".pred",  PTXType::Pred  },
+    // { ".pred",  PTXType::Pred  }, // unsupported
 };
 
-struct PTXRawVarBase {
+template<PTXType ptxType>
+using getVarType =
+    // byte types
+    std::conditional_t<ptxType == PTXType::B8,     int8_t,
+    std::conditional_t<ptxType == PTXType::B16,    int16_t,
+    std::conditional_t<ptxType == PTXType::B32,    int32_t,
+    std::conditional_t<ptxType == PTXType::B64,    int64_t,
+    // std::conditional_t<ptxType == PTXType::B128,   int128_t, // unsupported
 
-    PTXRawVarBase(PTXType type) : realType{type} {}
+    // signed integer types
+    std::conditional_t<ptxType == PTXType::S8,     int8_t,
+    std::conditional_t<ptxType == PTXType::S16,    int16_t,
+    std::conditional_t<ptxType == PTXType::S32,    int32_t,
+    std::conditional_t<ptxType == PTXType::S64,    int64_t,
 
-    virtual void* Get() = 0;
+    // // unsigned integer types
+    std::conditional_t<ptxType == PTXType::U8,     uint8_t,
+    std::conditional_t<ptxType == PTXType::U16,    uint16_t,
+    std::conditional_t<ptxType == PTXType::U32,    uint32_t,
+    std::conditional_t<ptxType == PTXType::U64,    uint64_t,
 
-    PTXType realType;
-};
+    // // floating point types
+    std::conditional_t<ptxType == PTXType::F16,    float,
+    std::conditional_t<ptxType == PTXType::F16X2,  float,
+    std::conditional_t<ptxType == PTXType::F32,    std::conditional_t<sizeof(float) == 4, float, double>,
+    std::conditional_t<ptxType == PTXType::F64,    double,
+    // C++23 not supported in msvc yet
+    // std::conditional_t<ptxType == PTXType::F16,    std::float16_t,
+    // std::conditional_t<ptxType == PTXType::F16X2,  std::bfloat16_t,
+    // std::conditional_t<ptxType == PTXType::F32,    std::float32_t,
+    // std::conditional_t<ptxType == PTXType::F64,    std::float64_t,
 
-struct PTXRawVar8 : public PTXRawVarBase {
-    PTXRawVar8(PTXType type) : PTXRawVarBase{type} {}
+    // default value
+    uint64_t>>>>>>>>>>>>>>>>;
 
-    void* Get() override {
-        if (realType & PTXTypeSigned)
-            return static_cast<void*>(&_signed);
-        else if (realType & PTXTypeUnsigned)
-            return static_cast<void*>(&_unsigned);
-        else if (realType & PTXTypeBit)
-            return static_cast<void*>(&_bit);
+class PTXVar {
 
-        PRINT_E("Unknown PTXType(%d), trait as .s8", static_cast<int>(realType));
-        return static_cast<void*>(&_signed);
-    }
+public:
 
-    union {
-        int8_t  _signed;
-        uint8_t _unsigned;
-        int8_t  _bit; // @todo implementation: is it correct to bit as int?
-    };
-};
+    using RawValuePtrType = std::shared_ptr<void>;
+    // using RawValuePtrType = std::unique_ptr<void, void(*)(void*)>;
 
-struct PTXRawVar16 : public PTXRawVarBase {
-    PTXRawVar16(PTXType type) : PTXRawVarBase{type} {}
+protected:
 
-    void* Get() override {
-        if (realType & PTXTypeSigned)
-            return static_cast<void*>(&_signed);
-        else if (realType & PTXTypeUnsigned)
-            return static_cast<void*>(&_unsigned);
-        else if (realType & PTXTypeBit)
-            return static_cast<void*>(&_bit);
-        else if (realType & PTXTypeBit)
-            return static_cast<void*>(&_float);
+    PTXVar(RawValuePtrType&& _pValue) : pValue{std::move(_pValue)} {}
 
-        PRINT_E("Unknown PTXType(%d), trait as .s16", static_cast<int>(realType));
-        return static_cast<void*>(&_signed);
-    }
+public:
 
-    union {
-        int16_t         _signed;
-        uint16_t        _unsigned;
-        int16_t         _bit;
-        float           _float; // @todo implementation: is it a correct float representation? use std::float16_t with c++ 23 <stdfloat>
-    };
-};
+    // PTXVar(const PTXVar& right) : pValue{right.pValue} {}
+    PTXVar(const PTXVar&) = delete;
+    PTXVar(PTXVar&& right) : pValue{std::move(right.pValue)} {}
+    ~PTXVar() = default;
 
-struct PTXRawVar32 : public PTXRawVarBase {
-    PTXRawVar32(PTXType type) : PTXRawVarBase{type} {}
-
-    void* Get() override {
-        if (realType & PTXTypeSigned)
-            return static_cast<void*>(&_signed);
-        else if (realType & PTXTypeUnsigned)
-            return static_cast<void*>(&_unsigned);
-        else if (realType & PTXTypeBit)
-            return static_cast<void*>(&_bit);
-        else if (realType & PTXTypeBit)
-            return static_cast<void*>(&_float);
-
-        PRINT_E("Unknown PTXType(%d), trait as .s32", static_cast<int>(realType));
-        return static_cast<void*>(&_signed);
-    }
-
-    union {
-        int32_t         _signed;
-        uint32_t        _unsigned;
-        int32_t         _bit;
-        float           _float;
-    };
-};
-
-struct PTXRawVar64 : public PTXRawVarBase {
-    PTXRawVar64(PTXType type) : PTXRawVarBase{type} {}
-
-    void* Get() override {
-        if (realType & PTXTypeSigned)
-            return static_cast<void*>(&_signed);
-        else if (realType & PTXTypeUnsigned)
-            return static_cast<void*>(&_unsigned);
-        else if (realType & PTXTypeBit)
-            return static_cast<void*>(&_bit);
-        else if (realType & PTXTypeBit)
-            return static_cast<void*>(&_float);
-
-        PRINT_E("Unknown PTXType(%d), trait as .s64", static_cast<int>(realType));
-        return static_cast<void*>(&_signed);
-    }
-
-    union {
-        int64_t         _signed;
-        uint64_t        _unsigned;
-        int64_t         _bit;
-        double          _float;
-    };
-};
-
-struct VirtualVar {
-    VirtualVar() = default;
-    VirtualVar(const VirtualVar&) = delete;
-    VirtualVar(VirtualVar&& right) : ptxType(right.ptxType) {
-        data.swap(right.data);
-
-        right.ptxType = "";
-        right.data.reset();
-    }
-    ~VirtualVar() = default;
-    VirtualVar& operator = (const VirtualVar&) = delete;
-    VirtualVar& operator = (VirtualVar&& right) {
-        if (&right == this)
+    PTXVar& operator = (const PTXVar&) = delete;
+    PTXVar& operator = (PTXVar&& right) {
+        if(this == &right)
             return *this;
 
-        data.swap(right.data);
-
-        right.ptxType = "";
-        right.data.reset();
+        pValue = std::move(right.pValue);
 
         return *this;
     }
 
-    void AllocateTyped(PTXType type) {
-        if (type & PTXType8)
-            data.reset(new PTXRawVar8(type));
-        else if (type & PTXType16)
-            data.reset(new PTXRawVar16(type));
-        else if (type & PTXType32)
-            data.reset(new PTXRawVar16(type));
-        else if (type & PTXType64)
-            data.reset(new PTXRawVar16(type));
-        else
-        {
-            PRINT_E("Unknown PTXType(%d), trait as .s64", static_cast<int>(type));
-            data.reset(new PTXRawVar64(PTXType::S64));
-        }
+    template<PTXType ptxType>
+    getVarType<ptxType>& Get() {
+        return *static_cast<getVarType<ptxType>*>(pValue.get());
     }
 
-    std::string ptxType;
-    std::unique_ptr<PTXRawVarBase> data = nullptr;
+    template<PTXType ptxType>
+    const getVarType<ptxType>& Get() const {
+        return *static_cast<getVarType<ptxType>*>(pValue.get());
+    }
+
+    virtual constexpr PTXType GetPTXType() const = 0;
+
+private:
+
+    RawValuePtrType pValue;
+
 };
 
-// PTX variable name to it's data
-using VirtualVarsList = std::map<std::string, VirtualVar>;
+template<PTXType ptxType>
+class PTXVarTyped : public PTXVar {
 
-class VarsTable : public VirtualVarsList {
 public:
-    VarsTable() = default;
+
+    using RealType = getVarType<ptxType>;
+
+    PTXVarTyped()
+        : PTXVar{std::move(
+                RawValuePtrType{static_cast<void*>(new RealType)}
+        )} {}
+    PTXVarTyped(RealType initValue)
+        : PTXVar{std::move(
+                RawValuePtrType{static_cast<void*>(new RealType(initValue))}
+        )} {}
+    PTXVarTyped(const PTXVarTyped&) = delete;
+    PTXVarTyped(PTXVarTyped&& right) {}
+    ~PTXVarTyped() = default;
+
+    PTXVarTyped& operator = (const PTXVarTyped&) = delete;
+    PTXVarTyped& operator = (PTXVarTyped&& right) {}
+
+    constexpr PTXType GetPTXType() const override { return ptxType; }
+
+};
+
+using PTXVarPtr = std::unique_ptr<PTXVar>;
+
+using PTXVarList = std::vector<PTXVarPtr>;
+
+class VarsTable {
+
+public:
+
+    explicit VarsTable(const VarsTable* pParentTable = nullptr)
+        : parent{pParentTable} {}
     VarsTable(const VarsTable&) = delete;
-    VarsTable(VarsTable&& right) {
+    VarsTable(VarsTable&& right)
+        : virtualVars{std::move(right.virtualVars)} {
+
         parent = right.parent;
         right.parent = nullptr;
     }
     ~VarsTable() = default;
+
     VarsTable& operator = (const VarsTable&) = delete;
     VarsTable& operator = (VarsTable&& right) {
         if (&right == this)
             return *this;
 
+        virtualVars = std::move(right.virtualVars);
         parent = right.parent;
         right.parent = nullptr;
 
         return *this;
     }
 
-    VarsTable* parent = nullptr;
+    void SwapVars(VarsTable& table) {
+        virtualVars.swap(table.virtualVars);
+    }
+
+    bool Contains(const std::string& name) {
+        return FindVar(name);
+    }
+
+    // Compile-time arg
+    template<PTXType ptxType>
+    void AppendVar(const std::string& name) {
+        PTXVarPtr newVar{new PTXVarTyped<PTXType::S16>};
+        // virtualVars.emplace({name, new PTXVarTyped<ptxType>});
+    }
+
+    // Run-time arg
+    void AppendVar(PTXType ptxType, const std::string& name) {
+        // virtualVars.emplace({name, new PTXVarTyped<PTXType::B32>});
+        // PTXVarPtr newVar{new PTXVarTyped<PTXType::S16>};
+        // virtualVars.at(name).swap(PTXVarPtr{new PTXVarTyped<PTXType::S16>()});
+    }
+
+    //     virtualVars.at(name) = std::move(PTXVarPtr(new PTXVarTyped<PTXType(1)>));
+    // }
+
+    PTXVar& GetVar(const std::string& name) {
+        return *FindVar(name);
+    }
+
+    const PTXVar& GetVar(const std::string& name) const {
+        return *FindVar(name);
+    }
+
+    template<PTXType ptxType>
+    auto& GetValue(const std::string& name) {
+        return FindVar(name)->Get<ptxType>();
+    }
+
+    template<PTXType ptxType>
+    const auto& GetValue(const std::string& name) const {
+        return FindVar(name)->Get<ptxType>();
+    }
+
+    const VarsTable* GetParent() const { return parent; }
+
+    void DeleteVar(const std::string& name) {
+        virtualVars.erase(name);
+    }
+
+    void Clear() {
+        virtualVars.clear();
+    }
+
+private:
+
+    PTXVar* FindVar(const std::string& name) {
+        for (const auto* pTable = this; pTable; pTable = parent) {
+            if (pTable->virtualVars.contains(name))
+                return pTable->virtualVars.at(name).get();
+        }
+        return nullptr;
+    }
+
+    const PTXVar* FindVar(const std::string& name) const {
+        for (const auto* pTable = this; pTable; pTable = parent) {
+            if (pTable->virtualVars.contains(name))
+                return pTable->virtualVars.at(name).get();
+        }
+        return nullptr;
+    }
+
+private:
+
+    std::map<std::string, std::unique_ptr<PTXVar>> virtualVars;
+
+    const VarsTable* parent = nullptr;
+
 };
 
-struct VarPtxType {
+struct PtxVarDesc {
     std::vector<std::string> attributes;
-    std::string type;
+    PTXType type;
 };
 
-class Function
+struct Function
 {
-public:
+
     Function()                = default;
-    Function(const Function&) = delete;
+    Function(const Function&) = default;
     Function(Function&& right)
         : name       {std::move(right.name)}
         , attributes {std::move(right.attributes)}
@@ -310,10 +353,9 @@ public:
         , returns    {std::move(right.returns)}
         , start      {right.start}
         , end        {right.end}
-        , vtable     {std::move(right.vtable)}
     {
-        right.start = DataIterator::Npos;
-        right.end   = DataIterator::Npos;
+        right.start = Data::Iterator::Npos;
+        right.end   = Data::Iterator::Npos;
     }
     ~Function()               = default;
     Function& operator = (const Function&) = delete;
@@ -327,10 +369,9 @@ public:
         returns    = std::move(right.returns);
         start      = right.start;
         end        = right.end;
-        vtable     = std::move(right.vtable);
 
-        right.start = DataIterator::Npos;
-        right.end   = DataIterator::Npos;
+        right.start = Data::Iterator::Npos;
+        right.end   = Data::Iterator::Npos;
 
         return *this;
     }
@@ -340,16 +381,17 @@ public:
     // function attribute to it's optional value
     std::unordered_map<std::string, std::string> attributes;
     // argument name to it's type
-    std::unordered_map<std::string, VarPtxType> arguments;
+    std::unordered_map<std::string, PtxVarDesc> arguments;
     // returning value name to it's type
-    std::unordered_map<std::string, VarPtxType> returns;
+    std::unordered_map<std::string, PtxVarDesc> returns;
     // Index of m_Data pointed to the first instruction of the function body
-    DataIterator::Size start = DataIterator::Npos;
+    Data::Iterator::Size start = Data::Iterator::Npos;
     // Index of m_Data pointed to the first index after the last instruction of the function body
-    DataIterator::Size end   = DataIterator::Npos;
-    // A table of variabled defined into the function
-    VarsTable vtable;
+    Data::Iterator::Size end   = Data::Iterator::Npos;
+
 };
 
-}  // namespace ParserInternal
+using FuncsList = std::vector<Types::Function>;
+
+}  // namespace Types
 }  // namespace PTX2ASM

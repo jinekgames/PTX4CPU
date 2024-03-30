@@ -7,8 +7,10 @@
 #include <tuple>
 #include <vector>
 
+#include <executor.h>
 #include <result.h>
 #include <parser_types.h>
+#include <parser_data.h>
 
 
 namespace PTX2ASM {
@@ -19,15 +21,6 @@ namespace PTX2ASM {
 class Parser {
 
 public:
-
-    using Data            = ParserInternal::Data;
-    using DataIterator    = ParserInternal::DataIterator;
-    using Function        = ParserInternal::Function;
-    using PtxProperties   = ParserInternal::PtxProperties;
-    using VarsTable       = ParserInternal::VarsTable;
-    using VirtualVar      = ParserInternal::VirtualVar;
-    using VirtualVarsList = ParserInternal::VirtualVarsList;
-    using VarPtxType      = ParserInternal::VarPtxType;
 
     // Preprocessing code type (each instruction into one line)
     using PreprocessData = std::list<std::string>;
@@ -87,6 +80,12 @@ public:
 
     State GetState() { return m_State; }
 
+    /**
+     * Prepare executors for each thread, which could be runned asynchronously
+    */
+    std::vector<ThreadExecutor> MakeThreadExecutors(const std::string& funcName, const Types::PTXVarList& arguments,
+                                                    int3 threadsCount) const;
+
 private:
 
     /**
@@ -106,7 +105,7 @@ private:
     /**
      * Convert list of instructions into vector type
     */
-    static Data ConvertCode(const PreprocessData& code);
+    static Data::Type ConvertCode(const PreprocessData& code);
 
     /**
      * Preprocessing code
@@ -123,20 +122,15 @@ private:
      * global defined variables
      * and defined funtions with their own virtual tables
     */
-    bool InitVTable();
-
-    /**
-     * Allocates the memory for the functions arguments
-    */
-    static void AllocateFunctionsMemory() {};
+    bool InitVTable() const;
 
 private:
 
-    DataIterator m_DataIter;
+    mutable Data::Iterator m_DataIter;
 
     mutable State m_State = State::NotLoaded;
 
-    mutable PtxProperties m_PtxProps;
+    mutable Types::PtxProperties m_PtxProps;
 
     // list of dirictives which are not trailed by {} of ;
     inline static const std::vector<std::string> m_FreeDirictives = {
@@ -164,12 +158,13 @@ private:
         // ".alias",
     };
 
-    VarsTable m_VarsTable;
+    // Global file variables
+    mutable Types::VarsTable m_VarsTable;
 
-    static std::pair<std::string, VarPtxType> ParsePtxVar(const std::string& entry);
+    static std::pair<std::string, Types::PtxVarDesc> ParsePtxVar(const std::string& entry);
 
     // A list of functions stated in the PTX
-    std::vector<Function> m_FuncsList;
+    mutable Types::FuncsList m_FuncsList;
 
 };
 

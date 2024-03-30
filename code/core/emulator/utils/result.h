@@ -6,24 +6,24 @@
 
 namespace PTX2ASM {
 
-enum class ResultCode : uint32_t {
-    Ok = 0,
-    Fail,
-};
-
 struct Result {
 
-    Result() : code(ResultCode::Ok) {};
-    Result(ResultCode _code) : code(_code) {};
+    enum class Code : uint32_t {
+        Ok = 0,
+        Fail,
+    };
+
+    Result() : code(Code::Ok) {};
+    Result(Code _code) : code(_code) {};
     Result(std::string _msg)
-        : code(ResultCode::Fail)
+        : code(Code::Fail)
         , msg(_msg) {};
 
     operator bool () {
-        return (code == ResultCode::Ok);
+        return (code == Code::Ok);
     }
 
-    ResultCode code = ResultCode::Fail;
+    Code code = Code::Fail;
     std::string msg;
 };
 

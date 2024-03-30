@@ -6,9 +6,6 @@
 
 namespace PTX2ASM {
 
-using namespace ParserInternal;
-
-
 // Constructors and Destructors
 
 Parser::Parser(const std::string& source) {
@@ -39,7 +36,7 @@ Result Parser::Load(const std::string& source) {
 
     PreprocessCode(code);
     auto data = ConvertCode(code);
-    m_DataIter.SwapData(std::move(data));
+    m_DataIter = {std::move(data)};
 
     if (!m_PtxProps.IsValid())
         return {"The source PTX file is missing PTX properties"};
@@ -56,6 +53,65 @@ Result Parser::Load(const std::string& source) {
     m_State = State::Ready;
 
     return {};
+}
+
+std::vector<ThreadExecutor> Parser::MakeThreadExecutors(const std::string& funcName, const Types::PTXVarList& arguments,
+                                                        int3 threadsCount) const {
+
+    // Find kernel
+    auto funcIter = std::find_if(m_FuncsList.begin(), m_FuncsList.end(),
+        [&](const Types::FuncsList::value_type& func) {
+            // correct name
+            if (func.name != funcName)
+                return false;
+            // correct arguments
+            if (func.arguments.size() != arguments.size())
+                return false;
+            Types::PTXVarList::size_type i = 0;
+            for (auto& arg : func.arguments) {
+                if (!arguments[i] || arg.second.type != arguments[i]->GetPTXType())
+                    return false;
+                ++i;
+            }
+            return true;
+        });
+
+    if (funcIter == m_FuncsList.end()) {
+        PRINT_E("Function with such name (\"%s\") and corespondent arguments "
+                "is not stated in the PTX file", funcName.c_str());
+        return {};
+    }
+
+    auto& func = *funcIter;
+
+    // Convert arguments
+    std::shared_ptr<Types::VarsTable> argumentsTable;
+
+    Types::PTXVarList::size_type i = 0;
+    argumentsTable->AppendVar<Types::PTXType::S16>("A");
+    constexpr Types::PTXType tt = (Types::PTXType)1;
+    argumentsTable->AppendVar<tt>("B");
+    // for (auto& [name, var]: func.arguments ) {
+    //     const auto type = var.type;
+    //     argumentsTable->AppendVar<Types::PTXType::B128>("name");
+    //     argumentsTable->AppendVar<type>(name);
+    //     argumentsTable->GetValue<type>(name) = arguments[i]->Get<type>();
+    //     ++i;
+    // }
+
+    // Create executors
+
+    std::vector<ThreadExecutor> ret;
+
+    for (int3::type x = 0; x < threadsCount.x; ++x) {
+        for (int3::type y = 0; y < threadsCount.y; ++y) {
+            for (int3::type z = 0; z < threadsCount.z; ++z) {
+                ret.push_back(ThreadExecutor{m_DataIter, func, argumentsTable, int3{x, y, z}});
+            }
+        }
+    }
+
+    return ret;
 }
 
 void Parser::ClearCodeComments(std::string& code) {
@@ -150,7 +206,7 @@ Parser::PreprocessData Parser::ConvertCode(std::string& code) {
     return ret;
 }
 
-Data Parser::ConvertCode(const PreprocessData& code) {
+Data::Type Parser::ConvertCode(const PreprocessData& code) {
 
     return {code.begin(), code.end()};
 }
@@ -226,7 +282,7 @@ void Parser::PreprocessCode(PreprocessData& code) const {
     m_State = State::Preprocessed;
 }
 
-bool Parser::InitVTable() {
+bool Parser::InitVTable() const {
 
     using namespace StringIteration;
 
@@ -253,7 +309,7 @@ bool Parser::InitVTable() {
         if (!isFunc)
             continue;
 
-        Function func;
+        Types::Function func;
 
         // get returns, name and arguments
         lineIter.GoToNextNonSpace();
@@ -303,9 +359,10 @@ bool Parser::InitVTable() {
             func.end   = m_DataIter.GetOffset() - 1;
         }
 
-        auto funcFound = std::find_if(m_FuncsList.begin(), m_FuncsList.end(), [&func](const Function& f) {
-            return (f.name == func.name);
-        });
+        auto funcFound = std::find_if(m_FuncsList.begin(), m_FuncsList.end(),
+            [&func](const Types::Function& f) {
+                return (f.name == func.name);
+            });
         if(funcFound != m_FuncsList.end()) {
             // @todo implementation: maybe better to merge values, not remove olds
             m_FuncsList.erase(std::move(funcFound));
@@ -316,17 +373,24 @@ bool Parser::InitVTable() {
     return true;
 }
 
-std::pair<std::string, Parser::VarPtxType> Parser::ParsePtxVar(const std::string& entry) {
+std::pair<std::string, Types::PtxVarDesc> Parser::ParsePtxVar(const std::string& entry) {
 
     std::string name;
-    Parser::VarPtxType type;
+    Types::PtxVarDesc desc;
     // Sample string:
     // .reg .f64 dbl
     const StringIteration::SmartIterator iter{entry};
-    type.attributes.push_back(iter.ReadWord2()); // contains memory location only
-    type.type = iter.ReadWord2();
+    desc.attributes.push_back(iter.ReadWord2()); // contains memory location only
+    auto typeStr = iter.ReadWord2();
+    if (Types::PTXTypesStrTable.contains(typeStr)) {
+        desc.type = Types::PTXTypesStrTable.at(typeStr);
+    }
+    else {
+        PRINT_E("Unknown type of variable \"%s\". Treating as .s64", typeStr.c_str());
+        desc.type = Types::PTXType::S64;
+    }
     name = iter.ReadWord2();
-    return {name, type};
+    return {name, desc};
 }
 
 
