@@ -8,8 +8,6 @@ class DispatchTable {
 public:
 
     static Result Return(const ThreadExecutor* pExecutor) {
-        if (!pExecutor)
-            return {"Invalid executor"};
         auto& iter = pExecutor->m_DataIter;
         iter.Shift(pExecutor->m_Func.end - iter.GetOffset());
         return {};

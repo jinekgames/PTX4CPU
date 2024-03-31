@@ -12,8 +12,9 @@ InstructionRunner::InstructionRunner(const std::string& instruction, const Threa
     , m_pExecutor{pExecutor} {
 
     if (pExecutor)
-        PRINT_V("[%d,%d,%d]: > %s",
+        PRINT_V("[%d,%d,%d]:%lu: > %s",
                 pExecutor->m_ThreadId.x, pExecutor->m_ThreadId.y, pExecutor->m_ThreadId.z,
+                pExecutor->m_DataIter.GetOffset(),
                 instruction.c_str());
 
     FindRunner();
@@ -43,10 +44,13 @@ void InstructionRunner::FindRunner() {
 
 Result InstructionRunner::Run() {
 
+    if (!m_pExecutor)
+        return {"Invalid executor"};
+
     if (m_Runner)
         return m_Runner(m_pExecutor);
 
-    return {"Runner for the given instruction not found"};
+    return {Result::Code::NotOk, "Runner for the given instruction not found. Skipped"};
 }
 
 }  // namespace PTX4CPU

@@ -28,6 +28,8 @@ auto CreateTranslator(const std::string src) {
     return std::unique_ptr<PTX4CPU::ITranslator>{rawPtr};
 }
 
+// @todo implementation: add ability to export parsed ptx file
+
 int main(size_t argc, char** argv) {
     Parser args(argc, argv);
 
@@ -85,9 +87,15 @@ Commands:
 
         auto kernelName = args["kernel"];
 
-        pTranslator->ExecuteFunc(kernelName);
+        auto res = pTranslator->ExecuteFunc(kernelName);
 
-        return 0;
+        if (res) {
+            std::cout << "Kernel finished execution" << std::endl;
+            return 0;
+        }
+
+        std::cout << "Function execution faled. Error: " << res.msg << std::endl;
+        return 1;
     }
 
         std::cout <<

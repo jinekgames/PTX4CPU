@@ -90,7 +90,8 @@ std::vector<ThreadExecutor> Parser::MakeThreadExecutors(const std::string& funcN
     for (auto& [name, var]: func.arguments ) {
         const auto type = var.type;
         PTXTypedOp(var.type,
-                   argumentsTable->AppendVar<_Runtime_Type_>(name, arguments[i]->Get<_Runtime_Type_>()));
+            argumentsTable->AppendVar<_Runtime_Type_>(name, arguments[i]->Get<_Runtime_Type_>());
+        );
         ++i;
     }
 

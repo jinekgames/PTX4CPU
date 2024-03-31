@@ -59,11 +59,18 @@ Result ThreadExecutor::Run(Data::Iterator::Size instructionsCount) const {
         decltype(auto) instStr = m_DataIter.ReadInstruction();
 
         InstructionRunner runner{instStr, this};
-        const auto res = runner.Run();
+        auto res = runner.Run();
 
-        if(!res)
-            PRINT_E("%s Execution error (offset:%llu): %s",
-                    logPrefix.c_str(), m_DataIter.GetOffset(), res.msg.c_str());
+        if(!res) {
+            if (res == Result::Code::NotOk) {
+                PRINT_W("%s Execution warning (offset:%llu): %s",
+                        logPrefix.c_str(), m_DataIter.GetOffset(), res.msg.c_str());
+            } else {
+                res.msg = std::vformat("(offset:{}): {}",
+                    std::make_format_args(m_DataIter.GetOffset(), res.msg));
+                return res;
+            }
+        }
     }
 
     PRINT_I("%s: Execution paused (offset:%llu)",

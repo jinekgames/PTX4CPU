@@ -38,11 +38,6 @@ Result Translator::ExecuteFunc(const std::string& funcName) {
     Types::PTXVarList args;
     args.push_back(
         std::move(
-            Types::PTXVarPtr(new Types::PTXVarTyped<Types::PTXType::U64>(0))
-        )
-    );
-    args.push_back(
-        std::move(
             Types::PTXVarPtr(new Types::PTXVarTyped<Types::PTXType::U64>(1))
         )
     );
@@ -51,10 +46,15 @@ Result Translator::ExecuteFunc(const std::string& funcName) {
             Types::PTXVarPtr(new Types::PTXVarTyped<Types::PTXType::U64>(2))
         )
     );
+    args.push_back(
+        std::move(
+            Types::PTXVarPtr(new Types::PTXVarTyped<Types::PTXType::U64>(3))
+        )
+    );
 
     int3 thrdsCount = { 1, 1, 1 };
 
-    PRINT_I("Executing a kernel \"%s\" in block [%llu,%llu,%llu]",
+    PRINT_I("Executing kernel \"%s\" in block [%llu,%llu,%llu]",
             funcName.c_str(), thrdsCount.x, thrdsCount.y, thrdsCount.z);
 
     auto execs = m_Parser.MakeThreadExecutors(funcName, std::move(args), thrdsCount);

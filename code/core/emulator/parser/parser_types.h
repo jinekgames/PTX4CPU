@@ -139,20 +139,20 @@ using getVarType =
 #define PTX_Internal_TypedOp_Construct_First(runtimeType, constType, op) \
     if (runtimeType == constType) {                                      \
         const Types::PTXType _Runtime_Type_ = constType;                 \
-        op;                                                              \
+        op                                                               \
     }
 
 #define PTX_Internal_TypedOp_Construct_Following(runtimeType, constType, op) \
     else if (type == constType) {                                            \
         const Types::PTXType _Runtime_Type_ = constType;                     \
-        op;                                                                  \
+        op                                                                   \
     }
 
 #define PTX_Internal_TypedOp_Construct_Default(runtimeType, op)                                  \
     else {                                                                                       \
         PRINT_E("Unknown type PTXType(%d). Casting to .s64", static_cast<int32_t>(runtimeType)); \
         const Types::PTXType _Runtime_Type_ = Types::PTXType::S64;                               \
-        op;                                                                                      \
+        op                                                                                       \
     }
 
 // use _Runtime_Type_ as template argument
@@ -177,7 +177,7 @@ using getVarType =
         PTX_Internal_TypedOp_Construct_Following(type, Types::PTXType::F64,   op) \
         /*PTX_Internal_TypedOp_Construct_Following(type, Types::PTXType::Pred,  op)*/ \
         PTX_Internal_TypedOp_Construct_Default(type, op)                          \
-    } while (0)
+    } while (0);
 
 class PTXVar {
 
