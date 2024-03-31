@@ -29,45 +29,45 @@ enum class PTXType : int32_t {
     None = 0,
 
     // untyped bits 8-bit
-    B8,//   = PTXTypeBit | PTXType8,
+    B8,
     // untyped bits 16-bit
-    B16,//  = PTXTypeBit | PTXType16,
+    B16,
     // untyped bits 32-bit
-    B32,//  = PTXTypeBit | PTXType32,
+    B32,
     // untyped bits 64-bit
-    B64,//  = PTXTypeBit | PTXType64,
+    B64,
     // untyped bits 128-bit
-    B128,// = PTXTypeBit | PTXType128,
+    B128,
 
     // signed integer 8-bit
-    S8,//  = PTXTypeSigned | PTXType8,
+    S8,
     // signed integer 16-bit
-    S16,// = PTXTypeSigned | PTXType16,
+    S16,
     // signed integer 32-bit
-    S32,// = PTXTypeSigned | PTXType32,
+    S32,
     // signed integer 64-bit
-    S64,// = PTXTypeSigned | PTXType64,
+    S64,
 
     // unsigned integer 8-bit
-    U8,//  = PTXTypeUnsigned | PTXType8,
+    U8,
     // unsigned integer 16-bit
-    U16,// = PTXTypeUnsigned | PTXType16,
+    U16,
     // unsigned integer 32-bit
-    U32,// = PTXTypeUnsigned | PTXType32,
+    U32,
     // unsigned integer 64-bit
-    U64,// = PTXTypeUnsigned | PTXType64,
+    U64,
 
     // floating-point 16-bit
-    F16,//   = PTXTypeFloat | PTXType16,
+    F16,
     // floating-point 16-bit half precision
-    F16X2,// = PTXTypeFloat | PTXType16X2,
+    F16X2,
     // floating-point 32-bit
-    F32,//   = PTXTypeFloat | PTXType32,
+    F32,
     // floating-point 64-bit
-    F64,//   = PTXTypeFloat | PTXType64,
+    F64,
 
     // Predicate
-    Pred,// = PTXTypePred,
+    Pred,
 
     Size,
 };
@@ -162,7 +162,7 @@ using getVarType =
         PTX_Internal_TypedOp_Construct_Following(type, Types::PTXType::B16,   op) \
         PTX_Internal_TypedOp_Construct_Following(type, Types::PTXType::B32,   op) \
         PTX_Internal_TypedOp_Construct_Following(type, Types::PTXType::B64,   op) \
-        PTX_Internal_TypedOp_Construct_Following(type, Types::PTXType::B128,  op) \
+        /*PTX_Internal_TypedOp_Construct_Following(type, Types::PTXType::B128,  op)*/ \
         PTX_Internal_TypedOp_Construct_Following(type, Types::PTXType::S8,    op) \
         PTX_Internal_TypedOp_Construct_Following(type, Types::PTXType::S16,   op) \
         PTX_Internal_TypedOp_Construct_Following(type, Types::PTXType::S32,   op) \
@@ -175,45 +175,9 @@ using getVarType =
         PTX_Internal_TypedOp_Construct_Following(type, Types::PTXType::F16X2, op) \
         PTX_Internal_TypedOp_Construct_Following(type, Types::PTXType::F32,   op) \
         PTX_Internal_TypedOp_Construct_Following(type, Types::PTXType::F64,   op) \
+        /*PTX_Internal_TypedOp_Construct_Following(type, Types::PTXType::Pred,  op)*/ \
         PTX_Internal_TypedOp_Construct_Default(type, op)                          \
     } while (0)
-
-    // if (type == Types::PTXType::B8) {                            \
-    //     const Types::PTXType _Runtime_Type_ = Types::PTXType::B8; \
-    //     op;
-    // }
-    // else if (type == PTXType::B16)         \
-    //     op<PTXType::B16>(__VA_ARGS__);     \
-    // else if (type == PTXType::B32)         \
-    //     op<PTXType::B32>(__VA_ARGS__);     \
-    // else if (type == PTXType::B64)         \
-    //     op<PTXType::B64>(__VA_ARGS__);     \
-    // else if (type == == PTXType:)          \
-    //     op<== PTXType:B128>(__VA_ARGS__);  \
-    // else if (type == PTXType::S8)          \
-    //     op<PTXType::S8>(__VA_ARGS__);      \
-    // else if (type == PTXType::S16)         \
-    //     op<PTXType::S16>(__VA_ARGS__);     \
-    // else if (type == PTXType::S32)         \
-    //     op<PTXType::S32>(__VA_ARGS__);     \
-    // else if (type == PTXType::S64)         \
-    //     op<PTXType::S64>(__VA_ARGS__);     \
-    // else if (type == PTXType::U8)          \
-    //     op<PTXType::U8>(__VA_ARGS__);      \
-    // else if (type == PTXType::U16)         \
-    //     op<PTXType::U16>(__VA_ARGS__);     \
-    // else if (type == PTXType::U32)         \
-    //     op<PTXType::U32>(__VA_ARGS__);     \
-    // else if (type == PTXType::U64)         \
-    //     op<PTXType::U64>(__VA_ARGS__);     \
-    // else if (type == PTXType::F16)         \
-    //     op<PTXType::F16>(__VA_ARGS__);     \
-    // else if (type == PTXType::F16X)        \
-    //     op<PTXType::F16X>(__VA_ARGS__);    \
-    // else if (type == PTXType::F32)         \
-    //     op<PTXType::F32>(__VA_ARGS__);     \
-    // else if (type == PTXType::F64)         \
-    //     op<PTXType::F64>(__VA_ARGS__);
 
 class PTXVar {
 
@@ -224,11 +188,18 @@ public:
 
 protected:
 
-    explicit PTXVar(RawValuePtrType valuePtr) : pValue{std::move(valuePtr)} {}
+    explicit PTXVar(RawValuePtrType valuePtr)
+        : pValue{std::move(valuePtr)}
+#ifdef DEBUG_BUILD
+        , _debug_int_ptr{static_cast<decltype(_debug_int_ptr)>(pValue.get())}
+        , _debug_uint_ptr{static_cast<decltype(_debug_uint_ptr)>(pValue.get())}
+        , _debug_float_ptr{static_cast<decltype(_debug_float_ptr)>(pValue.get())}
+        , _debug_double_ptr{static_cast<decltype(_debug_double_ptr)>(pValue.get())}
+#endif
+        {}
 
 public:
 
-    // PTXVar(const PTXVar& right) : pValue{right.pValue} {}
     PTXVar(const PTXVar&) = delete;
     PTXVar(PTXVar&& right) : pValue{std::move(right.pValue)} {}
     ~PTXVar() = default;
@@ -258,6 +229,13 @@ public:
 private:
 
     RawValuePtrType pValue;
+
+#ifdef DEBUG_BUILD
+    int64_t*  _debug_int_ptr    = nullptr;
+    uint64_t* _debug_uint_ptr   = nullptr;
+    float*    _debug_float_ptr  = nullptr;
+    double*   _debug_double_ptr = nullptr;
+#endif
 
 };
 

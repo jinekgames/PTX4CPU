@@ -17,7 +17,7 @@ private:
 public:
 
     ThreadExecutor(const Data::Iterator& iterator, const Types::Function& func,
-                   std::shared_ptr<Types::VarsTable> arguments, const int3& threadId);
+                   const std::shared_ptr<Types::VarsTable>& arguments, const int3& threadId);
     ThreadExecutor(const ThreadExecutor&) = delete;
     ThreadExecutor(ThreadExecutor&& right);
     ~ThreadExecutor() = default;

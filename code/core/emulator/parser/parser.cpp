@@ -101,10 +101,11 @@ std::vector<ThreadExecutor> Parser::MakeThreadExecutors(const std::string& funcN
     for (int3::type x = 0; x < threadsCount.x; ++x) {
         for (int3::type y = 0; y < threadsCount.y; ++y) {
             for (int3::type z = 0; z < threadsCount.z; ++z) {
-                ret.push_back(ThreadExecutor{m_DataIter, func, argumentsTable, int3{x, y, z}});
+                ret.push_back(std::move(ThreadExecutor{m_DataIter, func, argumentsTable, int3{x, y, z}}));
             }
         }
     }
+    // @todo bug: ptr to argumentsTable data destructs despite it was copied
 
     return ret;
 }

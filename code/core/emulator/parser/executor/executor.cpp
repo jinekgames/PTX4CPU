@@ -8,7 +8,7 @@
 namespace PTX4CPU {
 
 ThreadExecutor::ThreadExecutor(const Data::Iterator& iterator, const Types::Function& func,
-                               std::shared_ptr<Types::VarsTable> arguments, const int3& threadId)
+                               const std::shared_ptr<Types::VarsTable>& arguments, const int3& threadId)
     : m_ThreadId{threadId}
     , m_DataIter{iterator}
     , m_Func{func}
@@ -21,7 +21,7 @@ ThreadExecutor::ThreadExecutor(const Data::Iterator& iterator, const Types::Func
 ThreadExecutor::ThreadExecutor(ThreadExecutor&& right)
     : m_DataIter{std::move(right.m_DataIter)}
     , m_Func{std::move(right.m_Func)}
-    , m_VarsTable{std::move(right.m_VarsTable)}
+    , m_VarsTable{right.m_VarsTable}
     , m_ThreadId{std::move(right.m_ThreadId)} {}
 
 ThreadExecutor& ThreadExecutor::operator = (ThreadExecutor&& right) {
