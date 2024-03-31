@@ -19,10 +19,11 @@ ThreadExecutor::ThreadExecutor(const Data::Iterator& iterator, const Types::Func
 }
 
 ThreadExecutor::ThreadExecutor(ThreadExecutor&& right)
-    : m_DataIter{std::move(right.m_DataIter)}
+    : m_ThreadId{std::move(right.m_ThreadId)}
+    , m_DataIter{std::move(right.m_DataIter)}
     , m_Func{std::move(right.m_Func)}
-    , m_VarsTable{right.m_VarsTable}
-    , m_ThreadId{std::move(right.m_ThreadId)} {}
+    , m_Arguments{std::move(right.m_Arguments)}
+    , m_VarsTable{std::move(right.m_VarsTable)} {}
 
 ThreadExecutor& ThreadExecutor::operator = (ThreadExecutor&& right) {
 

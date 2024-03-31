@@ -105,7 +105,6 @@ std::vector<ThreadExecutor> Parser::MakeThreadExecutors(const std::string& funcN
             }
         }
     }
-    // @todo bug: ptr to argumentsTable data destructs despite it was copied
 
     return ret;
 }
