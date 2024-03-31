@@ -67,6 +67,7 @@
         "xtree": "cpp",
         "stdfloat": "cpp",
         "stop_token": "cpp",
-        "thread": "cpp"
+        "thread": "cpp",
+        "functional": "cpp"
     }
 }

@@ -29,4 +29,4 @@
  * @param source      source code of a PTX
 */
 extern "C" EMULATOR_EXPORT_API void EMULATOR_CC
-EMULATOR_CreateTranslator(PTX2ASM::ITranslator** translator, const std::string& source);
+EMULATOR_CreateTranslator(PTX4CPU::ITranslator** translator, const std::string& source);

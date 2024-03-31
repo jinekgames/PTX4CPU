@@ -5,7 +5,7 @@
 #include <utils/result.h>
 
 
-namespace PTX2ASM {
+namespace PTX4CPU {
 
 struct ITranslator {
 
@@ -23,4 +23,4 @@ struct ITranslator {
 
 };
 
-};  // namespace PTX2ASM
+};  // namespace PTX4CPU

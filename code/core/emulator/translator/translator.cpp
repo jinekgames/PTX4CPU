@@ -7,7 +7,7 @@
 #include <translator.h>
 
 
-namespace PTX2ASM {
+namespace PTX4CPU {
 
 // Constructors and Destructors
 
@@ -34,14 +34,30 @@ Result Translator::ExecuteFunc(const std::string& funcName) {
     }
 
     // @todo implementation: pass args and thrds count
-    // Types::VarsTable args;
+
     Types::PTXVarList args;
+    args.push_back(
+        std::move(
+            Types::PTXVarPtr(new Types::PTXVarTyped<Types::PTXType::U64>(0))
+        )
+    );
+    args.push_back(
+        std::move(
+            Types::PTXVarPtr(new Types::PTXVarTyped<Types::PTXType::U64>(1))
+        )
+    );
+    args.push_back(
+        std::move(
+            Types::PTXVarPtr(new Types::PTXVarTyped<Types::PTXType::U64>(2))
+        )
+    );
+
     int3 thrdsCount = { 1, 1, 1 };
 
     PRINT_I("Executing a kernel \"%s\" in block [%llu,%llu,%llu]",
             funcName.c_str(), thrdsCount.x, thrdsCount.y, thrdsCount.z);
 
-    auto execs = m_Parser.MakeThreadExecutors(funcName, args, thrdsCount);
+    auto execs = m_Parser.MakeThreadExecutors(funcName, std::move(args), thrdsCount);
 
     if (execs.empty()) {
         PRINT_E("Failed to create kernel executors");
@@ -52,7 +68,15 @@ Result Translator::ExecuteFunc(const std::string& funcName) {
 
     for (auto& exec : execs) {
         threads.push_back(std::thread{[&] {
-            exec.Run();
+            auto res = exec.Run();
+            if(res)
+            {
+                PRINT_I("ThreadExecutor[%llu,%llu,%llu]: Execution finished",
+                        exec.GetTID().x, exec.GetTID().y, exec.GetTID().z);
+            } else {
+                PRINT_E("ThreadExecutor[%llu,%llu,%llu]: Execution falied. Error: %s",
+                        exec.GetTID().x, exec.GetTID().y, exec.GetTID().z, res.msg.c_str());
+            }
         }});
     }
 
@@ -60,9 +84,9 @@ Result Translator::ExecuteFunc(const std::string& funcName) {
         thrd.join();
     }
 
-    // @todo implementation: return result data
+    // @todo implementation: save result data
 
     return {};
 }
 
-};  // namespace PTX2ASM
+};  // namespace PTX4CPU

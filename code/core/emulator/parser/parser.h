@@ -13,7 +13,7 @@
 #include <parser_data.h>
 
 
-namespace PTX2ASM {
+namespace PTX4CPU {
 
 /**
  * Stores PTX source file and provide iteraion by instructions of a file and functions it is consisting of
@@ -41,11 +41,11 @@ public:
     Parser(const std::string& source);
     Parser(const Parser&) = delete;
     Parser(Parser&& right)
-        : m_DataIter   (std::move(right.m_DataIter))
-        , m_State      (std::move(right.m_State))
-        , m_PtxProps   (std::move(right.m_PtxProps))
-        , m_VarsTable  (std::move(right.m_VarsTable))
-        , m_FuncsList  (std::move(right.m_FuncsList)) {
+        : m_DataIter        {std::move(right.m_DataIter)}
+        , m_State           {std::move(right.m_State)}
+        , m_PtxProps        {std::move(right.m_PtxProps)}
+        , m_GlobalVarsTable {std::move(right.m_GlobalVarsTable)}
+        , m_FuncsList       {std::move(right.m_FuncsList)} {
 
         right.m_State      = State::NotLoaded;
     }
@@ -59,7 +59,7 @@ public:
         m_DataIter  = std::move(right.m_DataIter);
         m_State     = std::move(right.m_State);
         m_PtxProps  = std::move(right.m_PtxProps);
-        std::swap(m_VarsTable, right.m_VarsTable);
+        std::swap(m_GlobalVarsTable, right.m_GlobalVarsTable);
         m_FuncsList = std::move(right.m_FuncsList);
 
         right.m_State      = State::NotLoaded;
@@ -83,7 +83,7 @@ public:
     /**
      * Prepare executors for each thread, which could be runned asynchronously
     */
-    std::vector<ThreadExecutor> MakeThreadExecutors(const std::string& funcName, const Types::PTXVarList& arguments,
+    std::vector<ThreadExecutor> MakeThreadExecutors(const std::string& funcName, Types::PTXVarList&& arguments,
                                                     int3 threadsCount) const;
 
 private:
@@ -159,7 +159,7 @@ private:
     };
 
     // Global file variables
-    mutable Types::VarsTable m_VarsTable;
+    mutable Types::VarsTable m_GlobalVarsTable;
 
     static std::pair<std::string, Types::PtxVarDesc> ParsePtxVar(const std::string& entry);
 
@@ -168,4 +168,4 @@ private:
 
 };
 
-};  // namespace PTX2ASM
+};  // namespace PTX4CPU

@@ -3,7 +3,7 @@
 #include <string>
 
 
-namespace PTX2ASM {
+namespace PTX4CPU {
 namespace TransBase {
 
 class Element {
@@ -21,4 +21,4 @@ private:
 };
 
 } // namespace TransBase
-} // namespace PTX2ASM
+} // namespace PTX4CPU

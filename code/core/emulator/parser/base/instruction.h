@@ -6,7 +6,7 @@
 #include <vector>
 
 
-namespace PTX2ASM {
+namespace PTX4CPU {
 namespace TransBase {
 
 class Instruction : public Element {
@@ -22,4 +22,4 @@ private:
 };
 
 } // namespace TransBase
-} // namespace PTX2ASM
+} // namespace PTX4CPU

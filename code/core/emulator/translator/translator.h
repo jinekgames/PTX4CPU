@@ -7,7 +7,7 @@
 #include <translator_interface.h>
 #include <parser.h>
 
-namespace PTX2ASM {
+namespace PTX4CPU {
 
 class Translator : public ITranslator {
 
@@ -48,4 +48,4 @@ private:
 
 };
 
-};  // namespace PTX2ASM
+};  // namespace PTX4CPU

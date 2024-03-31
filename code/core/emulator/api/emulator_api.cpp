@@ -4,7 +4,7 @@
 
 
 extern "C" EMULATOR_EXPORT_API void EMULATOR_CC
-EMULATOR_CreateTranslator(PTX2ASM::ITranslator** translator, const std::string& source) {
+EMULATOR_CreateTranslator(PTX4CPU::ITranslator** translator, const std::string& source) {
 
-    *translator = new PTX2ASM::Translator(source);
+    *translator = new PTX4CPU::Translator(source);
 }

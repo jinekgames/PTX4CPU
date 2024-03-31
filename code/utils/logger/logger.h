@@ -7,7 +7,7 @@
 
 #include "log_color.h"
 
-#define LOGS_DEFAULT_TAG "PTX2ASM"
+#define LOGS_DEFAULT_TAG "PTX4CPU"
 #define LOGS_LAYER_TAG "validation layer"
 
 // Enables debug logs if true

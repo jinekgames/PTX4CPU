@@ -5,7 +5,7 @@
 #include "utils.h"
 
 
-namespace PTX2ASM {
+namespace PTX4CPU {
 namespace TransBase {
 
 struct Variable : public Element {
@@ -32,7 +32,7 @@ public:
             break;
 
         case FuncArguement
-        
+
         default:
             break;
         }
@@ -45,4 +45,4 @@ private:
 };
 
 } // namespace TransBase
-} // namespace PTX2ASM
+} // namespace PTX4CPU

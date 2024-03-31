@@ -1,5 +1,6 @@
 #pragma once
 
+#include <map>
 #include <stdfloat>
 #include <string>
 #include <unordered_map>
@@ -8,7 +9,7 @@
 #include <parser_data.h>
 
 
-namespace PTX2ASM {
+namespace PTX4CPU {
 namespace Types {
 
 struct PtxProperties {
@@ -23,21 +24,6 @@ struct PtxProperties {
                 addressSize > 0;
     }
 };
-
-// enum PTXTypeQualifires {
-//     PTXTypeBit       = 1 << 0,
-//     PTXTypeSigned    = 1 << 1,
-//     PTXTypeUnsigned  = 1 << 2,
-//     PTXTypeFloat     = 1 << 3,
-//     PTXTypePred      = 1 << 4,
-
-//     PTXType8         = 1 << 8,
-//     PTXType16        = 1 << 9,
-//     PTXType16X2      = 1 << 10,
-//     PTXType32        = 1 << 11,
-//     PTXType64        = 1 << 12,
-//     PTXType128       = 1 << 13,
-// };
 
 enum class PTXType : int32_t {
     None = 0,
@@ -89,10 +75,6 @@ enum class PTXType : int32_t {
 inline PTXType operator & (PTXType left, PTXType right) {
     return static_cast<PTXType>(static_cast<int32_t>(left) & static_cast<int32_t>(right));
 }
-
-// inline int32_t operator & (PTXType left, PTXTypeQualifires right) {
-//     return static_cast<int32_t>(left) & static_cast<int32_t>(right);
-// }
 
 inline static const std::unordered_map<std::string, PTXType> PTXTypesStrTable = {
     { ".b8",    PTXType::B8    },
@@ -154,16 +136,95 @@ using getVarType =
     // default value
     uint64_t>>>>>>>>>>>>>>>>;
 
+#define PTX_Internal_TypedOp_Construct_First(runtimeType, constType, op) \
+    if (runtimeType == constType) {                                      \
+        const Types::PTXType _Runtime_Type_ = constType;                 \
+        op;                                                              \
+    }
+
+#define PTX_Internal_TypedOp_Construct_Following(runtimeType, constType, op) \
+    else if (type == constType) {                                            \
+        const Types::PTXType _Runtime_Type_ = constType;                     \
+        op;                                                                  \
+    }
+
+#define PTX_Internal_TypedOp_Construct_Default(runtimeType, op)                                  \
+    else {                                                                                       \
+        PRINT_E("Unknown type PTXType(%d). Casting to .s64", static_cast<int32_t>(runtimeType)); \
+        const Types::PTXType _Runtime_Type_ = Types::PTXType::S64;                               \
+        op;                                                                                      \
+    }
+
+// use _Runtime_Type_ as template argument
+#define PTXTypedOp(type, op)                                                      \
+    do {                                                                          \
+        PTX_Internal_TypedOp_Construct_First(type,     Types::PTXType::B8,    op) \
+        PTX_Internal_TypedOp_Construct_Following(type, Types::PTXType::B16,   op) \
+        PTX_Internal_TypedOp_Construct_Following(type, Types::PTXType::B32,   op) \
+        PTX_Internal_TypedOp_Construct_Following(type, Types::PTXType::B64,   op) \
+        PTX_Internal_TypedOp_Construct_Following(type, Types::PTXType::B128,  op) \
+        PTX_Internal_TypedOp_Construct_Following(type, Types::PTXType::S8,    op) \
+        PTX_Internal_TypedOp_Construct_Following(type, Types::PTXType::S16,   op) \
+        PTX_Internal_TypedOp_Construct_Following(type, Types::PTXType::S32,   op) \
+        PTX_Internal_TypedOp_Construct_Following(type, Types::PTXType::S64,   op) \
+        PTX_Internal_TypedOp_Construct_Following(type, Types::PTXType::U8,    op) \
+        PTX_Internal_TypedOp_Construct_Following(type, Types::PTXType::U16,   op) \
+        PTX_Internal_TypedOp_Construct_Following(type, Types::PTXType::U32,   op) \
+        PTX_Internal_TypedOp_Construct_Following(type, Types::PTXType::U64,   op) \
+        PTX_Internal_TypedOp_Construct_Following(type, Types::PTXType::F16,   op) \
+        PTX_Internal_TypedOp_Construct_Following(type, Types::PTXType::F16X2, op) \
+        PTX_Internal_TypedOp_Construct_Following(type, Types::PTXType::F32,   op) \
+        PTX_Internal_TypedOp_Construct_Following(type, Types::PTXType::F64,   op) \
+        PTX_Internal_TypedOp_Construct_Default(type, op)                          \
+    } while (0)
+
+    // if (type == Types::PTXType::B8) {                            \
+    //     const Types::PTXType _Runtime_Type_ = Types::PTXType::B8; \
+    //     op;
+    // }
+    // else if (type == PTXType::B16)         \
+    //     op<PTXType::B16>(__VA_ARGS__);     \
+    // else if (type == PTXType::B32)         \
+    //     op<PTXType::B32>(__VA_ARGS__);     \
+    // else if (type == PTXType::B64)         \
+    //     op<PTXType::B64>(__VA_ARGS__);     \
+    // else if (type == == PTXType:)          \
+    //     op<== PTXType:B128>(__VA_ARGS__);  \
+    // else if (type == PTXType::S8)          \
+    //     op<PTXType::S8>(__VA_ARGS__);      \
+    // else if (type == PTXType::S16)         \
+    //     op<PTXType::S16>(__VA_ARGS__);     \
+    // else if (type == PTXType::S32)         \
+    //     op<PTXType::S32>(__VA_ARGS__);     \
+    // else if (type == PTXType::S64)         \
+    //     op<PTXType::S64>(__VA_ARGS__);     \
+    // else if (type == PTXType::U8)          \
+    //     op<PTXType::U8>(__VA_ARGS__);      \
+    // else if (type == PTXType::U16)         \
+    //     op<PTXType::U16>(__VA_ARGS__);     \
+    // else if (type == PTXType::U32)         \
+    //     op<PTXType::U32>(__VA_ARGS__);     \
+    // else if (type == PTXType::U64)         \
+    //     op<PTXType::U64>(__VA_ARGS__);     \
+    // else if (type == PTXType::F16)         \
+    //     op<PTXType::F16>(__VA_ARGS__);     \
+    // else if (type == PTXType::F16X)        \
+    //     op<PTXType::F16X>(__VA_ARGS__);    \
+    // else if (type == PTXType::F32)         \
+    //     op<PTXType::F32>(__VA_ARGS__);     \
+    // else if (type == PTXType::F64)         \
+    //     op<PTXType::F64>(__VA_ARGS__);
+
 class PTXVar {
 
 public:
 
-    using RawValuePtrType = std::shared_ptr<void>;
-    // using RawValuePtrType = std::unique_ptr<void, void(*)(void*)>;
+    // using RawValuePtrType = std::shared_ptr<void>;
+    using RawValuePtrType = std::unique_ptr<void, void(*)(void*)>;
 
 protected:
 
-    PTXVar(RawValuePtrType&& _pValue) : pValue{std::move(_pValue)} {}
+    explicit PTXVar(RawValuePtrType valuePtr) : pValue{std::move(valuePtr)} {}
 
 public:
 
@@ -208,13 +269,15 @@ public:
     using RealType = getVarType<ptxType>;
 
     PTXVarTyped()
-        : PTXVar{std::move(
-                RawValuePtrType{static_cast<void*>(new RealType)}
-        )} {}
+        : PTXVar{std::move(RawValuePtrType{
+             static_cast<void*>(new RealType()),
+             VarMemDeleter
+          })} {}
     PTXVarTyped(RealType initValue)
-        : PTXVar{std::move(
-                RawValuePtrType{static_cast<void*>(new RealType(initValue))}
-        )} {}
+        : PTXVar{std::move(RawValuePtrType{
+             static_cast<void*>(new RealType(initValue)),
+             VarMemDeleter
+          })} {}
     PTXVarTyped(const PTXVarTyped&) = delete;
     PTXVarTyped(PTXVarTyped&& right) {}
     ~PTXVarTyped() = default;
@@ -223,6 +286,12 @@ public:
     PTXVarTyped& operator = (PTXVarTyped&& right) {}
 
     constexpr PTXType GetPTXType() const override { return ptxType; }
+
+private:
+
+    static void VarMemDeleter(void* rawPtr) {
+        delete static_cast<RealType*>(rawPtr);
+    }
 
 };
 
@@ -265,22 +334,19 @@ public:
         return FindVar(name);
     }
 
-    // Compile-time arg
     template<PTXType ptxType>
     void AppendVar(const std::string& name) {
-        PTXVarPtr newVar{new PTXVarTyped<PTXType::S16>};
-        // virtualVars.emplace({name, new PTXVarTyped<ptxType>});
+        auto& var = virtualVars[name];
+        PTXVarPtr newPtr{new PTXVarTyped<ptxType>()};
+        var.swap(newPtr);
     }
 
-    // Run-time arg
-    void AppendVar(PTXType ptxType, const std::string& name) {
-        // virtualVars.emplace({name, new PTXVarTyped<PTXType::B32>});
-        // PTXVarPtr newVar{new PTXVarTyped<PTXType::S16>};
-        // virtualVars.at(name).swap(PTXVarPtr{new PTXVarTyped<PTXType::S16>()});
+    template<PTXType ptxType>
+    void AppendVar(const std::string& name, getVarType<ptxType> initValue) {
+        auto& var = virtualVars[name];
+        PTXVarPtr newPtr{new PTXVarTyped<ptxType>(initValue)};
+        var.swap(newPtr);
     }
-
-    //     virtualVars.at(name) = std::move(PTXVarPtr(new PTXVarTyped<PTXType(1)>));
-    // }
 
     PTXVar& GetVar(const std::string& name) {
         return *FindVar(name);
@@ -330,7 +396,7 @@ private:
 
 private:
 
-    std::map<std::string, std::unique_ptr<PTXVar>> virtualVars;
+    std::map<std::string, PTXVarPtr> virtualVars;
 
     const VarsTable* parent = nullptr;
 
@@ -394,4 +460,4 @@ struct Function
 using FuncsList = std::vector<Types::Function>;
 
 }  // namespace Types
-}  // namespace PTX2ASM
+}  // namespace PTX4CPU

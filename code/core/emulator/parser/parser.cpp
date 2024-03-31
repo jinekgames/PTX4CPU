@@ -4,7 +4,7 @@
 #include <string_utils.h>
 
 
-namespace PTX2ASM {
+namespace PTX4CPU {
 
 // Constructors and Destructors
 
@@ -17,8 +17,7 @@ Parser::Parser(const std::string& source) {
     PRINT_I("PTX file is loaded and ready for execution");
 }
 
-
-// Private realizations
+// Public realizations
 
 Result Parser::Load(const std::string& source) {
 
@@ -55,7 +54,7 @@ Result Parser::Load(const std::string& source) {
     return {};
 }
 
-std::vector<ThreadExecutor> Parser::MakeThreadExecutors(const std::string& funcName, const Types::PTXVarList& arguments,
+std::vector<ThreadExecutor> Parser::MakeThreadExecutors(const std::string& funcName, Types::PTXVarList&& arguments,
                                                         int3 threadsCount) const {
 
     // Find kernel
@@ -85,19 +84,15 @@ std::vector<ThreadExecutor> Parser::MakeThreadExecutors(const std::string& funcN
     auto& func = *funcIter;
 
     // Convert arguments
-    std::shared_ptr<Types::VarsTable> argumentsTable;
+    auto argumentsTable = std::make_shared<Types::VarsTable>(&m_GlobalVarsTable);
 
     Types::PTXVarList::size_type i = 0;
-    argumentsTable->AppendVar<Types::PTXType::S16>("A");
-    constexpr Types::PTXType tt = (Types::PTXType)1;
-    argumentsTable->AppendVar<tt>("B");
-    // for (auto& [name, var]: func.arguments ) {
-    //     const auto type = var.type;
-    //     argumentsTable->AppendVar<Types::PTXType::B128>("name");
-    //     argumentsTable->AppendVar<type>(name);
-    //     argumentsTable->GetValue<type>(name) = arguments[i]->Get<type>();
-    //     ++i;
-    // }
+    for (auto& [name, var]: func.arguments ) {
+        const auto type = var.type;
+        PTXTypedOp(var.type,
+                   argumentsTable->AppendVar<_Runtime_Type_>(name, arguments[i]->Get<_Runtime_Type_>()));
+        ++i;
+    }
 
     // Create executors
 
@@ -113,6 +108,8 @@ std::vector<ThreadExecutor> Parser::MakeThreadExecutors(const std::string& funcN
 
     return ret;
 }
+
+// Private realizations
 
 void Parser::ClearCodeComments(std::string& code) {
 
@@ -393,5 +390,4 @@ std::pair<std::string, Types::PtxVarDesc> Parser::ParsePtxVar(const std::string&
     return {name, desc};
 }
 
-
-};  // namespace PTX2ASM
+};  // namespace PTX4CPU

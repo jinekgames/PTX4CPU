@@ -22,10 +22,10 @@ std::string OpenPTX(std::string filepath) {
 }
 
 auto CreateTranslator(const std::string src) {
-    PTX2ASM::ITranslator* rawPtr = nullptr;
+    PTX4CPU::ITranslator* rawPtr = nullptr;
     EMULATOR_CreateTranslator(&rawPtr, src);
 
-    return std::unique_ptr<PTX2ASM::ITranslator>{rawPtr};
+    return std::unique_ptr<PTX4CPU::ITranslator>{rawPtr};
 }
 
 int main(size_t argc, char** argv) {

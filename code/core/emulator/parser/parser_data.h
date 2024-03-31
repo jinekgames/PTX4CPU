@@ -1,10 +1,11 @@
 #pragma once
 
+#include <memory>
 #include <string>
 #include <vector>
 
 
-namespace PTX2ASM {
+namespace PTX4CPU {
 namespace Data {
 
 // Interating code type (base work) (each instruction into one line)
@@ -138,9 +139,9 @@ private:
     // Level of block inside which we are
     mutable int64_t m_BlocksFallCount = 0;
 
-    inline static const std::string OPEN_BLOCK = "{";
+    inline static const std::string OPEN_BLOCK  = "{";
     inline static const std::string CLOSE_BLOCK = "}";
 };
 
 }  // namespace Data
-}  // namespace PTX2ASM
+}  // namespace PTX4CPU

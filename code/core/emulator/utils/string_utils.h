@@ -371,3 +371,9 @@ private:
 }; // class SmartIterator
 
 } // namespace StringIteration
+
+#define CONCAT_INTERNAL(first, second) \
+    first##second
+
+#define CONCAT(first, second) \
+    CONCAT_INTERNAL(first, second)

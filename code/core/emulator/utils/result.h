@@ -4,7 +4,7 @@
 #include <string>
 
 
-namespace PTX2ASM {
+namespace PTX4CPU {
 
 struct Result {
 
@@ -19,7 +19,7 @@ struct Result {
         : code(Code::Fail)
         , msg(_msg) {};
 
-    operator bool () {
+    operator bool () const {
         return (code == Code::Ok);
     }
 
@@ -27,4 +27,4 @@ struct Result {
     std::string msg;
 };
 
-};  // namespace PTX2ASM
+};  // namespace PTX4CPU

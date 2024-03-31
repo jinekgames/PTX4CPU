@@ -1,6 +1,7 @@
 set(EMULATOR_LIB_NAME "EmulatorCore")
 
 set(EMULATOR_UTILS_DIR ${EMULATOR_DIR}/utils)
+set(EXECUTOR_DIR       ${PARSER_DIR}/executor)
 
 
 set(translator_sources
@@ -8,11 +9,19 @@ set(translator_sources
     ${TRANSLATOR_DIR}/translator_interface.cpp
     ${PARSER_DIR}/parser.cpp
     ${EMULATOR_UTILS_DIR}/version.cpp
+    ${EXECUTOR_DIR}/executor.cpp
+    ${EXECUTOR_DIR}/instruction.cpp
+    ${EXECUTOR_DIR}/dispatch_table.cpp
+)
+
+set(dispatch_table_sources
+    ${EXECUTOR_DIR}/runners/base.cpp
 )
 
 set(translator_includes
     ${TRANSLATOR_DIR}
     ${PARSER_DIR}
+    ${EXECUTOR_DIR}
 )
 
 
@@ -28,6 +37,7 @@ set(emulator_api_includes
 set(sources
     ${translator_sources}
     ${emulator_api_sources}
+    ${dispatch_table_sources}
 )
 
 set(includes
