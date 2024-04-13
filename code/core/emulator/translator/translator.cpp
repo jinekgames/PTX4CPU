@@ -7,7 +7,7 @@
 #include <translator.h>
 
 
-namespace PTX4CPU {
+using namespace PTX4CPU;
 
 // Constructors and Destructors
 
@@ -35,29 +35,37 @@ Result Translator::ExecuteFunc(const std::string& funcName) {
 
     // @todo implementation: pass args and thrds count
 
+    uint64_t varsRaw[] = { 1, 2, 3 };
+
     Types::PTXVarList args;
     args.push_back(
         std::move(
-            Types::PTXVarPtr(new Types::PTXVarTyped<Types::PTXType::U64>(1))
+            Types::PTXVarPtr(new Types::PTXVarTyped<Types::PTXType::U64>(
+                reinterpret_cast<uint64_t>(&varsRaw[0])
+            ))
         )
     );
     args.push_back(
         std::move(
-            Types::PTXVarPtr(new Types::PTXVarTyped<Types::PTXType::U64>(2))
+            Types::PTXVarPtr(new Types::PTXVarTyped<Types::PTXType::U64>(
+                reinterpret_cast<uint64_t>(&varsRaw[1])
+            ))
         )
     );
     args.push_back(
         std::move(
-            Types::PTXVarPtr(new Types::PTXVarTyped<Types::PTXType::U64>(3))
+            Types::PTXVarPtr(new Types::PTXVarTyped<Types::PTXType::U64>(
+                reinterpret_cast<uint64_t>(&varsRaw[2])
+            ))
         )
     );
 
-    int3 thrdsCount = { 1, 1, 1 };
+    uint3_32 thrdsCount = { 1, 1, 1 };
 
     PRINT_I("Executing kernel \"%s\" in block [%llu,%llu,%llu]",
             funcName.c_str(), thrdsCount.x, thrdsCount.y, thrdsCount.z);
 
-    auto execs = m_Parser.MakeThreadExecutors(funcName, std::move(args), thrdsCount);
+    auto execs = m_Parser.MakeThreadExecutors(funcName, args, thrdsCount);
 
     if (execs.empty()) {
         PRINT_E("Failed to create kernel executors");
@@ -88,5 +96,3 @@ Result Translator::ExecuteFunc(const std::string& funcName) {
 
     return {};
 }
-
-};  // namespace PTX4CPU

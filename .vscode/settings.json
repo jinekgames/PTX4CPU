@@ -68,6 +68,7 @@
         "stdfloat": "cpp",
         "stop_token": "cpp",
         "thread": "cpp",
-        "functional": "cpp"
+        "functional": "cpp",
+        "array": "cpp"
     }
 }

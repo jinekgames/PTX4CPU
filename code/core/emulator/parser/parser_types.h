@@ -1,9 +1,12 @@
 #pragma once
 
+#include <algorithm>
+#include <array>
 #include <map>
 #include <stdfloat>
 #include <string>
 #include <unordered_map>
+#include <utility>
 
 #include <logger.h>
 #include <parser_data.h>
@@ -76,7 +79,9 @@ inline PTXType operator & (PTXType left, PTXType right) {
     return static_cast<PTXType>(static_cast<int32_t>(left) & static_cast<int32_t>(right));
 }
 
-inline static const std::unordered_map<std::string, PTXType> PTXTypesStrTable = {
+namespace {
+
+inline static const std::unordered_map<std::string, PTXType> StrTable = {
     { ".b8",    PTXType::B8    },
     { ".b16",   PTXType::B16   },
     { ".b32",   PTXType::B32   },
@@ -100,6 +105,18 @@ inline static const std::unordered_map<std::string, PTXType> PTXTypesStrTable = 
 
     // { ".pred",  PTXType::Pred  }, // unsupported
 };
+
+}
+
+inline PTXType GetFromStr(const std::string& typeStr) {
+    if (StrTable.contains(typeStr)) {
+        return StrTable.at(typeStr);
+    }
+    else {
+        PRINT_E("Unknown type of variable: \"%s\". Treating as .s64", typeStr.c_str());
+        return Types::PTXType::S64;
+    }
+}
 
 template<PTXType ptxType>
 using getVarType =
@@ -143,7 +160,7 @@ using getVarType =
     }
 
 #define PTX_Internal_TypedOp_Construct_Following(runtimeType, constType, op) \
-    else if (type == constType) {                                            \
+    else if (runtimeType == constType) {                                     \
         const Types::PTXType _Runtime_Type_ = constType;                     \
         op                                                                   \
     }
@@ -179,20 +196,38 @@ using getVarType =
         PTX_Internal_TypedOp_Construct_Default(type, op)                          \
     } while (0);
 
+class PTXVar;
+
+using PTXVarPtr  = std::unique_ptr<PTXVar>;
+using PTXVarList = std::vector<PTXVarPtr>;
+
+
+using IndexType = int8_t;
+template<IndexType size>
+concept VectorSize = size >= 1 && size <= 4;
+template<IndexType size>
+concept VectorIndex = size >= 0 && size <= 3;
+
 class PTXVar {
 
 public:
 
-    // using RawValuePtrType = std::shared_ptr<void>;
-    using RawValuePtrType = std::unique_ptr<void, void(*)(void*)>;
+    using RawValuePtrType = std::shared_ptr<void>;
+    // using RawValuePtrType = std::unique_ptr<void, void(*)(void*)>;
 
 protected:
 
     explicit PTXVar(RawValuePtrType valuePtr)
         : pValue{std::move(valuePtr)}
 #ifdef DEBUG_BUILD
-        , _debug_int_ptr{static_cast<decltype(_debug_int_ptr)>(pValue.get())}
-        , _debug_uint_ptr{static_cast<decltype(_debug_uint_ptr)>(pValue.get())}
+        ,  _debug_int8_ptr{static_cast<decltype(_debug_int8_ptr)>(pValue.get())}
+        ,  _debug_uint8_ptr{static_cast<decltype(_debug_uint8_ptr)>(pValue.get())}
+        ,  _debug_int16_ptr{static_cast<decltype(_debug_int16_ptr)>(pValue.get())}
+        ,  _debug_uint16_ptr{static_cast<decltype(_debug_uint16_ptr)>(pValue.get())}
+        ,  _debug_int32_ptr{static_cast<decltype(_debug_int32_ptr)>(pValue.get())}
+        ,  _debug_uint32_ptr{static_cast<decltype(_debug_uint32_ptr)>(pValue.get())}
+        ,  _debug_int64_ptr{static_cast<decltype(_debug_int64_ptr)>(pValue.get())}
+        ,  _debug_uint64_ptr{static_cast<decltype(_debug_uint64_ptr)>(pValue.get())}
         , _debug_float_ptr{static_cast<decltype(_debug_float_ptr)>(pValue.get())}
         , _debug_double_ptr{static_cast<decltype(_debug_double_ptr)>(pValue.get())}
 #endif
@@ -215,31 +250,80 @@ public:
     }
 
     template<PTXType ptxType>
-    getVarType<ptxType>& Get() {
-        return *static_cast<getVarType<ptxType>*>(pValue.get());
+    getVarType<ptxType>& Get(IndexType idx = 0) {
+#ifdef COMPILE_SAFE_CHECKS
+        if (idx < 0 || idx >= GetVectorSize()) {
+            PRINT_E("Invalid vector access index (should be 0..%d). Treat as 0", GetVectorSize());
+            idx = 0;
+        }
+#endif
+        return static_cast<getVarType<ptxType>*>(pValue.get())[idx];
     }
 
     template<PTXType ptxType>
-    const getVarType<ptxType>& Get() const {
-        return *static_cast<getVarType<ptxType>*>(pValue.get());
+    const getVarType<ptxType>& Get(IndexType idx = 0) const {
+#ifdef COMPILE_SAFE_CHECKS
+        if (idx < 0 || idx >= GetVectorSize()) {
+            PRINT_E("Invalid vector access index (should be 0..%d). Treat as 0", GetVectorSize());
+            idx = 0;
+        }
+#endif
+        return static_cast<getVarType<ptxType>*>(pValue.get())[idx];
     }
 
-    virtual constexpr PTXType GetPTXType() const = 0;
+    template<PTXType ptxType>
+    getVarType<ptxType>& Get(char key) {
+        constexpr std::array<char, 4> appropriateKeys = "xyzw";
+        auto idx = std::find(appropriateKeys.begin(), appropriateKeys.end(), key) - appropriateKeys.begin();
+#ifdef COMPILE_SAFE_CHECKS
+        if (idx < 0 || idx >= GetVectorSize()) {
+            PRINT_E("Invalid vector access key (should be one of \"xyzw\"). Treat as x");
+            idx = 0;
+        }
+#endif
+        return Get<ptxType>(idx);
+    }
 
-private:
+    template<PTXType ptxType>
+    const getVarType<ptxType>& Get(char key) const {
+        constexpr std::array<char, 4> appropriateKeys = "xyzw";
+        auto idx = std::find(appropriateKeys.begin(), appropriateKeys.end(), key) - appropriateKeys.begin();
+#ifdef COMPILE_SAFE_CHECKS
+        if (idx < 0 || idx >= GetVectorSize()) {
+            PRINT_E("Invalid vector access key (should be one of \"xyzw\"). Treat as x");
+            idx = 0;
+        }
+#endif
+        return Get<ptxType>(idx);
+    }
+
+    virtual PTXVarPtr       MakeCopy()            = 0;
+    virtual const PTXVarPtr MakeCopy()      const = 0;
+    virtual PTXVarPtr       MakeReference()       = 0;
+    virtual const PTXVarPtr MakeReference() const = 0;
+
+    virtual constexpr PTXType   GetPTXType()    const = 0;
+    virtual constexpr IndexType GetVectorSize() const = 0;
+
+protected:
 
     RawValuePtrType pValue;
 
 #ifdef DEBUG_BUILD
-    int64_t*  _debug_int_ptr    = nullptr;
-    uint64_t* _debug_uint_ptr   = nullptr;
+    int8_t*   _debug_int8_ptr   = nullptr;
+    uint8_t*  _debug_uint8_ptr  = nullptr;
+    int16_t*  _debug_int16_ptr  = nullptr;
+    uint16_t* _debug_uint16_ptr = nullptr;
+    int32_t*  _debug_int32_ptr  = nullptr;
+    uint32_t* _debug_uint32_ptr = nullptr;
+    int64_t*  _debug_int64_ptr  = nullptr;
+    uint64_t* _debug_uint64_ptr = nullptr;
     float*    _debug_float_ptr  = nullptr;
     double*   _debug_double_ptr = nullptr;
 #endif
-
 };
 
-template<PTXType ptxType>
+template<PTXType ptxType, IndexType VectorSize = 1>
 class PTXVarTyped : public PTXVar {
 
 public:
@@ -248,14 +332,16 @@ public:
 
     PTXVarTyped()
         : PTXVar{std::move(RawValuePtrType{
-             static_cast<void*>(new RealType()),
+             static_cast<void*>(new RealType[VectorSize]),
              VarMemDeleter
           })} {}
-    PTXVarTyped(RealType initValue)
+    PTXVarTyped(const RealType& initValue)
         : PTXVar{std::move(RawValuePtrType{
-             static_cast<void*>(new RealType(initValue)),
+             static_cast<void*>(new RealType[VectorSize]),
              VarMemDeleter
-          })} {}
+          })} {
+        CopyVector(&Get(), &initValue, std::make_integer_sequence<IndexType, VectorSize>{});
+    }
     PTXVarTyped(const PTXVarTyped&) = delete;
     PTXVarTyped(PTXVarTyped&& right) {}
     ~PTXVarTyped() = default;
@@ -263,19 +349,50 @@ public:
     PTXVarTyped& operator = (const PTXVarTyped&) = delete;
     PTXVarTyped& operator = (PTXVarTyped&& right) {}
 
-    constexpr PTXType GetPTXType() const override { return ptxType; }
+    constexpr PTXType   GetPTXType()    const override { return ptxType; }
+    constexpr IndexType GetVectorSize() const override { return VectorSize; }
+
+    RealType& Get(IndexType idx = 0) {
+        return (static_cast<PTXVar*>(this))->Get<ptxType>(idx);
+    }
+
+    const RealType& Get(IndexType idx = 0) const {
+        return (static_cast<const PTXVar*>(this))->Get<ptxType>(idx);
+    }
+
+    const PTXVarPtr MakeCopy() const override {
+        return PTXVarPtr{new PTXVarTyped{Get()}};
+    }
+
+    PTXVarPtr MakeCopy() override {
+        return PTXVarPtr{new PTXVarTyped{Get()}};
+    }
+
+    PTXVarPtr MakeReference() {
+        return PTXVarPtr{new PTXVarTyped{pValue}};
+    }
+
+    const PTXVarPtr MakeReference() const {
+        return PTXVarPtr{new PTXVarTyped{pValue}};
+    }
 
 private:
 
+    // Special private constuctor, creating a reference to the given raw value
+    PTXVarTyped(RawValuePtrType pInitValue)
+        : PTXVar{std::move(pInitValue)} {}
+
     static void VarMemDeleter(void* rawPtr) {
-        delete static_cast<RealType*>(rawPtr);
+        delete[] static_cast<RealType*>(rawPtr);
     }
 
+
+    template<IndexType... size>
+    static void CopyVector(RealType* dst, const RealType* src,
+                           std::integer_sequence<IndexType, size...> int_seq) {
+        ((dst[size] = src[size]), ...);
+    }
 };
-
-using PTXVarPtr = std::unique_ptr<PTXVar>;
-
-using PTXVarList = std::vector<PTXVarPtr>;
 
 class VarsTable {
 
@@ -312,18 +429,40 @@ public:
         return FindVar(name);
     }
 
-    template<PTXType ptxType>
+    template<PTXType ptxType, IndexType VectorSize = 1>
     void AppendVar(const std::string& name) {
+#ifdef COMPILE_SAFE_CHECKS
+        if (virtualVars.contains(name)) {
+            PRINT_W("Variable \"%s\" already exists in the current scope. "
+                    "It will be overriden", name.c_str());
+        }
+#endif
         auto& var = virtualVars[name];
-        PTXVarPtr newPtr{new PTXVarTyped<ptxType>()};
+        PTXVarPtr newPtr{new PTXVarTyped<ptxType, VectorSize>()};
         var.swap(newPtr);
     }
 
-    template<PTXType ptxType>
-    void AppendVar(const std::string& name, getVarType<ptxType> initValue) {
+    template<PTXType ptxType, IndexType VectorSize = 1>
+    void AppendVar(const std::string& name, getVarType<ptxType>& initValue) {
+#ifdef COMPILE_SAFE_CHECKS
+        if (virtualVars.contains(name)) {
+            PRINT_W("Variable \"%s\" already exists in the current scope. "
+                    "It will be overriden", name.c_str());
+        }
+#endif
         auto& var = virtualVars[name];
-        PTXVarPtr newPtr{new PTXVarTyped<ptxType>(initValue)};
+        PTXVarPtr newPtr{new PTXVarTyped<ptxType, VectorSize>(initValue)};
         var.swap(newPtr);
+    }
+
+    void AppendVar(const std::string& name, PTXVarPtr&& pVar) {
+#ifdef COMPILE_SAFE_CHECKS
+        if (virtualVars.contains(name)) {
+            PRINT_W("Variable \"%s\" already exists in the current scope. "
+                    "It will be overriden", name.c_str());
+        }
+#endif
+        virtualVars[name] = std::move(pVar);
     }
 
     PTXVar& GetVar(const std::string& name) {
@@ -354,10 +493,8 @@ public:
         virtualVars.clear();
     }
 
-private:
-
     PTXVar* FindVar(const std::string& name) {
-        for (const auto* pTable = this; pTable; pTable = parent) {
+        for (const auto* pTable = this; pTable; pTable = pTable->parent) {
             if (pTable->virtualVars.contains(name))
                 return pTable->virtualVars.at(name).get();
         }

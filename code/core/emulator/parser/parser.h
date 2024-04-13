@@ -16,7 +16,8 @@
 namespace PTX4CPU {
 
 /**
- * Stores PTX source file and provide iteraion by instructions of a file and functions it is consisting of
+ * Stores PTX source file and provide iteraion by instructions of a file and
+ * functions it is consisting of
 */
 class Parser {
 
@@ -83,8 +84,24 @@ public:
     /**
      * Prepare executors for each thread, which could be runned asynchronously
     */
-    std::vector<ThreadExecutor> MakeThreadExecutors(const std::string& funcName, Types::PTXVarList&& arguments,
-                                                    int3 threadsCount) const;
+    std::vector<ThreadExecutor> MakeThreadExecutors(const std::string& funcName,
+                                                    const Types::PTXVarList& arguments,
+                                                    uint3_32 threadsCount) const;
+
+    /**
+     * Parses a PTX var from the input string `entry`
+    */
+    static std::pair<std::string, Types::PtxVarDesc> ParsePtxVar(const std::string& entry);
+
+    struct ParsedPtxVectorName {
+        char        key = 'x';
+        std::string name;
+    };
+
+    /**
+     * Extracts an access key (should be one of xyzw) and real variable name
+    */
+    static ParsedPtxVectorName ParseVectorName(const std::string& name);
 
 private:
 
@@ -124,6 +141,14 @@ private:
     */
     bool InitVTable() const;
 
+    /**
+     * Finds an appropriate funtion according to the specified signature
+     * Retuns an iterator of the functions'table, pointing to the function
+     * descriptor or the end iterator, if no fuction found
+    */
+    Types::FuncsList::iterator FindFunction(const std::string& funcName,
+                                            const Types::PTXVarList& arguments) const;
+
 private:
 
     mutable Data::Iterator m_DataIter;
@@ -160,8 +185,6 @@ private:
 
     // Global file variables
     mutable Types::VarsTable m_GlobalVarsTable;
-
-    static std::pair<std::string, Types::PtxVarDesc> ParsePtxVar(const std::string& entry);
 
     // A list of functions stated in the PTX
     mutable Types::FuncsList m_FuncsList;

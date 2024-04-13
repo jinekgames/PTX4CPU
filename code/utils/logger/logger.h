@@ -12,6 +12,7 @@
 
 // Enables debug logs if true
 #ifdef DEBUG_BUILD
+// @todo implementation: move this into runtime config
 #define DEBUG_LOGS 1
 #else
 #define DEBUG_LOGS 0

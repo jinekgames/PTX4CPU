@@ -2,13 +2,13 @@
 
 #include <executor.h>
 #include <logger.h>
-#include <string_utils.h>
 
 
-namespace PTX4CPU {
+using namespace PTX4CPU;
 
 InstructionRunner::InstructionRunner(const std::string& instruction, const ThreadExecutor* pExecutor)
     : m_Instruction{instruction}
+    , m_InstructionIter{m_Instruction}
     , m_pExecutor{pExecutor} {
 
     if (pExecutor)
@@ -30,12 +30,15 @@ void InstructionRunner::FindRunner() {
      * Erase type from the command, it will be processed by the runner
     */
 
-    const StringIteration::SmartIterator iter{m_Instruction};
-    auto command = iter.ReadWord2();
+    auto command = m_InstructionIter.ReadWord2();
 
     auto dotIdx = command.find_last_of('.');
     if (dotIdx != 0 && dotIdx != std::string::npos)
+    {
         command.erase(dotIdx);
+        // shift back to type start to read from the runner
+        m_InstructionIter.Shift(dotIdx - m_InstructionIter.GetOffset());
+    }
 
     auto found = m_DispatchTable.find(command);
     if (found != m_DispatchTable.end())
@@ -48,9 +51,8 @@ Result InstructionRunner::Run() {
         return {"Invalid executor"};
 
     if (m_Runner)
-        return m_Runner(m_pExecutor);
+        return m_Runner(m_pExecutor, m_InstructionIter);
 
-    return {Result::Code::NotOk, "Runner for the given instruction not found. Skipped"};
+    return {Result::Code::NotOk, "Runner for the given instruction not found. Skipped (" +
+                                 m_InstructionIter.GetString() + ")"};
 }
-
-}  // namespace PTX4CPU

@@ -4,7 +4,7 @@
 #include <logger.h>
 
 
-namespace PTX4CPU {
+using namespace PTX4CPU;
 
 std::unordered_map<std::string,
     InstructionRunner::RunnerFunc> InstructionRunner::m_DispatchTable = {};
@@ -13,4 +13,4 @@ RunnerRegistrator::RunnerRegistrator(std::string command, InstructionRunner::Run
     InstructionRunner::m_DispatchTable.emplace(command, func);
 }
 
-}  // namespace PTX4CPU
+DispatchTable dispatchTable;

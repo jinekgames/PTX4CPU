@@ -4,7 +4,7 @@
 #include <string_utils.h>
 
 
-namespace PTX4CPU {
+using namespace PTX4CPU;
 
 // Constructors and Destructors
 
@@ -54,59 +54,77 @@ Result Parser::Load(const std::string& source) {
     return {};
 }
 
-std::vector<ThreadExecutor> Parser::MakeThreadExecutors(const std::string& funcName, Types::PTXVarList&& arguments,
-                                                        int3 threadsCount) const {
+std::vector<ThreadExecutor> Parser::MakeThreadExecutors(const std::string& funcName,
+                                                        const Types::PTXVarList& arguments,
+                                                        uint3_32 threadsCount) const {
 
     // Find kernel
-    auto funcIter = std::find_if(m_FuncsList.begin(), m_FuncsList.end(),
-        [&](const Types::FuncsList::value_type& func) {
-            // correct name
-            if (func.name != funcName)
-                return false;
-            // correct arguments
-            if (func.arguments.size() != arguments.size())
-                return false;
-            Types::PTXVarList::size_type i = 0;
-            for (auto& arg : func.arguments) {
-                if (!arguments[i] || arg.second.type != arguments[i]->GetPTXType())
-                    return false;
-                ++i;
-            }
-            return true;
-        });
-
+    auto funcIter = FindFunction(funcName, arguments);
     if (funcIter == m_FuncsList.end()) {
         PRINT_E("Function with such name (\"%s\") and corespondent arguments "
                 "is not stated in the PTX file", funcName.c_str());
         return {};
     }
-
     auto& func = *funcIter;
 
-    // Convert arguments
-    auto argumentsTable = std::make_shared<Types::VarsTable>(&m_GlobalVarsTable);
+    // @todo refactor the func
 
+    // Convert arguments
+    auto pAgumentsTable = std::make_shared<Types::VarsTable>(&m_GlobalVarsTable);
     Types::PTXVarList::size_type i = 0;
-    for (auto& [name, var]: func.arguments ) {
-        const auto type = var.type;
-        PTXTypedOp(var.type,
-            argumentsTable->AppendVar<_Runtime_Type_>(name, arguments[i]->Get<_Runtime_Type_>());
-        );
+    for (auto& [name, var] : func.arguments) {
+        pAgumentsTable->AppendVar(name, arguments[i]->MakeReference());
         ++i;
     }
 
+    // Append consts here to be available across all the threads
+    uint4_32 tid{threadsCount};
+    // First element is passed as a reference
+    // All the serial data will be copied to the virtual memory
+    pAgumentsTable->AppendVar<Types::PTXType::U32, 4>("tid", tid.x);
+
     // Create executors
-
     std::vector<ThreadExecutor> ret;
-
     for (int3::type x = 0; x < threadsCount.x; ++x) {
         for (int3::type y = 0; y < threadsCount.y; ++y) {
             for (int3::type z = 0; z < threadsCount.z; ++z) {
-                ret.push_back(std::move(ThreadExecutor{m_DataIter, func, argumentsTable, int3{x, y, z}}));
+                ret.push_back(std::move(
+                    ThreadExecutor{m_DataIter, func, pAgumentsTable, int3{x, y, z}}
+                ));
             }
         }
     }
 
+    return ret;
+}
+
+std::pair<std::string, Types::PtxVarDesc> Parser::ParsePtxVar(const std::string& entry) {
+
+    std::string name;
+    Types::PtxVarDesc desc;
+    // Sample string:
+    // .reg .f64 dbl
+    const StringIteration::SmartIterator iter{entry};
+
+    desc.attributes.push_back(iter.ReadWord2()); // contains memory location only
+
+    auto typeStr = iter.ReadWord2();
+    desc.type = Types::GetFromStr(typeStr);
+
+    iter.Skip(StringIteration::CodeDelimiter);
+    name = iter.ReadWord2(false, StringIteration::AllSpaces);
+
+    return {name, desc};
+}
+
+Parser::ParsedPtxVectorName Parser::ParseVectorName(const std::string& name) {
+
+    ParsedPtxVectorName ret;
+    StringIteration::SmartIterator iter{name};
+    ret.name = iter.ReadWord2(false, StringIteration::WordDelimiter::Dot);
+    iter.Skip(StringIteration::WordDelimiter::Dot);
+    if (iter.IsValid())
+        ret.key = *iter.GetIter();
     return ret;
 }
 
@@ -371,24 +389,23 @@ bool Parser::InitVTable() const {
     return true;
 }
 
-std::pair<std::string, Types::PtxVarDesc> Parser::ParsePtxVar(const std::string& entry) {
+Types::FuncsList::iterator Parser::FindFunction(const std::string& funcName,
+                                                const Types::PTXVarList& arguments) const {
 
-    std::string name;
-    Types::PtxVarDesc desc;
-    // Sample string:
-    // .reg .f64 dbl
-    const StringIteration::SmartIterator iter{entry};
-    desc.attributes.push_back(iter.ReadWord2()); // contains memory location only
-    auto typeStr = iter.ReadWord2();
-    if (Types::PTXTypesStrTable.contains(typeStr)) {
-        desc.type = Types::PTXTypesStrTable.at(typeStr);
+    return std::find_if(m_FuncsList.begin(), m_FuncsList.end(),
+        [&](const Types::FuncsList::value_type& func) {
+            // correct name
+            if (func.name != funcName)
+                return false;
+            // correct arguments
+            if (func.arguments.size() != arguments.size())
+                return false;
+            Types::PTXVarList::size_type i = 0;
+            for (auto& arg : func.arguments) {
+                if (!arguments[i] || arg.second.type != arguments[i]->GetPTXType())
+                    return false;
+                ++i;
     }
-    else {
-        PRINT_E("Unknown type of variable \"%s\". Treating as .s64", typeStr.c_str());
-        desc.type = Types::PTXType::S64;
-    }
-    name = iter.ReadWord2();
-    return {name, desc};
+            return true;
+        });
 }
-
-};  // namespace PTX4CPU

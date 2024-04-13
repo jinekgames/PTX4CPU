@@ -193,6 +193,8 @@ public:
     {}
     ~SmartIterator() = default;
 
+    const RawStrType& GetString() const { return m_Str; }
+
     const IterType Begin() const { return m_Str.begin(); }
     const IterType End()   const { return m_Str.end(); }
 

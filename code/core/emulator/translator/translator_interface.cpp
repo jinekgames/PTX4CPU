@@ -3,10 +3,8 @@
 #include <version.h>
 
 
-namespace PTX4CPU {
+using namespace PTX4CPU;
 
 ITranslator::ITranslator() {
     PRINT_I("Initializing a PTX Translator (Git commit %s)", ProjectGitCommit);
 }
-
-};  // namespace PTX4CPU

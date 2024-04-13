@@ -50,9 +50,10 @@ private:
 
     Types::Function m_Func;
 
-    std::shared_ptr<Types::VarsTable> m_Arguments;
+    // Stored for keeping an ownershit
+    std::shared_ptr<Types::VarsTable> m_pArguments;
 
-    mutable std::shared_ptr<Types::VarsTable> m_VarsTable;
+    mutable std::shared_ptr<Types::VarsTable> m_pVarsTable;
 
     friend class InstructionRunner;
     friend class DispatchTable;

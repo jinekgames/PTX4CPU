@@ -6,6 +6,7 @@
 
 #include <parser_types.h>
 #include <result.h>
+#include <string_utils.h>
 #include <utils/base_types.h>
 
 
@@ -24,9 +25,9 @@ private:
 
 public:
 
-    using RunnerFuncArg = const ThreadExecutor*;
-    using RunnerFuncRet = Result;
-    using RunnerFunc    = std::function<RunnerFuncRet(RunnerFuncArg)>;
+    using RunnerFuncRet   = Result;
+    using InstructionIter = const StringIteration::SmartIterator<std::string>;
+    using RunnerFunc      = std::function<RunnerFuncRet(const ThreadExecutor*, InstructionIter&)>;
 
     InstructionRunner(const std::string& instruction, const ThreadExecutor* pExecutor);
     InstructionRunner(const InstructionRunner&) = delete;
@@ -47,6 +48,8 @@ public:
 private:
 
     std::string m_Instruction;
+
+    InstructionIter m_InstructionIter;
 
     const ThreadExecutor* m_pExecutor;
 

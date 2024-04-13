@@ -1,21 +1,10 @@
-#include <instruction.h>
-#include <dispatch_table.h>
+#include "runner.h"
 
-#include <executor.h>
 
-namespace PTX4CPU {
-class DispatchTable {
-public:
+using namespace PTX4CPU;
 
-    static Result Return(const ThreadExecutor* pExecutor) {
-        auto& iter = pExecutor->m_DataIter;
-        iter.Shift(pExecutor->m_Func.end - iter.GetOffset());
-        return {};
-    }
-
-    RegisterRunner("ret", Return);
-
-};  // class DispatchTable
-
-DispatchTable dispatchTable;
-}  // namespace PTX4CPU
+Result DispatchTable::Return(const ThreadExecutor* pExecutor, InstructionRunner::InstructionIter&) {
+    auto& iter = pExecutor->m_DataIter;
+    iter.Shift(pExecutor->m_Func.end - iter.GetOffset());
+    return {};
+}

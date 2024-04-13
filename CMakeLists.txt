@@ -7,6 +7,10 @@ project(CUDA_CPU_EMULATOR
         LANGUAGES CXX)
 
 
+# @todo implementation: move this into runtime config
+option(COMPILE_SAFE_CHECKS "If set, the additional data checking will be compiled" ON)
+
+
 if (!WIN32)
     message(ERROR "Emulator supports WIN32 systems only")
 endif()
@@ -15,6 +19,16 @@ endif()
 message(STATUS "CMAKE_BUILD_TYPE: " ${CMAKE_BUILD_TYPE})
 if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
     add_compile_definitions(DEBUG_BUILD)
+endif()
+
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+    add_compile_definitions(SYSTEM_ARCH_64)
+elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
+    add_compile_definitions(SYSTEM_ARCH_32)
+endif()
+
+if(COMPILE_SAFE_CHECKS)
+    add_compile_definitions(COMPILE_SAFE_CHECKS)
 endif()
 
 

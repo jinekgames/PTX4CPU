@@ -1,7 +1,8 @@
 set(EMULATOR_LIB_NAME "EmulatorCore")
 
-set(EMULATOR_UTILS_DIR ${EMULATOR_DIR}/utils)
-set(EXECUTOR_DIR       ${PARSER_DIR}/executor)
+set(EMULATOR_UTILS_DIR  ${EMULATOR_DIR}/utils)
+set(EXECUTOR_DIR        ${PARSER_DIR}/executor)
+set(DTABLE_RUNNERS_DIR ${EXECUTOR_DIR}/runners)
 
 
 set(translator_sources
@@ -12,10 +13,6 @@ set(translator_sources
     ${EXECUTOR_DIR}/executor.cpp
     ${EXECUTOR_DIR}/instruction.cpp
     ${EXECUTOR_DIR}/dispatch_table.cpp
-)
-
-set(dispatch_table_sources
-    ${EXECUTOR_DIR}/runners/base.cpp
 )
 
 set(translator_includes
@@ -37,7 +34,6 @@ set(emulator_api_includes
 set(sources
     ${translator_sources}
     ${emulator_api_sources}
-    ${dispatch_table_sources}
 )
 
 set(includes
@@ -51,7 +47,9 @@ set(includes
 
 include_directories(${includes})
 
-add_library(emulatorlib SHARED ${sources})
+add_subdirectory(${DTABLE_RUNNERS_DIR})
+
+add_library(emulatorlib SHARED ${sources} $<TARGET_OBJECTS:dTableRunnersObj>)
 
 set_target_properties(emulatorlib PROPERTIES OUTPUT_NAME ${EMULATOR_LIB_NAME})
 
