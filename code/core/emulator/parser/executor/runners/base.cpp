@@ -4,7 +4,7 @@
 using namespace PTX4CPU;
 
 Result DispatchTable::Return(const ThreadExecutor* pExecutor, InstructionRunner::InstructionIter&) {
-    auto& iter = pExecutor->m_DataIter;
-    iter.Shift(pExecutor->m_Func.end - iter.GetOffset());
+    auto& iter = pExecutor->GetIter();
+    iter.Shift(pExecutor->GetFunc().end - iter.GetOffset());
     return {};
 }

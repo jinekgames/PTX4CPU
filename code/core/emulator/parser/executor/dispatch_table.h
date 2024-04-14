@@ -52,10 +52,23 @@ public:
     RegisterRunner("ld.param", LoadParam);
 
     template<bool copyAsReference>
-    static Result CopyVar(const ThreadExecutor* pExecutor,
-                          InstructionRunner::InstructionIter& iter);
-    RegisterRunner("cvta.to.global", CopyVarAsValue);
-    RegisterRunner("mov",            CopyVarAsReference);
+    static Result CopyVarInternal(const ThreadExecutor* pExecutor,
+                                  InstructionRunner::InstructionIter& iter);
+    RegisterRunner("cvta.to.global", CopyVarAsReference);
+    RegisterRunner("mov",            CopyVarAsValue);
+
+
+    // runners/memory.cpp
+
+    using pOpProc = Result(*)(Types::PTXType, Types::PTXVar&, Types::PTXVar&, Types::PTXVar&,
+                          char, char, char);
+
+    static Result Op2Internal(const ThreadExecutor* pExecutor,
+                              InstructionRunner::InstructionIter& iter,
+                              pOpProc opProc);
+    RegisterRunner("mul.hi",   MulHi);
+    RegisterRunner("mul.lo",   MulLo);
+    RegisterRunner("mul.wide", MulWide);
 
 };  // class DispatchTable
 

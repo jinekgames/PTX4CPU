@@ -36,33 +36,36 @@ Result Translator::ExecuteFunc(const std::string& funcName) {
     // @todo implementation: pass args and thrds count
 
     uint64_t varsRaw[] = { 1, 2, 3 };
+    uint64_t pVarsConv[] = { reinterpret_cast<uint64_t>(varsRaw),
+                             reinterpret_cast<uint64_t>(varsRaw + 1),
+                             reinterpret_cast<uint64_t>(varsRaw + 2) };
 
     Types::PTXVarList args;
     args.push_back(
         std::move(
             Types::PTXVarPtr(new Types::PTXVarTyped<Types::PTXType::U64>(
-                reinterpret_cast<uint64_t>(&varsRaw[0])
+                &pVarsConv[0]
             ))
         )
     );
     args.push_back(
         std::move(
             Types::PTXVarPtr(new Types::PTXVarTyped<Types::PTXType::U64>(
-                reinterpret_cast<uint64_t>(&varsRaw[1])
+                &pVarsConv[1]
             ))
         )
     );
     args.push_back(
         std::move(
             Types::PTXVarPtr(new Types::PTXVarTyped<Types::PTXType::U64>(
-                reinterpret_cast<uint64_t>(&varsRaw[2])
+                &pVarsConv[2]
             ))
         )
     );
 
     uint3_32 thrdsCount = { 1, 1, 1 };
 
-    PRINT_I("Executing kernel \"%s\" in block [%llu,%llu,%llu]",
+    PRINT_I("Executing kernel \"%s\" in block [%lu,%lu,%lu]",
             funcName.c_str(), thrdsCount.x, thrdsCount.y, thrdsCount.z);
 
     auto execs = m_Parser.MakeThreadExecutors(funcName, args, thrdsCount);
@@ -79,10 +82,10 @@ Result Translator::ExecuteFunc(const std::string& funcName) {
             auto res = exec.Run();
             if(res)
             {
-                PRINT_I("ThreadExecutor[%llu,%llu,%llu]: Execution finished",
+                PRINT_I("ThreadExecutor[%lu,%lu,%lu]: Execution finished",
                         exec.GetTID().x, exec.GetTID().y, exec.GetTID().z);
             } else {
-                PRINT_E("ThreadExecutor[%llu,%llu,%llu]: Execution falied. Error: %s",
+                PRINT_E("ThreadExecutor[%lu,%lu,%lu]: Execution falied. Error: %s",
                         exec.GetTID().x, exec.GetTID().y, exec.GetTID().z, res.msg.c_str());
             }
         }});

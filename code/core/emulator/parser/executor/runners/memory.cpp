@@ -20,7 +20,7 @@ uint64_t DispatchTable::RegisterMemoryInternal(const ThreadExecutor* pExecutor,
     size_t i;
     for (i = 1; i <= count; ++i) {
         const std::string numberedName = name + std::to_string(i);
-        pExecutor->m_pVarsTable->AppendVar<ptxType>(numberedName);
+        pExecutor->GetTable()->AppendVar<ptxType>(numberedName);
     }
     return i - 1;
 }
@@ -56,7 +56,7 @@ Result DispatchTable::RegisterMemory(const ThreadExecutor* pExecutor,
 
 namespace {
 template<Types::PTXType ptxType>
-Result Dereference(Types::PTXVar* ptrVar, Types::getVarType<ptxType>& value) {
+Result Dereference(Types::PTXVar* ptrVar, Types::getVarType<ptxType>& value, char ptrKey = 'x') {
 
     using realType = std::remove_cvref_t<decltype(value)>;
 
@@ -67,7 +67,7 @@ Result Dereference(Types::PTXVar* ptrVar, Types::getVarType<ptxType>& value) {
         S32;
 #endif
 
-    auto ptr = ptrVar->Get<ptrPtxType>();
+    auto ptr = ptrVar->Get<ptrPtxType>(ptrKey);
 
 #ifdef COMPILE_SAFE_CHECKS
     if (!ptr) {
@@ -88,33 +88,33 @@ Result Dereference(Types::PTXVar* ptrVar, Types::getVarType<ptxType>& value) {
 
 template<Types::PTXType ptxType>
 Result DispatchTable::LoadParamInternal(const ThreadExecutor* pExecutor,
-                                        const std::string& valueName,
-                                        const std::string& ptrName) {
+                                        const std::string& valueFullName,
+                                        const std::string& ptrFullName) {
 
-    auto valueNameParsed = Parser::ParseVectorName(valueName);
-    auto ptrNameParsed   = Parser::ParseVectorName(ptrName);
+    const auto valueDesc = Parser::ParseVectorName(valueFullName);
+    const auto ptrDesc   = Parser::ParseVectorName(ptrFullName);
 
-    auto ptrVar = pExecutor->m_pVarsTable->FindVar(ptrNameParsed.name);
+    auto ptrVar = pExecutor->GetTable()->FindVar(ptrDesc.name);
 #ifdef COMPILE_SAFE_CHECKS
     if (!ptrVar) {
-        return { "Variable \"" + ptrName + "\" storing the pointer is undefined" };
+        return { "Variable \"" + ptrFullName + "\" storing the pointer is undefined" };
     }
 #endif
 
     Types::getVarType<ptxType> value;
-    auto result = Dereference<ptxType>(ptrVar, value);
+    auto result = Dereference<ptxType>(ptrVar, value, ptrDesc.key);
 
     if (!result) {
         PRINT_E(result.msg.c_str());
-        return { "Dereferece of " + ptrName + " failed" };
+        return { "Loading of param " + ptrFullName + " failed" };
     }
 
 #ifdef COMPILE_SAFE_CHECKS
-    if (!pExecutor->m_pVarsTable->FindVar(valueName)) {
-        return { "Variable \"" + valueName + "\" storing the dereferanced value is undefined" };
+    if (!pExecutor->GetTable()->FindVar(valueDesc.name)) {
+        return { "Variable \"" + valueFullName + "\" storing the dereferanced value is undefined" };
     }
 #endif
-    pExecutor->m_pVarsTable->GetValue<ptxType>(valueName) = value;
+    pExecutor->GetTable()->GetValue<ptxType>(valueDesc.name, valueDesc.key) = value;
 
     return {};
 }
@@ -126,64 +126,83 @@ Result DispatchTable::LoadParam(const ThreadExecutor* pExecutor,
     // ld.param.u64   %rd1,   [_Z9addKernelPiPKiS1__param_0];
 
     const auto typeStr = iter.ReadWord2();
-    const auto type = Types::GetFromStr(typeStr);
+    const auto type    = Types::GetFromStr(typeStr);
 
-    const auto valueName = iter.ReadWord2();
-    const auto ptrName = iter.ReadWord2();
+    const auto valueFullName = iter.ReadWord2();
+    const auto ptrFullName   = iter.ReadWord2();
 
+    Result result;
     PTXTypedOp(type,
-        return LoadParamInternal<_Runtime_Type_>(pExecutor, valueName, ptrName);
+        result = LoadParamInternal<_Runtime_Type_>(pExecutor, valueFullName, ptrFullName);
     )
 
-    return { "Failed to found pointer dereference runner for the given type: " + typeStr };
+    if (!result) {
+        PRINT_E("%s", result.msg.c_str());
+        return { "Dereference of " + ptrFullName + " failed" };
+    }
+    return {};
 }
 
 template<bool copyAsReference>
-Result DispatchTable::CopyVar(const ThreadExecutor* pExecutor,
+Result DispatchTable::CopyVarInternal(const ThreadExecutor* pExecutor,
                                       InstructionRunner::InstructionIter& iter) {
 
-    // Sample instruction:
+    // Sample instructions:
+    // <true>
     // cvta.to.global.u64   %rd5,   %rd3;
+    // <false>
+    // mov.u32   %rd5,   %rd3;
 
     const auto typeStr = iter.ReadWord2();
     const auto type = Types::GetFromStr(typeStr);
 
-    const auto dstName = iter.ReadWord2();
-    const auto srcName = iter.ReadWord2();
+    const auto dstFullName = iter.ReadWord2();
+    const auto srcFullName = iter.ReadWord2();
+    const auto dstDesc = Parser::ParseVectorName(dstFullName);
+    const auto srcDesc = Parser::ParseVectorName(srcFullName);
 
 #ifdef COMPILE_SAFE_CHECKS
-    if (!pExecutor->m_pVarsTable->FindVar(dstName)) {
-        return { "Variable \"" + dstName + "\" storing the destination value is undefined" };
+    if (!pExecutor->GetTable()->FindVar(dstDesc.name)) {
+        return { "Variable \"" + dstFullName + "\" storing the destination copy value is undefined" };
     }
-    if (!pExecutor->m_pVarsTable->FindVar(srcName)) {
-        return { "Variable \"" + srcName + "\" storing the source value is undefined" };
-    }
-    // Original virtual variable will be overriden, so we additionally check if types are copatible
-    if (pExecutor->m_pVarsTable->GetVar(dstName).GetPTXType() !=
-        pExecutor->m_pVarsTable->GetVar(srcName).GetPTXType()) {
-        return { "Types of source \"" + srcName + "\" and destination \"" + dstName + "\" convert/copy variables are not copatible" };
+    if (!pExecutor->GetTable()->FindVar(srcDesc.name)) {
+        return { "Variable \"" + srcFullName + "\" storing the source copy value is undefined" };
     }
 #endif
 
-    decltype(auto) srcVar = pExecutor->m_pVarsTable->GetVar(srcName);
-    pExecutor->m_pVarsTable->DeleteVar(dstName);
-    if constexpr (copyAsReference) {
-        pExecutor->m_pVarsTable->AppendVar(dstName, srcVar.MakeReference());
-    } else {
-        pExecutor->m_pVarsTable->AppendVar(dstName, srcVar.MakeCopy());
-    }
+    decltype(auto) srcVar = pExecutor->GetTable()->GetVar(srcDesc.name);
+    decltype(auto) dstVar = pExecutor->GetTable()->GetVar(dstDesc.name);
 
+    bool result;
+    PTXTypedOp(type,
+        result = dstVar.AssignValue<_Runtime_Type_, copyAsReference>(srcVar, srcDesc.key, dstDesc.key);
+    )
+
+    if (!result) {
+        return { "Failed to perform copy operation for virtual variables \"" + dstFullName + "\" and "
+                 "\"" + srcFullName + "\"" };
+    }
     return {};
 }
 
 Result DispatchTable::CopyVarAsReference(const ThreadExecutor* pExecutor,
                                          InstructionRunner::InstructionIter& iter) {
-    return CopyVar<true>(pExecutor, iter);
+    auto result = CopyVarInternal<true>(pExecutor, iter);
+    if (!result) {
+        PRINT_E("%s", result.msg.c_str());
+        return { "Copying of variable failed" };
+    }
+    return {};
 }
 
 Result DispatchTable::CopyVarAsValue(const ThreadExecutor* pExecutor,
                                      InstructionRunner::InstructionIter& iter) {
-    return CopyVar<false>(pExecutor, iter);
+    auto result = CopyVarInternal<false>(pExecutor, iter);
+    if (!result) {
+        PRINT_E("%s", result.msg.c_str());
+        return { "Copying of variable failed" };
+    }
+    return {};
 }
 
 

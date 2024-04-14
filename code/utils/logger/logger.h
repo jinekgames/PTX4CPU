@@ -33,6 +33,7 @@ static std::unordered_map<LogType, const char*> logsTypeColors = {
 };
 
 #if defined(WIN32) || defined(LINUX) || defined(MAC_OS)
+
 static std::unordered_map<LogType, const char*> logsTypeStrings = {
     { LogType::Debug,   "Debug"   },
     { LogType::Info,    "Info"    },
@@ -45,6 +46,7 @@ static std::unordered_map<LogType, const char*> logsTypeStrings = {
 
 template<class... Args>
 void _app_log_message(LogType type, const char* tag, const char* file, int line, Args... args) {
+
     static const size_t bufSize = _MAX_PATH;
     static const size_t fileStrMinLen = 30;
 
@@ -66,6 +68,7 @@ void _app_log_message(LogType type, const char* tag, const char* file, int line,
 
     std::printf("%s\n", output.c_str());
 }
+
 #else
 #error "logs are not implemented for this platform"
 #endif

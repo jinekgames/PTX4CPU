@@ -67,8 +67,6 @@ std::vector<ThreadExecutor> Parser::MakeThreadExecutors(const std::string& funcN
     }
     auto& func = *funcIter;
 
-    // @todo refactor the func
-
     // Convert arguments
     auto pAgumentsTable = std::make_shared<Types::VarsTable>(&m_GlobalVarsTable);
     Types::PTXVarList::size_type i = 0;
@@ -77,19 +75,13 @@ std::vector<ThreadExecutor> Parser::MakeThreadExecutors(const std::string& funcN
         ++i;
     }
 
-    // Append consts here to be available across all the threads
-    uint4_32 tid{threadsCount};
-    // First element is passed as a reference
-    // All the serial data will be copied to the virtual memory
-    pAgumentsTable->AppendVar<Types::PTXType::U32, 4>("tid", tid.x);
-
     // Create executors
     std::vector<ThreadExecutor> ret;
-    for (int3::type x = 0; x < threadsCount.x; ++x) {
-        for (int3::type y = 0; y < threadsCount.y; ++y) {
-            for (int3::type z = 0; z < threadsCount.z; ++z) {
+    for (uint3_32::type x = 0; x < threadsCount.x; ++x) {
+        for (uint3_32::type y = 0; y < threadsCount.y; ++y) {
+            for (uint3_32::type z = 0; z < threadsCount.z; ++z) {
                 ret.push_back(std::move(
-                    ThreadExecutor{m_DataIter, func, pAgumentsTable, int3{x, y, z}}
+                    ThreadExecutor{m_DataIter, func, pAgumentsTable, {x, y, z}}
                 ));
             }
         }

@@ -8,7 +8,8 @@
 using namespace PTX4CPU;
 
 ThreadExecutor::ThreadExecutor(const Data::Iterator& iterator, const Types::Function& func,
-                               const std::shared_ptr<Types::VarsTable>& arguments, const int3& threadId)
+                               const std::shared_ptr<Types::VarsTable>& arguments,
+                               const uint3_32& threadId)
     : m_ThreadId{threadId}
     , m_DataIter{iterator}
     , m_Func{func}
@@ -30,10 +31,10 @@ ThreadExecutor& ThreadExecutor::operator = (ThreadExecutor&& right) {
     if(this == &right)
         return *this;
 
-    m_DataIter  = std::move(right.m_DataIter);
-    m_Func      = std::move(right.m_Func);
+    m_DataIter   = std::move(right.m_DataIter);
+    m_Func       = std::move(right.m_Func);
     m_pVarsTable = std::move(right.m_pVarsTable);
-    m_ThreadId  = std::move(right.m_ThreadId);
+    m_ThreadId   = std::move(right.m_ThreadId);
 
     return *this;
 }
@@ -41,8 +42,10 @@ ThreadExecutor& ThreadExecutor::operator = (ThreadExecutor&& right) {
 void ThreadExecutor::Reset() const {
     m_DataIter.Reset();
     m_DataIter.Shift(m_Func.start);
-    if (m_pVarsTable)
+    if (m_pVarsTable) {
         m_pVarsTable->Clear();
+        AppendConstants();
+    }
 }
 
 Result ThreadExecutor::Run(Data::Iterator::Size instructionsCount) const {
@@ -77,4 +80,9 @@ Result ThreadExecutor::Run(Data::Iterator::Size instructionsCount) const {
             logPrefix.c_str(), m_DataIter.GetOffset());
 
     return {};
+}
+
+void ThreadExecutor::AppendConstants() const {
+
+    m_pVarsTable->AppendVar<Types::PTXType::U32, 4>("%tid", &m_ThreadId.x);
 }

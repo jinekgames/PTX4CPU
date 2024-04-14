@@ -17,7 +17,7 @@ private:
 public:
 
     ThreadExecutor(const Data::Iterator& iterator, const Types::Function& func,
-                   const std::shared_ptr<Types::VarsTable>& arguments, const int3& threadId);
+                   const std::shared_ptr<Types::VarsTable>& arguments, const uint3_32& threadId);
     ThreadExecutor(const ThreadExecutor&) = delete;
     ThreadExecutor(ThreadExecutor&& right);
     ~ThreadExecutor() = default;
@@ -40,23 +40,27 @@ public:
         return Run(m_Func.end - m_Func.start);
     }
 
-    auto GetTID() const { return m_ThreadId; }
+    auto                   GetTID()   const { return m_ThreadId; }
+    Types::VarsTable*      GetTable() const { return m_pVarsTable.get(); }
+    const Types::Function& GetFunc()  const { return m_Func; }
+    Data::Iterator&        GetIter()  const { return m_DataIter; }
 
 private:
 
-    int3 m_ThreadId;
+    void AppendConstants() const;
 
-    Data::Iterator m_DataIter;
+    uint4_32 m_ThreadId;
+
+    mutable Data::Iterator m_DataIter;
 
     Types::Function m_Func;
 
     // Stored for keeping an ownershit
-    std::shared_ptr<Types::VarsTable> m_pArguments;
+    const std::shared_ptr<Types::VarsTable> m_pArguments;
 
     mutable std::shared_ptr<Types::VarsTable> m_pVarsTable;
 
     friend class InstructionRunner;
-    friend class DispatchTable;
 
 };
 
