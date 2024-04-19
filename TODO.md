@@ -3,8 +3,8 @@
 
 - ### Implementation
 
-    The most important task for now. For now the project could open a given _.ptx_ and parse it.
-    Even now parcing engine don't fully cover the _PTX_ spec. Such places are marked in code with `@todo implementation:`.
+    The most important task for now. For now the project could open a given _.ptx_ and parse it. It can also parse and half-run an 'add' PTX sample.
+    Even now parcing engine don't fully cover the _PTX_ spec (if not talking about the all operations' support). Such places are marked in code with `@todo implementation:`.
 
     Also there is a list of core features need to be implemented.
 
@@ -12,19 +12,15 @@
 
     1. Add ability to run kernels
 
-        The kernels should be runned with a special cnd commnd. The data provided to kernal as an argument should be stored in storage in the format such as _json/xml/csv_ (i think _json_).
+        The kernels should be runned with a special cmd command. The data provided to a kernel as an arguments should be stored in storage in the format such as _json/xml/csv_ (i think _json_).
 
-        So, the first task is to prepare CLI interface to run a kernel. Even in a single thread mode.
+        We currently can run a PTX with the command line. The PTX which support is currently implemented is located in the [rel_add_op.ptx](.\ext\cuda_ptx_samples\rel_add_op.ptx) file.
 
-    1. The second is to implement an interpritator engine, executing the instructions from the given with using of the given data.
-
-    1. The next task is to make a logic for multi-threaded kernel execution. The input data should be correctly shared between the threads.
-
-    1. Current main goal is to support a correct execution of the "Add operation" kernel. It's source PTX is located in the [rel_add_op.ptx](.\ext\cuda_ptx_samples\rel_add_op.ptx) file.
+        The following steps are to cover all of sample PTX's instructions and add arguments serialization support.
 
     Long term tasks:
 
-    1. Add a filtratio logic accorting to the _PTX_ version and gpu's _SM\_##_ type.
+    1. Add a filtration logic accorting to the _PTX_ version and gpu's _SM\_##_ type.
 
     1. Implement a threads' synchronization logic.
 
@@ -39,6 +35,14 @@
 - ### Optimization
 
     Tryna not to worry about this for now. But the code in future need to be optimized. It seems to me that it is very inefficient now. A big amount of time should be made to improve the project efficiency.
+
+    I have the following ideas about the architecture improvement, which will make the efficiency better:
+
+    - A kernel is ran on as many threads is possible currently. It'll be better to create only as many logical threads, as the system has physiscally. The threads should be executed till the some break (e.g. synchronization point) and the logical thread should switch the execution to another ready thread (not stated in another logical thread to try keep l1 and l2 caches)
+
+    - We can improve memory consuption bu using not a smart pointers, but a raw pointer for the virtual cariables memory
+
+    - I struction's parsing logic should be removed from the threads executions tep into the prepass, which will prepare the low-memory list of isntructions and links to the arguments
 
 
 - ### Documentation
