@@ -30,7 +30,7 @@
 	ld.param.u64 	%rd1, [_Z9addKernelPiPKiS1__param_0]; // get param 0 addr
 	ld.param.u64 	%rd2, [_Z9addKernelPiPKiS1__param_1]; // get param 1 addr
 	ld.param.u64 	%rd3, [_Z9addKernelPiPKiS1__param_2]; // get param 2 addr
-	cvta.to.global.u64 	%rd4, %rd1; // 
+	cvta.to.global.u64 	%rd4, %rd1; //
 	cvta.to.global.u64 	%rd5, %rd3;
 	cvta.to.global.u64 	%rd6, %rd2;
 	mov.u32 	%r1, %tid.x;

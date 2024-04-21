@@ -84,6 +84,36 @@ Result Dereference(Types::PTXVar* ptrVar, Types::getVarType<ptxType>& value, cha
 
     return {};
 }
+
+template<Types::PTXType ptxType>
+Result DereferenceAndSet(Types::PTXVar* ptrVar, const Types::getVarType<ptxType>& value, char ptrKey = 'x') {
+
+    using realType = std::remove_cvref_t<decltype(value)>;
+
+    const auto ptrPtxType = Types::PTXType::
+#ifdef SYSTEM_ARCH_64
+        S64;
+#else
+        S32;
+#endif
+
+    auto ptr = reinterpret_cast<realType*>(ptrVar->Get<ptrPtxType>(ptrKey));
+
+#ifdef COMPILE_SAFE_CHECKS
+    if (!ptr) {
+        return { "Null pointer dereference" };
+    }
+#ifdef WIN32
+    if (IsBadReadPtr(reinterpret_cast<void*>(ptr), static_cast<UINT_PTR>(sizeof(realType)))) {
+        return { "Invalid pointer. Possible reading access violation" };
+    }
+#endif
+#endif
+
+    *ptr = value;
+
+    return {};
+}
 }
 
 template<Types::PTXType ptxType>
@@ -143,15 +173,65 @@ Result DispatchTable::LoadParam(const ThreadExecutor* pExecutor,
     return {};
 }
 
+template<Types::PTXType ptxType>
+Result DispatchTable::SetParamInternal(const ThreadExecutor* pExecutor,
+                                       const std::string& valueFullName,
+                                       const std::string& ptrFullName) {
+
+    const auto valueDesc = Parser::ParseVectorName(valueFullName);
+    const auto ptrDesc   = Parser::ParseVectorName(ptrFullName);
+
+    auto ptrVar = pExecutor->GetTable()->FindVar(ptrDesc.name);
+#ifdef COMPILE_SAFE_CHECKS
+    if (!ptrVar) {
+        return { "Variable \"" + ptrFullName + "\" storing the pointer is undefined" };
+    }
+#endif
+
+    auto value = pExecutor->GetTable()->GetValue<ptxType>(valueDesc.name, valueDesc.key);
+    auto result = DereferenceAndSet<ptxType>(ptrVar, value, ptrDesc.key);
+
+    if (!result) {
+        PRINT_E(result.msg.c_str());
+        return { "Loading of param " + ptrFullName + " failed" };
+    }
+
+#ifdef COMPILE_SAFE_CHECKS
+    if (!pExecutor->GetTable()->FindVar(valueDesc.name)) {
+        return { "Variable \"" + valueFullName + "\" storing the dereferanced value is undefined" };
+    }
+#endif
+
+    return {};
+}
+
+Result DispatchTable::SetParam(const ThreadExecutor* pExecutor,
+                                InstructionRunner::InstructionIter& iter) {
+
+    // Sample instruction:
+    // ld.param.u64   %rd1,   [_Z9addKernelPiPKiS1__param_0];
+
+    const auto typeStr = iter.ReadWord2();
+    const auto type    = Types::GetFromStr(typeStr);
+
+    const auto ptrFullName   = iter.ReadWord2();
+    const auto valueFullName = iter.ReadWord2();
+
+    Result result;
+    PTXTypedOp(type,
+        result = SetParamInternal<_Runtime_Type_>(pExecutor, valueFullName, ptrFullName);
+    )
+
+    if (!result) {
+        PRINT_E("%s", result.msg.c_str());
+        return { "Setting value to pointer " + ptrFullName + " failed" };
+    }
+    return {};
+}
+
 template<bool copyAsReference>
 Result DispatchTable::CopyVarInternal(const ThreadExecutor* pExecutor,
                                       InstructionRunner::InstructionIter& iter) {
-
-    // Sample instructions:
-    // <true>
-    // cvta.to.global.u64   %rd5,   %rd3;
-    // <false>
-    // mov.u32   %rd5,   %rd3;
 
     const auto typeStr = iter.ReadWord2();
     const auto type = Types::GetFromStr(typeStr);
@@ -187,6 +267,10 @@ Result DispatchTable::CopyVarInternal(const ThreadExecutor* pExecutor,
 
 Result DispatchTable::CopyVarAsReference(const ThreadExecutor* pExecutor,
                                          InstructionRunner::InstructionIter& iter) {
+
+    // Sample instruction:
+    // cvta.to.global.u64   %rd5,   %rd3;
+
     auto result = CopyVarInternal<true>(pExecutor, iter);
     if (!result) {
         PRINT_E("%s", result.msg.c_str());
@@ -197,6 +281,10 @@ Result DispatchTable::CopyVarAsReference(const ThreadExecutor* pExecutor,
 
 Result DispatchTable::CopyVarAsValue(const ThreadExecutor* pExecutor,
                                      InstructionRunner::InstructionIter& iter) {
+
+    // Sample instruction:
+    // mov.u32   %rd5,   %rd3;
+
     auto result = CopyVarInternal<false>(pExecutor, iter);
     if (!result) {
         PRINT_E("%s", result.msg.c_str());
@@ -204,5 +292,3 @@ Result DispatchTable::CopyVarAsValue(const ThreadExecutor* pExecutor,
     }
     return {};
 }
-
-

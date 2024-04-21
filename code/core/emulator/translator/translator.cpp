@@ -2,7 +2,8 @@
 #include <sstream>
 #include <thread>
 
-#include <logger.h>
+#include <helpers.h>
+#include <logger/logger.h>
 #include <string_utils.h>
 #include <translator.h>
 
@@ -35,35 +36,51 @@ Result Translator::ExecuteFunc(const std::string& funcName) {
 
     // @todo implementation: pass args and thrds count
 
-    uint64_t varsRaw[] = { 1, 2, 3 };
-    uint64_t pVarsConv[] = { reinterpret_cast<uint64_t>(varsRaw),
-                             reinterpret_cast<uint64_t>(varsRaw + 1),
-                             reinterpret_cast<uint64_t>(varsRaw + 2) };
+    const uint32_t count = 1;
+
+    std::vector<uint32_t> vars[3];
+    vars[0].resize(count);
+    vars[1].resize(count);
+    vars[2].resize(count);
+
+    for (uint32_t i = 0; i < count; ++i) {
+        vars[0][i] = 0;
+        vars[1][i] = i + 1;
+        vars[2][i] = i + 1;
+    }
+
+    uint64_t pVarsConv[] = { reinterpret_cast<uint64_t>(vars[0].data()),
+                             reinterpret_cast<uint64_t>(vars[1].data()),
+                             reinterpret_cast<uint64_t>(vars[2].data()) };
+
+    uint64_t ppVarsConv[] = { reinterpret_cast<uint64_t>(&pVarsConv[0]),
+                              reinterpret_cast<uint64_t>(&pVarsConv[1]),
+                              reinterpret_cast<uint64_t>(&pVarsConv[2]) };
 
     Types::PTXVarList args;
     args.push_back(
         std::move(
             Types::PTXVarPtr(new Types::PTXVarTyped<Types::PTXType::U64>(
-                &pVarsConv[0]
+                &ppVarsConv[0]
             ))
         )
     );
     args.push_back(
         std::move(
             Types::PTXVarPtr(new Types::PTXVarTyped<Types::PTXType::U64>(
-                &pVarsConv[1]
+                &ppVarsConv[1]
             ))
         )
     );
     args.push_back(
         std::move(
             Types::PTXVarPtr(new Types::PTXVarTyped<Types::PTXType::U64>(
-                &pVarsConv[2]
+                &ppVarsConv[2]
             ))
         )
     );
 
-    uint3_32 thrdsCount = { 1, 1, 1 };
+    uint3_32 thrdsCount = { count, 1, 1 };
 
     PRINT_I("Executing kernel \"%s\" in block [%lu,%lu,%lu]",
             funcName.c_str(), thrdsCount.x, thrdsCount.y, thrdsCount.z);
@@ -77,8 +94,13 @@ Result Translator::ExecuteFunc(const std::string& funcName) {
 
     std::list<std::thread> threads;
 
+    Helpers::Timer overallTimer("Overall execution");
+
     for (auto& exec : execs) {
-        threads.push_back(std::thread{[&] {
+        auto thread = std::thread{[&] {
+            Helpers::Timer threadTimer(std::vformat("Thread [{},{},{}]", std::make_format_args(
+                exec.GetTID().x, exec.GetTID().y, exec.GetTID().z
+            )));
             auto res = exec.Run();
             if(res)
             {
@@ -88,11 +110,12 @@ Result Translator::ExecuteFunc(const std::string& funcName) {
                 PRINT_E("ThreadExecutor[%lu,%lu,%lu]: Execution falied. Error: %s",
                         exec.GetTID().x, exec.GetTID().y, exec.GetTID().z, res.msg.c_str());
             }
-        }});
+        }};
+        threads.push_back(std::move(thread));
     }
 
-    for (auto& thrd : threads) {
-        thrd.join();
+    for (auto& thread : threads) {
+        thread.join();
     }
 
     // @todo implementation: save result data

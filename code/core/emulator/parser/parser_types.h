@@ -8,7 +8,7 @@
 #include <unordered_map>
 #include <utility>
 
-#include <logger.h>
+#include <logger/logger.h>
 #include <parser_data.h>
 
 
@@ -195,27 +195,27 @@ using getVarType =
     uint64_t>>>>>>>>>>>>>>>>;
 
 #define PTX_Internal_TypedOp_Construct_First(runtimeType, constType, ...) \
-    if (runtimeType == constType) {                                      \
-        const Types::PTXType _Runtime_Type_ = constType;                 \
-        __VA_ARGS__                                                               \
+    if (runtimeType == constType) {                                       \
+        const Types::PTXType _Runtime_Type_ = constType;                  \
+        __VA_ARGS__                                                       \
     }
 
 #define PTX_Internal_TypedOp_Construct_Following(runtimeType, constType, ...) \
-    else if (runtimeType == constType) {                                     \
-        const Types::PTXType _Runtime_Type_ = constType;                     \
-        __VA_ARGS__                                                                   \
+    else if (runtimeType == constType) {                                      \
+        const Types::PTXType _Runtime_Type_ = constType;                      \
+        __VA_ARGS__                                                           \
     }
 
-#define PTX_Internal_TypedOp_Construct_Default(runtimeType, ...)                                  \
+#define PTX_Internal_TypedOp_Construct_Default(runtimeType, ...)                                 \
     else {                                                                                       \
         PRINT_E("Unknown type PTXType(%d). Casting to .s64", static_cast<int32_t>(runtimeType)); \
         const Types::PTXType _Runtime_Type_ = Types::PTXType::S64;                               \
-        __VA_ARGS__                                                                                       \
+        __VA_ARGS__                                                                              \
     }
 
 // use _Runtime_Type_ as template argument
-#define PTXTypedOp(type, ...)                                                      \
-    do {                                                                          \
+#define PTXTypedOp(type, ...)                                                              \
+    do {                                                                                   \
         PTX_Internal_TypedOp_Construct_First(type,     Types::PTXType::B8,    __VA_ARGS__) \
         PTX_Internal_TypedOp_Construct_Following(type, Types::PTXType::B16,   __VA_ARGS__) \
         PTX_Internal_TypedOp_Construct_Following(type, Types::PTXType::B32,   __VA_ARGS__) \
@@ -370,7 +370,6 @@ protected:
 private:
 
 #ifdef DEBUG_BUILD
-
     void SetupDebugPtrs() {
         auto rawPtr = pValue.get();
         _debug_int8_ptr   = static_cast<decltype(_debug_int8_ptr)>(rawPtr);

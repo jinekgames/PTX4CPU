@@ -1,7 +1,8 @@
 #include <instruction.h>
 
 #include <executor.h>
-#include <logger.h>
+#include <helpers.h>
+#include <logger/logger.h>
 
 
 using namespace PTX4CPU;
@@ -11,11 +12,12 @@ InstructionRunner::InstructionRunner(const std::string& instruction, const Threa
     , m_InstructionIter{m_Instruction}
     , m_pExecutor{pExecutor} {
 
-    if (pExecutor)
+    if (m_pExecutor) {
         PRINT_V("[%d,%d,%d]:%lu: > %s",
-                pExecutor->m_ThreadId.x, pExecutor->m_ThreadId.y, pExecutor->m_ThreadId.z,
-                pExecutor->m_DataIter.GetOffset(),
+                m_pExecutor->m_ThreadId.x, m_pExecutor->m_ThreadId.y, m_pExecutor->m_ThreadId.z,
+                m_pExecutor->m_DataIter.GetOffset(),
                 instruction.c_str());
+    }
 
     FindRunner();
 }

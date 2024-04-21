@@ -1,7 +1,7 @@
 #include <instruction.h>
 #include <dispatch_table.h>
 
-#include <logger.h>
+#include <logger/logger.h>
 
 
 using namespace PTX4CPU;

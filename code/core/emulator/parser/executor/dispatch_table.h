@@ -50,6 +50,17 @@ public:
                                     const std::string& valueName,
                                     const std::string& ptrName);
     RegisterRunner("ld.param", LoadParam);
+    RegisterRunnerFuncless("ld.global", LoadParam);
+
+    /**
+     * Dereference var with name `ptrName` and store there variable from the var
+     * named `storeName`
+    */
+    template<Types::PTXType ptxType>
+    static Result SetParamInternal(const ThreadExecutor* pExecutor,
+                                   const std::string& valueName,
+                                   const std::string& ptrName);
+    RegisterRunner("st.global", SetParam);
 
     template<bool copyAsReference>
     static Result CopyVarInternal(const ThreadExecutor* pExecutor,
@@ -59,6 +70,10 @@ public:
 
 
     // runners/memory.cpp
+
+    template<Types::PTXType type>
+    static Types::PTXVarPtr CreateTempValueVarTyped(const std::string& value);
+    static Types::PTXVarPtr CreateTempValueVar(Types::PTXType type, const std::string& value);
 
     using pOpProc = Result(*)(Types::PTXType, Types::PTXVar&, Types::PTXVar&, Types::PTXVar&,
                           char, char, char);
@@ -70,6 +85,11 @@ public:
     RegisterRunner("mul.lo",   MulLo);
     RegisterRunner("mul.wide", MulWide);
 
+    RegisterRunner("add", Add);
+
 };  // class DispatchTable
+
+#undef RegisterRunner
+#undef RegisterRunnerFuncless
 
 }  // namespace PTX4CPU

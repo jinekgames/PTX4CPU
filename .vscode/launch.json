@@ -23,7 +23,7 @@
             "type": "cppvsdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/bin/Debug/TranslatorCmd.exe",
-                        "args": [
+            "args": [
                 "--test-run",
                 "C:\\REPOS\\PTX2ASM\\ext\\cuda_ptx_samples\\rel_add_op.ptx",
                 "--kernel",

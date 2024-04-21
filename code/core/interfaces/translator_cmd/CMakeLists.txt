@@ -17,7 +17,7 @@ list(APPEND sources
 )
 
 list(APPEND includes
-    ${UTILS_DIR}/cmd_parser
+    ${UTILS_DIR}
 )
 
 

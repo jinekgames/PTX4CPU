@@ -1,4 +1,5 @@
-#include <cmd_parser.h>
+#include <cmd_parser/cmd_parser.h>
+#include <helpers.h>
 #include <emulator_api.h>
 
 #include <fstream>

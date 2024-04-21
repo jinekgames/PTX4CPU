@@ -374,8 +374,16 @@ private:
 
 } // namespace StringIteration
 
+
 #define CONCAT_INTERNAL(first, second) \
     first##second
 
 #define CONCAT(first, second) \
     CONCAT_INTERNAL(first, second)
+
+
+#define STRINGIFY_INTERNAL(value) \
+    #value
+
+#define STRINGIFY(value) \
+    STRINGIFY_INTERNAL(value)

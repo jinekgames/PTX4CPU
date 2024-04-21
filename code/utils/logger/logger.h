@@ -10,8 +10,10 @@
 #define LOGS_DEFAULT_TAG "PTX4CPU"
 #define LOGS_LAYER_TAG "validation layer"
 
+#define STRIP_DEBUG_LOGS 0
+
 // Enables debug logs if true
-#ifdef DEBUG_BUILD
+#if defined(DEBUG_BUILD) && !STRIP_DEBUG_LOGS
 // @todo implementation: move this into runtime config
 #define DEBUG_LOGS 1
 #else
@@ -79,7 +81,7 @@ void _app_log_message(LogType type, const char* tag, const char* file, int line,
 #if DEBUG_LOGS
 #define PRINT_TAG_V(tag, ...) _app_log_message(LogType::Debug,   tag, __FILE__, __LINE__, __VA_ARGS__)
 #else
-#define PRINT_TAG_V(tag, ...)
+#define PRINT_TAG_V(tag, ...) do {} while(false)
 #endif
 
 #define PRINT_E(...) PRINT_TAG_E(LOGS_DEFAULT_TAG, __VA_ARGS__)
