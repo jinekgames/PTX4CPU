@@ -225,7 +225,8 @@ void Parser::PreprocessCode(PreprocessData& code) const {
 
     // Parce properties' directives
     for (auto iter = code.begin(); iter != code.end();) {
-        if (iter->find(".version") != std::string::npos) {
+        // @todo refactoring: move parsers into Dirictives class
+        if (iter->find(Dirictives::VERSION) != std::string::npos) {
             auto i = std::find_if(iter->begin(), iter->end(), [](const char c) {
                 return std::isdigit(c);
             });
@@ -248,7 +249,7 @@ void Parser::PreprocessCode(PreprocessData& code) const {
             int8_t versionMinor = std::atoi(iter->substr(dotIdx + 1, endIdx - dotIdx - 1).c_str());
             m_PtxProps.version = { versionMajor, versionMinor };
             iter = code.erase(iter);
-        } else if (iter->find(".target") != std::string::npos) {
+        } else if (iter->find(Dirictives::TARGET) != std::string::npos) {
             size_t delimIdx = iter->find("_", 9);
             if (delimIdx == std::string::npos)
                 break;
@@ -262,7 +263,7 @@ void Parser::PreprocessCode(PreprocessData& code) const {
 
             m_PtxProps.target = std::atoi(iter->substr(delimIdx + 1, endIdx - delimIdx - 1).c_str());
             iter = code.erase(iter);
-        } else if (iter->find(".address_size") != std::string::npos) {
+        } else if (iter->find(Dirictives::ADDRESS_SIZE) != std::string::npos) {
             auto i = std::find_if(iter->begin(), iter->end(), [](const char c) {
                 return std::isdigit(c);
             });
@@ -386,6 +387,9 @@ Types::FuncsList::iterator Parser::FindFunction(const std::string& funcName,
 
     return std::find_if(m_FuncsList.begin(), m_FuncsList.end(),
         [&](const Types::FuncsList::value_type& func) {
+            // is entry
+            if (!func.attributes.contains(KernelAttributes::ENTRY))
+                return false;
             // correct name
             if (func.name != funcName)
                 return false;
@@ -397,7 +401,7 @@ Types::FuncsList::iterator Parser::FindFunction(const std::string& funcName,
                 if (!arguments[i] || arg.second.type != arguments[i]->GetPTXType())
                     return false;
                 ++i;
-    }
+            }
             return true;
         });
 }

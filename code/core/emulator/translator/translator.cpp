@@ -27,65 +27,18 @@ Translator::Translator(const std::string& source)
 
 // Public methods
 
-Result Translator::ExecuteFunc(const std::string& funcName) {
+Result Translator::ExecuteFunc(const std::string& funcName, Types::PTXVarList& args,
+                               const uint3_32& gridSize) {
 
     if (m_Parser.GetState() != Parser::State::Ready) {
         PRINT_E("Parser is not ready for execution");
         return {"Can't execute the kernel"};
     }
 
-    // @todo implementation: pass args and thrds count
-
-    const uint32_t count = 1;
-
-    std::vector<uint32_t> vars[3];
-    vars[0].resize(count);
-    vars[1].resize(count);
-    vars[2].resize(count);
-
-    for (uint32_t i = 0; i < count; ++i) {
-        vars[0][i] = 0;
-        vars[1][i] = i + 1;
-        vars[2][i] = i + 1;
-    }
-
-    uint64_t pVarsConv[] = { reinterpret_cast<uint64_t>(vars[0].data()),
-                             reinterpret_cast<uint64_t>(vars[1].data()),
-                             reinterpret_cast<uint64_t>(vars[2].data()) };
-
-    uint64_t ppVarsConv[] = { reinterpret_cast<uint64_t>(&pVarsConv[0]),
-                              reinterpret_cast<uint64_t>(&pVarsConv[1]),
-                              reinterpret_cast<uint64_t>(&pVarsConv[2]) };
-
-    Types::PTXVarList args;
-    args.push_back(
-        std::move(
-            Types::PTXVarPtr(new Types::PTXVarTyped<Types::PTXType::U64>(
-                &ppVarsConv[0]
-            ))
-        )
-    );
-    args.push_back(
-        std::move(
-            Types::PTXVarPtr(new Types::PTXVarTyped<Types::PTXType::U64>(
-                &ppVarsConv[1]
-            ))
-        )
-    );
-    args.push_back(
-        std::move(
-            Types::PTXVarPtr(new Types::PTXVarTyped<Types::PTXType::U64>(
-                &ppVarsConv[2]
-            ))
-        )
-    );
-
-    uint3_32 thrdsCount = { count, 1, 1 };
-
     PRINT_I("Executing kernel \"%s\" in block [%lu,%lu,%lu]",
-            funcName.c_str(), thrdsCount.x, thrdsCount.y, thrdsCount.z);
+            funcName.c_str(), gridSize.x, gridSize.y, gridSize.z);
 
-    auto execs = m_Parser.MakeThreadExecutors(funcName, args, thrdsCount);
+    auto execs = m_Parser.MakeThreadExecutors(funcName, args, gridSize);
 
     if (execs.empty()) {
         PRINT_E("Failed to create kernel executors");
@@ -117,8 +70,6 @@ Result Translator::ExecuteFunc(const std::string& funcName) {
     for (auto& thread : threads) {
         thread.join();
     }
-
-    // @todo implementation: save result data
 
     return {};
 }

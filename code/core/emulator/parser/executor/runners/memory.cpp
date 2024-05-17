@@ -46,7 +46,7 @@ Result DispatchTable::RegisterMemory(const ThreadExecutor* pExecutor,
 
     uint64_t allocatedCount = 0;
     PTXTypedOp(desc.type,
-        allocatedCount = RegisterMemoryInternal<_Runtime_Type_>(pExecutor, name, count);
+        allocatedCount = RegisterMemoryInternal<_PtxType_>(pExecutor, name, count);
     )
 
     if (allocatedCount != count)
@@ -163,7 +163,7 @@ Result DispatchTable::LoadParam(const ThreadExecutor* pExecutor,
 
     Result result;
     PTXTypedOp(type,
-        result = LoadParamInternal<_Runtime_Type_>(pExecutor, valueFullName, ptrFullName);
+        result = LoadParamInternal<_PtxType_>(pExecutor, valueFullName, ptrFullName);
     )
 
     if (!result) {
@@ -219,7 +219,7 @@ Result DispatchTable::SetParam(const ThreadExecutor* pExecutor,
 
     Result result;
     PTXTypedOp(type,
-        result = SetParamInternal<_Runtime_Type_>(pExecutor, valueFullName, ptrFullName);
+        result = SetParamInternal<_PtxType_>(pExecutor, valueFullName, ptrFullName);
     )
 
     if (!result) {
@@ -255,7 +255,7 @@ Result DispatchTable::CopyVarInternal(const ThreadExecutor* pExecutor,
 
     bool result;
     PTXTypedOp(type,
-        result = dstVar.AssignValue<_Runtime_Type_, copyAsReference>(srcVar, srcDesc.key, dstDesc.key);
+        result = dstVar.AssignValue<_PtxType_, copyAsReference>(srcVar, srcDesc.key, dstDesc.key);
     )
 
     if (!result) {

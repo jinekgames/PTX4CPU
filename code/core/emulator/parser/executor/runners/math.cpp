@@ -20,7 +20,7 @@ Types::PTXVarPtr DispatchTable::CreateTempValueVarTyped(const std::string& value
 Types::PTXVarPtr DispatchTable::CreateTempValueVar(Types::PTXType type, const std::string& value) {
 
     PTXTypedOp(type,
-        return  CreateTempValueVarTyped<_Runtime_Type_>(value);
+        return  CreateTempValueVarTyped<_PtxType_>(value);
     )
     return nullptr;
 }
@@ -117,7 +117,7 @@ Result MulOp(Types::PTXType type, Types::PTXVar& dst, Types::PTXVar& left, Types
              char dstKey = 'x', char leftKey = 'x', char rghtKey = 'x') {
 
     PTXTypedOp(type,
-        return MulOpTyped<mode, _Runtime_Type_>(dst, left, rght, dstKey, leftKey, rghtKey);
+        return MulOpTyped<mode, _PtxType_>(dst, left, rght, dstKey, leftKey, rghtKey);
     )
     return { "Invalid multiplication type" };
 }
@@ -175,7 +175,7 @@ Result AddOp(Types::PTXType type, Types::PTXVar& dst, Types::PTXVar& left, Types
              char dstKey = 'x', char leftKey = 'x', char rghtKey = 'x') {
 
     PTXTypedOp(type,
-        return AddOpTyped<_Runtime_Type_>(dst, left, rght, dstKey, leftKey, rghtKey);
+        return AddOpTyped<_PtxType_>(dst, left, rght, dstKey, leftKey, rghtKey);
     )
     return { "Invalid multiplication type" };
 }

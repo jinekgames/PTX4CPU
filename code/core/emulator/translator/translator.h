@@ -14,15 +14,11 @@ class Translator : public ITranslator {
 public:
 
     // Execute a kernel with the given name from the loaded PTX
-    Result ExecuteFunc(const std::string& funcName) override;
-
-private:
-    // /**
-    //  * Set invalid state for traslation
-    // */
-    // void InvalidateTranslation();
+    Result ExecuteFunc(const std::string& funcName, Types::PTXVarList& args,
+                       const uint3_32& gridSize) override;
 
 public:
+
     Translator();
     /**
      * @param source source code of a PTX

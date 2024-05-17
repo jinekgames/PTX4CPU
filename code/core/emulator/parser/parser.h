@@ -157,30 +157,47 @@ private:
 
     mutable Types::PtxProperties m_PtxProps;
 
+    struct Dirictives {
+        inline static const auto VERSION      = ".version";
+        inline static const auto TARGET       = ".target";
+        inline static const auto ADDRESS_SIZE = ".address_size";
+        inline static const auto DWARF        = "@@DWARF";
+        inline static const auto LOC          = ".loc";
+        inline static const auto C_STYLE      = "#";
+    };
+
     // list of dirictives which are not trailed by {} of ;
     inline static const std::vector<std::string> m_FreeDirictives = {
-        ".version",
-        ".target",
-        ".address_size",
+        Dirictives::VERSION,
+        Dirictives::TARGET,
+        Dirictives::ADDRESS_SIZE,
         // debug dirictives
         // @todo imlementation: @@DWARF dirictive
-        // "@@DWARF",
+        // Dirictives::DWARF,
         // @todo imlementation: .loc dirictive
-        // ".loc",
+        // Dirictives::LOC,
         // C-style preprocessor dirictives
         // @todo imlementation: C-style dirictives
-        // "#",
+        // Dirictives::C_STYLE,
+    };
+
+    struct KernelAttributes {
+        inline static const auto ENTRY          = ".entry";
+        inline static const auto FUNC           = ".func";
+        inline static const auto FUNCTION       = ".function";
+        inline static const auto CALLPROTOTYPE  = ".callprototype";
+        inline static const auto ALIAS          = ".alias";
     };
 
     // list of dirictives which are efining a fucntion
     inline static const std::vector<std::string> m_FuncDefDirictives = {
-        ".entry",
-        ".func",
-        ".function",
+        KernelAttributes::ENTRY,
+        KernelAttributes::FUNC,
+        KernelAttributes::FUNCTION,
         // @todo imlementation: .callprototype dirictive
-        // ".callprototype",
+        // KernelAttributes::CALLPROTOTYPE,
         // @todo imlementation: .alias dirictive
-        // ".alias",
+        // KernelAttributes::ALIAS,
     };
 
     // Global file variables
