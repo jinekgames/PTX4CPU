@@ -14,7 +14,7 @@ class Translator : public ITranslator {
 public:
 
     // Execute a kernel with the given name from the loaded PTX
-    Result ExecuteFunc(const std::string& funcName, Types::PTXVarList& args,
+    Result ExecuteFunc(const std::string& funcName, PtxInputData* pArgs,
                        const uint3_32& gridSize) override;
 
 public:

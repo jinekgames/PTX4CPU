@@ -30,3 +30,16 @@
 */
 extern "C" EMULATOR_EXPORT_API void EMULATOR_CC
 EMULATOR_CreateTranslator(PTX4CPU::ITranslator** translator, const std::string& source);
+
+struct PtxInputData;
+using PtxExecArgs = PtxInputData*;
+
+/**
+ * Create translator object
+ *
+ * @param inputData object where PTX execution arguments and temporary
+ * variables will be put
+ * @param jsonStr   content of a .json with execution arguments
+*/
+extern "C" EMULATOR_EXPORT_API void EMULATOR_CC
+EMULATOR_ParseArgsJson(PtxExecArgs* inputData, const std::string& jsonStr);

@@ -27,7 +27,7 @@ Translator::Translator(const std::string& source)
 
 // Public methods
 
-Result Translator::ExecuteFunc(const std::string& funcName, Types::PTXVarList& args,
+Result Translator::ExecuteFunc(const std::string& funcName, PtxInputData* pArgs,
                                const uint3_32& gridSize) {
 
     if (m_Parser.GetState() != Parser::State::Ready) {
@@ -38,7 +38,7 @@ Result Translator::ExecuteFunc(const std::string& funcName, Types::PTXVarList& a
     PRINT_I("Executing kernel \"%s\" in block [%lu,%lu,%lu]",
             funcName.c_str(), gridSize.x, gridSize.y, gridSize.z);
 
-    auto execs = m_Parser.MakeThreadExecutors(funcName, args, gridSize);
+    auto execs = m_Parser.MakeThreadExecutors(funcName, pArgs->execArgs, gridSize);
 
     if (execs.empty()) {
         PRINT_E("Failed to create kernel executors");

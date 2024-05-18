@@ -2,9 +2,12 @@
 
 #include <string>
 
-#include <parser/parser_types.h>
 #include <utils/result.h>
 #include <utils/base_types.h>
+
+
+struct PtxInputData;
+using PtxExecArgs = PtxInputData*;
 
 
 namespace PTX4CPU {
@@ -22,12 +25,12 @@ struct ITranslator {
      * (gridSize.x * gridSize.y * gridSize.z) execution threads will be created.
      *
      * @param funcName  compiled name of function
-     * @param args      list of execution args
+     * @param pArgs     list of execution args
      * @param gridSize  size of grid
      *
      * @return Result
     */
-    virtual Result ExecuteFunc(const std::string& funcName, Types::PTXVarList& args,
+    virtual Result ExecuteFunc(const std::string& funcName, PtxExecArgs pArgs,
                                const uint3_32& gridSize) = 0;
 
 };

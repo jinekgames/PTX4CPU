@@ -120,6 +120,14 @@ inline constexpr PTXType GetDoubleSizeType(PTXType type) {
     return static_cast<PTXType>(typeBase | (sizeBase << 1));
 }
 
+inline constexpr PTXType GetSystemPtrType() {
+#ifdef SYSTEM_ARCH_64
+    return PTXType::U64;
+#else
+    return PTXType::U32;
+#endif
+}
+
 namespace {
 
 inline static const std::unordered_map<std::string, PTXType> StrTable = {
@@ -147,7 +155,7 @@ inline static const std::unordered_map<std::string, PTXType> StrTable = {
     // { ".pred",  PTXType::Pred  }, // unsupported
 };
 
-}
+} // anonimous namespace
 
 inline PTXType GetFromStr(const std::string& typeStr) {
     if (StrTable.contains(typeStr)) {
@@ -246,7 +254,7 @@ using PTXVarPtr  = std::unique_ptr<PTXVar>;
 using PTXVarList = std::vector<PTXVarPtr>;
 
 
-using IndexType = int8_t;
+using IndexType = int64_t;
 template<IndexType size>
 concept VectorSize = size >= 1 && size <= 4;
 template<IndexType size>
@@ -257,7 +265,6 @@ class PTXVar {
 public:
 
     using RawValuePtrType = std::shared_ptr<void>;
-    // using RawValuePtrType = std::unique_ptr<void, void(*)(void*)>;
 
 protected:
 
@@ -287,7 +294,7 @@ public:
     template<PTXType ptxType>
     getVarType<ptxType>& Get(IndexType idx = 0) {
 #ifdef COMPILE_SAFE_CHECKS
-        if (idx < 0 || idx >= GetVectorSize()) {
+        if (idx < 0 || idx >= GetVectorSize() && idx >= GetDynamicSize()) {
             PRINT_E("Invalid vector access index (should be 0..%d). Treat as 0", GetVectorSize());
             idx = 0;
         }
@@ -298,7 +305,7 @@ public:
     template<PTXType ptxType>
     const getVarType<ptxType>& Get(IndexType idx = 0) const {
 #ifdef COMPILE_SAFE_CHECKS
-        if (idx < 0 || idx >= GetVectorSize()) {
+        if (idx < 0 || idx >= GetVectorSize() && idx >= GetDynamicSize()) {
             PRINT_E("Invalid vector access index (should be 0..%d). Treat as 0", GetVectorSize());
             idx = 0;
         }
@@ -311,7 +318,7 @@ public:
         constexpr std::array<char, 4> appropriateKeys = { 'x', 'y', 'z', 'w' };
         auto idx = static_cast<IndexType>(std::find(appropriateKeys.begin(), appropriateKeys.end(), key) - appropriateKeys.begin());
 #ifdef COMPILE_SAFE_CHECKS
-        if (idx < 0 || idx >= GetVectorSize()) {
+        if (idx < 0 || idx >= GetVectorSize() && idx >= GetDynamicSize()) {
             PRINT_E("Invalid vector access key (should be one of \"xyzw\"). Treat as x");
             idx = 0;
         }
@@ -324,7 +331,7 @@ public:
         constexpr std::array<char, 4> appropriateKeys = "xyzw";
         auto idx = static_cast<IndexType>(std::find(appropriateKeys.begin(), appropriateKeys.end(), key) - appropriateKeys.begin());
 #ifdef COMPILE_SAFE_CHECKS
-        if (idx < 0 || idx >= GetVectorSize()) {
+        if (idx < 0 || idx >= GetVectorSize() && idx >= GetDynamicSize()) {
             PRINT_E("Invalid vector access key (should be one of \"xyzw\"). Treat as x");
             idx = 0;
         }
@@ -338,7 +345,10 @@ public:
     virtual const PTXVarPtr MakeReference() const = 0;
 
     virtual constexpr PTXType   GetPTXType()    const = 0;
+    // Size of static array
     virtual constexpr IndexType GetVectorSize() const = 0;
+    // Size of dynamic array
+    virtual IndexType GetDynamicSize() const = 0;
 
     template<PTXType srcType, PTXType dstType, bool copyAsReference>
     static bool CopyValue(PTXVar& src, PTXVar& dst, char srcKey = 'x', char dstKey = 'x') {
@@ -409,15 +419,23 @@ public:
 
     PTXVarTyped()
         : PTXVar{std::move(RawValuePtrType{
-             static_cast<void*>(new RealType[VectorSize]),
-             VarMemDeleter
-          })} {}
-    PTXVarTyped(const RealType* initValue)
+            static_cast<void*>(new RealType[VectorSize]),
+            VarMemDeleter
+        })} {}
+    explicit PTXVarTyped(const RealType* pInitValue)
         : PTXVar{std::move(RawValuePtrType{
-             static_cast<void*>(new RealType[VectorSize]),
-             VarMemDeleter
-          })} {
-        CopyVector(&Get(), initValue, std::make_integer_sequence<IndexType, VectorSize>{});
+            static_cast<void*>(new RealType[VectorSize]),
+            VarMemDeleter
+        })} {
+        CopyVector(&Get(), pInitValue, std::make_integer_sequence<IndexType, VectorSize>{});
+    }
+    // @todo refactor: merge static and dynamic size impls into the only dynamic one
+    explicit PTXVarTyped(IndexType dynamicArraySize)
+        : PTXVar{std::move(RawValuePtrType{
+            static_cast<void*>(new RealType[dynamicArraySize]),
+            VarMemDeleter
+        })} {
+        dynamicSize = dynamicArraySize;
     }
     PTXVarTyped(const PTXVarTyped&) = delete;
     PTXVarTyped(PTXVarTyped&& right) {}
@@ -428,6 +446,7 @@ public:
 
     constexpr PTXType   GetPTXType()    const override { return ptxType; }
     constexpr IndexType GetVectorSize() const override { return VectorSize; }
+    IndexType GetDynamicSize() const { return dynamicSize; }
 
     RealType& Get(IndexType idx = 0) {
         return PTXVar::Get<ptxType>(idx);
@@ -482,12 +501,13 @@ private:
         delete[] static_cast<RealType*>(rawPtr);
     }
 
-
     template<IndexType... size>
     static void CopyVector(RealType* dst, const RealType* src,
                            std::integer_sequence<IndexType, size...> int_seq) {
         ((dst[size] = src[size]), ...);
     }
+
+    IndexType dynamicSize = 1;
 };
 
 class VarsTable {
@@ -682,3 +702,9 @@ using FuncsList = std::vector<Types::Function>;
 
 }  // namespace Types
 }  // namespace PTX4CPU
+
+
+struct PtxInputData {
+    PTX4CPU::Types::PTXVarList execArgs;
+    PTX4CPU::Types::PTXVarList tempVars;
+};

@@ -1,8 +1,9 @@
 set(EMULATOR_LIB_NAME "EmulatorCore")
 
-set(EMULATOR_UTILS_DIR  ${EMULATOR_DIR}/utils)
-set(EXECUTOR_DIR        ${PARSER_DIR}/executor)
+set(EMULATOR_UTILS_DIR ${EMULATOR_DIR}/utils)
+set(EXECUTOR_DIR       ${PARSER_DIR}/executor)
 set(DTABLE_RUNNERS_DIR ${EXECUTOR_DIR}/runners)
+set(JSON_PARSER_DIR    ${3RDPARTY_DIR}/json)
 
 
 set(translator_sources
@@ -19,6 +20,7 @@ set(translator_includes
     ${TRANSLATOR_DIR}
     ${PARSER_DIR}
     ${EXECUTOR_DIR}
+    ${JSON_PARSER_DIR}/include
 )
 
 

@@ -90,14 +90,9 @@ Result DereferenceAndSet(Types::PTXVar* ptrVar, const Types::getVarType<ptxType>
 
     using realType = std::remove_cvref_t<decltype(value)>;
 
-    const auto ptrPtxType = Types::PTXType::
-#ifdef SYSTEM_ARCH_64
-        S64;
-#else
-        S32;
-#endif
+    constexpr auto PtrType = Types::GetSystemPtrType();
 
-    auto ptr = reinterpret_cast<realType*>(ptrVar->Get<ptrPtxType>(ptrKey));
+    auto ptr = reinterpret_cast<realType*>(ptrVar->Get<PtrType>(ptrKey));
 
 #ifdef COMPILE_SAFE_CHECKS
     if (!ptr) {

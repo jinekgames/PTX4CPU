@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <map>
+#include <regex>
 #include <string>
 #include <sstream>
 #include <vector>
@@ -81,6 +82,19 @@ std::vector<String> Split(const String& str, char delimiter) {
   }
   return ret;
 }
+
+
+/**
+ * Checks if string is a number.
+ * Must match regex: (\\+|\\-|)\\d+
+*/
+template<class String>
+bool IsNumber(const String& str) {
+
+  static const std::regex expr{"(\\+|\\-|)\\d+"};
+  return std::regex_match(str, expr);
+}
+
 
 // @todo refactoring: move following into the speciel files and add comments
 

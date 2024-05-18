@@ -26,8 +26,9 @@
             "args": [
                 "--test-run",
                 "C:\\REPOS\\PTX2ASM\\ext\\cuda_ptx_samples\\rel_add_op.ptx",
-                "--kernel",
-                "_Z9addKernelPiPKiS1_",
+                "--kernel",  "_Z9addKernelPiPKiS1_",
+                "--args",    "C:\\REPOS\\PTX2ASM\\ext\\cuda_ptx_samples\\rel_add_op.json",
+                "--threads", "2",
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/build/bin/Debug/",
