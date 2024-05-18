@@ -20,7 +20,7 @@ For building instruction look [here](./docs/building/build_instruction.md)
 
 For usage instruction look [here](./docs/usage/usage_instruction.md)
 
-For architexture documentation look [here](./docs/core_functionality/architecture.md)
+For architecture documentation look [here](./docs/core_functionality/architecture.md)
 
 <br>
 

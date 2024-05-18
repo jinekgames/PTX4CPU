@@ -4,7 +4,7 @@ Current supported `.json` version: `0.1`
 
 ## Example
 
-[Here](../../../../../ext\cuda_ptx_samples\rel_add_op.json) you can see the example of a valid `.json`. Near the file you'll see a PTX with the corespondent name, for which the `.json` was created.
+[Here](../../../../../ext/cuda_ptx_samples/rel_add_op.json) you can see the example of a valid `.json`. Near the file you'll see a PTX with the corespondent name, for which the `.json` was created.
 
 ## `.json` structure
 
