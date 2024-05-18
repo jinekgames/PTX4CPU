@@ -1,6 +1,6 @@
 # Configuring of kernel execution arguments with `.json`
 
-Current supported `.json` version: `0.1`
+Current supported `.json` version: `1.0`
 
 ## Example
 
