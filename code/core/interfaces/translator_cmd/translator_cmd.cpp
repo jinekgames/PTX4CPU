@@ -36,17 +36,23 @@ auto CreateTranslator(const std::string& src) {
 }
 
 auto ParseArgsJson(const std::string& json) {
+    using RetType = std::unique_ptr<PtxExecArgs>;
+
     auto rawPtr = new PtxExecArgs;
     EMULATOR_ParseArgsJson(rawPtr, json);
 
-    return std::unique_ptr<PtxExecArgs>{rawPtr};
+    if (*rawPtr)
+        return RetType{rawPtr};
+
+    delete rawPtr;
+    return RetType{nullptr};
 }
 
 bool SaveOutputData(const std::string& filepath, PtxExecArgs& execArgs) {
 
     std::string output;
     EMULATOR_SerializeArgsJson(execArgs, output);
-    
+
     if (output.empty()) {
         std::cout << "ERROR: Failed to serialize output values" << std::endl;
         return false;
@@ -134,7 +140,7 @@ Commands:
     } else if (args.Contains("test-json")) {
 
         std::string argsJsonPath = args["test-json"];
-        
+
         auto pExecVars = ParseArgsJson(ReadFile(argsJsonPath));
         if (!pExecVars) {
             std::cout << "ERROR: Parsing of the execution arguments json failed" << std::endl;

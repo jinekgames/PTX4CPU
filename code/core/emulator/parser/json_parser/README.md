@@ -34,6 +34,7 @@ There are 2 options how you can set up a value depending on the argument represe
 
 If the argument is a simple scalar value, the `value` field is the appropriate one. The value of a `value` field should be a number with the type corresponding to the `type` field.
 
-If your variable is an array of values, the `vector` field is your one. The value of `vector` field is an array of numerical values you want to pass as the init values of the array. Then address of the 1st element of the array will be used.
-
-// @todo implementation: add `size` field for vector args to not initialize values of output arrays
+If your variable is an array of values, the `vector` field is your one.
+If you want to specify initial values of an array, the value of `vector` field must be an array of numerical values.
+If you want skip array's content initialization (e.g. this array is used as a result variable), just set the size of the array in `vector` field's value.
+Then address of the 1st element of the array will be used.

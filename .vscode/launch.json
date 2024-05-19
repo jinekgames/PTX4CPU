@@ -13,7 +13,7 @@
                 "--test-run", "${workspaceFolder}\\ext\\cuda_ptx_samples\\rel_add_op.ptx",
                 "--kernel",   "_Z9addKernelPiPKiS1_",
                 "--args",     "${workspaceFolder}\\ext\\cuda_ptx_samples\\rel_add_op.json",
-                "--threads",  "2",
+                "--threads",  "5",
                 "--save-output"
             ],
             "stopAtEntry": false,

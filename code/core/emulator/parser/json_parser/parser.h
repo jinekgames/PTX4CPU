@@ -75,13 +75,23 @@ void InsertVectorVar(PtxInputData& inputData, nlohmann::json& vectorParser) {
     constexpr auto ptrType = Types::GetSystemPtrType();
     using PtrRealType      = Types::getVarType<ptrType>;
 
-    Types::IndexType vectorSize = vectorParser.size();
-    Types::PTXVarPtr pPTXVec{new Types::PTXVarTyped<type>(vectorSize)};
-
-    for (Types::IndexType i = 0; i < vectorSize; ++i) {
-        auto& valueParser = vectorParser[i];
-        pPTXVec->Get<type>(i) = valueParser.get<RealType>();
+    Types::IndexType vectorSize = 0;
+    bool writeVectorData = true;
+    if (vectorParser.is_array()) {
+        vectorSize = vectorParser.size();
+    } else {
+        vectorSize = vectorParser.get<Types::IndexType>();
+        writeVectorData = false;
     }
+
+    Types::PTXVarPtr pPTXVec{new Types::PTXVarTyped<type>(vectorSize)};
+    if (writeVectorData) {
+        for (Types::IndexType i = 0; i < vectorSize; ++i) {
+            auto& valueParser = vectorParser[i];
+            pPTXVec->Get<type>(i) = valueParser.get<RealType>();
+        }
+    }
+
     // Retrive address of the 1st element of converted vector variable
     decltype(auto) pValTemp = &pPTXVec->Get<type>();
     // Save address of the 1st element of converted vector
@@ -97,13 +107,13 @@ void InsertVectorVar(PtxInputData& inputData, nlohmann::json& vectorParser) {
 }
 
 template<Types::PTXType type>
-void InsertScalarVar(nlohmann::json& valueParser, const PTX4CPU::Types::PTXVarPtr& pPTXVar) {
+void ExportScalarVar(nlohmann::json& valueParser, const PTX4CPU::Types::PTXVarPtr& pPTXVar) {
 
     valueParser = pPTXVar->Get<type>();
 }
 
 template<Types::PTXType type>
-void InsertVectorVar(nlohmann::json& valueParser, const PTX4CPU::Types::PTXVarPtr& pPTXVar) {
+void ExportVectorVar(nlohmann::json& valueParser, const PTX4CPU::Types::PTXVarPtr& pPTXVar) {
 
     valueParser = nlohmann::json::array();
     for (PTX4CPU::Types::IndexType i = 0; i < pPTXVar->GetDynamicSize(); ++i) {
@@ -191,9 +201,6 @@ inline static Result ParseJson(PtxInputData& inputData,
                 )
             } else {
                 auto vectorParser = argParser[VECTOR_KEY];
-                if (!vectorParser.is_array()) {
-                    thrw("Vector object should be an array");
-                }
                 PTXTypedOp(type,
                     InsertVectorVar<_PtxType_>(inputData, vectorParser);
                 )
@@ -201,7 +208,7 @@ inline static Result ParseJson(PtxInputData& inputData,
         }
 
     } catch (std::exception e) {
-        return std::string("ERROR: Failed to parse arguments json. ") + e.what();
+        return std::string("Failed to parse arguments json. Error: ") + e.what();
     }
 
     return {};
@@ -249,12 +256,12 @@ inline static Result ExtractJson(const PtxInputData& inputData,
             if (isScalar) {
                 auto& valueParser = argParser[VALUE_KEY];
                 PTXTypedOp(type,
-                    InsertScalarVar<_PtxType_>(valueParser, pPTXVar);
+                    ExportScalarVar<_PtxType_>(valueParser, pPTXVar);
                 )
             } else {
                 auto& valueParser = argParser[VECTOR_KEY];
                 PTXTypedOp(type,
-                    InsertVectorVar<_PtxType_>(valueParser, pPTXVar);
+                    ExportVectorVar<_PtxType_>(valueParser, pPTXVar);
                 )
             }
 

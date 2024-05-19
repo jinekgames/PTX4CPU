@@ -18,7 +18,7 @@ EMULATOR_ParseArgsJson(PtxExecArgs* inputData, const std::string& jsonStr) {
     auto res = PTX4CPU::ParseJson(retData, jsonStr);
 
     if (!res) {
-        PRINT_E("Failed to parse arguments json. Error: %s", res.msg.c_str());
+        PRINT_E(res.msg.c_str());
         *inputData = nullptr;
         return;
     }
