@@ -10,6 +10,8 @@
 #include <sstream>
 #include <tuple>
 
+#include "logo_ascii.h"
+
 
 namespace {
 
@@ -52,19 +54,21 @@ int main(size_t argc, char** argv) {
         std::cout <<
 R"(This tool traslate PTX assemble file to x86-copatible ones
 
+See usage docs here:
+
 Commands:
    --help      - show this message
    --test-load - do a test load and preparsing of a .ptx file
                  Example:
                      TranslatorCmd.exe --test-load input_file.ptx
-   --test-run  - do a test run of a given kernel with empty arguments
+   --run       - do a test run of a given kernel with empty arguments
                  Params:
                      --kernel  - name of kernel to execute
                      --args    - path to the .json contaning execution arguments
                      --threads - count of kernel execution threads
                  Example:
                      TranslatorCmd.exe --test-run input_file.ptx --kernel _Z9addKernelPiPKiS1_
-)" << std::endl;
+)" << ASCII_LOGO_CUDA4CPU << std::endl;
 
         return 0;
 
@@ -139,11 +143,19 @@ Commands:
         auto res = pTranslator->ExecuteFunc(kernelName, *pExecVars, gridSize);
 
         if (res) {
+            std::string output;
+            EMULATOR_SerializeArgsJson(*pExecVars, output);
+
+            std::cout << "\nOutput:\n\n" << output << std::endl << std::endl;
+
+            if (output.empty()) {
+                std::cout << "ERROR: Failed to serialize output values" << std::endl;
+                return 1;
+            }
+
             std::cout << "Kernel finished execution" << std::endl;
             return 0;
         }
-
-        // PTX4CPU::Result res{"end"};
 
         std::cout << "Function execution faled. Error: " << res.msg << std::endl;
         return 1;

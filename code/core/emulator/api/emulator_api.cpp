@@ -25,3 +25,17 @@ EMULATOR_ParseArgsJson(PtxExecArgs* inputData, const std::string& jsonStr) {
 
     *inputData = new PtxInputData{std::move(retData)};
 }
+
+extern "C" EMULATOR_EXPORT_API void EMULATOR_CC
+EMULATOR_SerializeArgsJson(const PtxExecArgs& inputData, std::string& jsonStr) {
+
+    std::string retStr;
+    auto res = PTX4CPU::ExtractJson(*inputData, retStr);
+    if (!res) {
+        PRINT_E("Failed to parse arguments json. Error: %s", res.msg.c_str());
+        jsonStr.clear();
+        return;
+    }
+
+    jsonStr = std::move(retStr);
+}

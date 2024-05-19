@@ -7,28 +7,39 @@
 #include <utils/string_utils.h>
 #include <parser_types.h>
 
+#include <sstream>
+
 
 namespace PTX4CPU {
 
 namespace {
 
 constexpr size_t JSON_VER_ELEMS_COUNT = 2;
-using JsonVer = std::array<int, JSON_VER_ELEMS_COUNT>;
 
-inline static JsonVer ParseJsonVer(const std::string& verStr) {
+class JsonVer : public std::array<int, JSON_VER_ELEMS_COUNT> {
+public:
+    void Parse(const std::string& verStr) {
+        auto strSplit = Split(verStr, '.');
+        if (strSplit.size() != JSON_VER_ELEMS_COUNT)
+            return;
 
-    JsonVer ver;
-
-    auto strSplit = Split(verStr, '.');
-    if (strSplit.size() != JSON_VER_ELEMS_COUNT)
-        return {};
-
-    for (auto i = 0; i < JSON_VER_ELEMS_COUNT; ++i) {
-        ver[i] = std::stoi(strSplit[i]);
+        for (auto i = 0; i < JSON_VER_ELEMS_COUNT; ++i) {
+            at(i) = std::stoi(strSplit[i]);
+        }
     }
+    std::string ToStr() const {
+        std::stringstream ret;
+        for (size_t i = 0; i < JSON_VER_ELEMS_COUNT; ++i) {
+            ret << at(i);
+            if (i < JSON_VER_ELEMS_COUNT - 1) {
+                ret << ".";
+            }
+        }
+        return ret.str();
+    }
+};
 
-    return ver;
-}
+constexpr JsonVer JSON_VER_ACTUAL = { 1, 0 };
 
 template<Types::PTXType type>
 void InsertScalarVar(PtxInputData& inputData, nlohmann::json& valueParser) {
@@ -45,6 +56,7 @@ void InsertScalarVar(PtxInputData& inputData, nlohmann::json& valueParser) {
 
     // Init var value
     auto value = valueParser.get<RealType>();
+    std::stringstream ss(1);
     // Value converted to PTX variable
     Types::PTXVarPtr pPTXVar{new Types::PTXVarTyped<type>(&value)};
     // Retrive address of converted variable
@@ -52,7 +64,7 @@ void InsertScalarVar(PtxInputData& inputData, nlohmann::json& valueParser) {
     // Save address of converted variable into the arg variable
     Types::PTXVarPtr pArgVar{new Types::PTXVarTyped<ptrType>(reinterpret_cast<PtrRealType*>(&pValTemp))};
     // Move converted vars into the data object
-    inputData.tempVars.push_back(std::move(pPTXVar));
+    inputData.outVars.push_back(std::move(pPTXVar));
     inputData.execArgs.push_back(std::move(pArgVar));
 }
 
@@ -79,31 +91,48 @@ void InsertVectorVar(PtxInputData& inputData, nlohmann::json& vectorParser) {
     // Save address of the 1st element's address as an argument
     Types::PTXVarPtr pArgVar{new Types::PTXVarTyped<ptrType>(reinterpret_cast<PtrRealType*>(&ppValTemp))};
     // Move converted vars into the data object
-    inputData.tempVars.push_back(std::move(pPTXVec));
+    inputData.outVars.push_back(std::move(pPTXVec));
     inputData.tempVars.push_back(std::move(pPTXpVar));
     inputData.execArgs.push_back(std::move(pArgVar));
 }
+
+template<Types::PTXType type>
+void InsertScalarVar(nlohmann::json& valueParser, const PTX4CPU::Types::PTXVarPtr& pPTXVar) {
+
+    valueParser = pPTXVar->Get<type>();
+}
+
+template<Types::PTXType type>
+void InsertVectorVar(nlohmann::json& valueParser, const PTX4CPU::Types::PTXVarPtr& pPTXVar) {
+
+    valueParser = nlohmann::json::array();
+    for (PTX4CPU::Types::IndexType i = 0; i < pPTXVar->GetDynamicSize(); ++i) {
+        const auto elementValue = pPTXVar->Get<type>(i);
+        valueParser.push_back(elementValue);
+    }
+}
+
+
+constexpr auto VER_KEY       = "version";
+constexpr auto ARGS_KEY      = "arguments";
+constexpr auto TYPE_KEY      = "type";
+constexpr auto VALUE_KEY     = "value";
+constexpr auto VECTOR_KEY    = "vector";
 
 } // anonimous namespace
 
 
 /**
-* Parces a given json configuring a PTX execution arguments
-*
-* @param jsonStr   a .json with execution arguments
-* @param inputData object where PTX execution arguments and temporary
-* variables will be put
-*
-* @return Parsing result
+ * Parces a given json configuring a PTX execution arguments
+ *
+ * @param jsonStr   a .json with execution arguments
+ * @param inputData object where PTX execution arguments and temporary
+ * variables will be put
+ *
+ * @return Parsing result
 */
 inline static Result ParseJson(PtxInputData& inputData,
                                const std::string& jsonStr) {
-
-    constexpr auto VER_KEY       = "version";
-    constexpr auto ARGS_KEY      = "arguments";
-    constexpr auto TYPE_KEY      = "type";
-    constexpr auto VALUE_KEY     = "value";
-    constexpr auto VECTOR_KEY    = "vector";
 
     inputData = PtxInputData{};
 
@@ -115,26 +144,34 @@ inline static Result ParseJson(PtxInputData& inputData,
 
         using namespace nlohmann;
 
+        auto checkField = [&](const json& parser, const std::string& parentName,
+                             std::string fieldName) {
+            if (!parser.contains(fieldName)) {
+                thrw(parentName + " must contain a `" + fieldName + "` field");
+            }
+        };
+
         // Read json
         auto parser = json::parse(jsonStr);
 
         // Check version
         {
+            checkField(parser, "Json", VER_KEY);
             auto verParser = parser[VER_KEY];
             auto verStr = verParser.get<std::string>();
-            auto ver = ParseJsonVer(verStr);
+            JsonVer ver;
+            ver.Parse(verStr);
             if (ver != JsonVer{1, 0}) {
                 thrw("Invalid json ver. Must be 1.0. Got " + verStr);
             }
         }
 
         // Read args
+        checkField(parser, "Json", VER_KEY);
         auto argsParser = parser[ARGS_KEY];
         for (const auto& argParser : argsParser) {
 
-            if (!argParser.contains(TYPE_KEY)) {
-                thrw("Variable must have 'type' field");
-            }
+            checkField(argParser, "Variable", TYPE_KEY);
             auto typeStr  = "." + argParser[TYPE_KEY].get<std::string>();
             bool isScalar = argParser.contains(VALUE_KEY);
             bool isVector = argParser.contains(VECTOR_KEY);
@@ -162,6 +199,69 @@ inline static Result ParseJson(PtxInputData& inputData,
                 )
             }
         }
+
+    } catch (std::exception e) {
+        return std::string("ERROR: Failed to parse arguments json. ") + e.what();
+    }
+
+    return {};
+}
+
+
+/**
+ * Serializes the resulting PTX arguments' values into the json
+ *
+ * @param inputData object where PTX execution result and temporary
+ * variables are stored
+ * @param jsonStr   an output .json with execution resuts
+ *
+ * @return Serialization result
+*/
+inline static Result ExtractJson(const PtxInputData& inputData,
+                                 std::string& jsonStr) {
+
+    jsonStr.clear();
+
+    try {
+
+        auto thrw = [](std::string msg) {
+            throw std::runtime_error(std::move(msg));
+        };
+
+        using namespace nlohmann;
+
+        json parser;
+
+        parser[VER_KEY]  = JSON_VER_ACTUAL.ToStr().c_str();
+
+        auto& argsParser = parser[ARGS_KEY];
+        argsParser = json::array();
+        for (const auto& pPTXVar : inputData.outVars) {
+
+            json argParser;
+
+            const auto type = pPTXVar->GetPTXType();
+            auto typeStr = Types::PTXTypeToStr(type);
+            typeStr.erase(0, 1);
+            argParser[TYPE_KEY] = typeStr.c_str();
+
+            const bool isScalar = (pPTXVar->GetDynamicSize() == 1);
+            if (isScalar) {
+                auto& valueParser = argParser[VALUE_KEY];
+                PTXTypedOp(type,
+                    InsertScalarVar<_PtxType_>(valueParser, pPTXVar);
+                )
+            } else {
+                auto& valueParser = argParser[VECTOR_KEY];
+                PTXTypedOp(type,
+                    InsertVectorVar<_PtxType_>(valueParser, pPTXVar);
+                )
+            }
+
+            argsParser.push_back(argParser);
+        }
+
+        jsonStr = parser.dump(4, ' ', true);
 
     } catch (std::exception e) {
         return std::string("ERROR: Failed to parse arguments json. ") + e.what();

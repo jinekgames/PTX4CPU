@@ -161,10 +161,23 @@ inline PTXType GetFromStr(const std::string& typeStr) {
     if (StrTable.contains(typeStr)) {
         return StrTable.at(typeStr);
     }
-    else {
-        PRINT_E("Unknown type of variable: \"%s\". Treating as .s64", typeStr.c_str());
-        return Types::PTXType::S64;
+    PRINT_E("Unknown type of variable: \"%s\". Treating as .s64", typeStr.c_str());
+    return Types::PTXType::S64;
+}
+
+inline std::string PTXTypeToStr(PTXType type) {
+    const auto& found = std::find_if(StrTable.begin(), StrTable.end(),
+        [&](const std::pair<std::string, PTXType>& el) {
+            if (el.second == type)
+                return true;
+            return false;
+        }
+    );
+    if (found != StrTable.end()) {
+        return found->first;
     }
+    PRINT_E("Unknown type of variable: PTXType(%lu)", static_cast<uint32_t>(type));
+    return {};
 }
 
 template<PTXType ptxType>
@@ -706,5 +719,6 @@ using FuncsList = std::vector<Types::Function>;
 
 struct PtxInputData {
     PTX4CPU::Types::PTXVarList execArgs;
+    PTX4CPU::Types::PTXVarList outVars;
     PTX4CPU::Types::PTXVarList tempVars;
 };
