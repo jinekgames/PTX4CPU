@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.8)
 set(CMAKE_CXX_STANDARD 23)
 
-project(CUDA_CPU_EMULATOR
-        VERSION 0.1
+project(PTX4CPU
+        VERSION 0.2.0
         DESCRIPTION "Emulator for running CUDA code on CPU"
         LANGUAGES CXX)
 
@@ -26,6 +26,8 @@ if(CMAKE_SIZEOF_VOID_P EQUAL 8)
 elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
     add_compile_definitions(SYSTEM_ARCH_32)
 endif()
+
+add_compile_definitions(PTX4CPU_VERSION="${CMAKE_PROJECT_VERSION}")
 
 if(COMPILE_SAFE_CHECKS)
     add_compile_definitions(COMPILE_SAFE_CHECKS)
