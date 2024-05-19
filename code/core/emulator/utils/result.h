@@ -4,27 +4,35 @@
 #include <string>
 
 
-namespace PTX2ASM {
-
-enum class ResultCode : uint32_t {
-    Ok = 0,
-    Fail,
-};
+namespace PTX4CPU {
 
 struct Result {
 
-    Result() : code(ResultCode::Ok) {};
-    Result(ResultCode _code) : code(_code) {};
+    enum class Code : uint32_t {
+        Ok = 0,
+        NotOk,
+        Fail,
+    };
+
+    Result() : code(Code::Ok) {};
+    Result(Code _code) : code(_code) {};
+    Result(Code _code, std::string _msg)
+        : code(_code)
+        , msg(_msg) {};
     Result(std::string _msg)
-        : code(ResultCode::Fail)
+        : code(Code::Fail)
         , msg(_msg) {};
 
-    operator bool () {
-        return (code == ResultCode::Ok);
+    operator bool () const {
+        return (code == Code::Ok);
     }
 
-    ResultCode code = ResultCode::Fail;
+    bool operator == (Code _code) const {
+        return (code == _code);
+    }
+
+    Code code = Code::Fail;
     std::string msg;
 };
 
-};  // namespace PTX2ASM
+};  // namespace PTX4CPU

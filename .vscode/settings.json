@@ -64,6 +64,25 @@
         "iomanip": "cpp",
         "ratio": "cpp",
         "map": "cpp",
-        "xtree": "cpp"
+        "xtree": "cpp",
+        "stdfloat": "cpp",
+        "stop_token": "cpp",
+        "thread": "cpp",
+        "functional": "cpp",
+        "array": "cpp",
+        "any": "cpp",
+        "csignal": "cpp",
+        "cstdarg": "cpp",
+        "deque": "cpp",
+        "mutex": "cpp",
+        "numeric": "cpp",
+        "random": "cpp",
+        "ranges": "cpp",
+        "regex": "cpp",
+        "set": "cpp",
+        "span": "cpp",
+        "unordered_set": "cpp",
+        "valarray": "cpp",
+        "variant": "cpp"
     }
 }

@@ -7,22 +7,18 @@
 #include <translator_interface.h>
 #include <parser.h>
 
-namespace PTX2ASM {
+namespace PTX4CPU {
 
 class Translator : public ITranslator {
 
 public:
 
-    // void SetSource(const std::string& source);
-    void ExecuteFunc(const std::string& funcName) override {};
-
-private:
-    // /**
-    //  * Set invalid state for traslation
-    // */
-    // void InvalidateTranslation();
+    // Execute a kernel with the given name from the loaded PTX
+    Result ExecuteFunc(const std::string& funcName, PtxInputData* pArgs,
+                       const uint3_32& gridSize) override;
 
 public:
+
     Translator();
     /**
      * @param source source code of a PTX
@@ -48,4 +44,4 @@ private:
 
 };
 
-};  // namespace PTX2ASM
+};  // namespace PTX4CPU

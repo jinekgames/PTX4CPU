@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <map>
+#include <regex>
 #include <string>
 #include <sstream>
 #include <vector>
@@ -82,6 +83,19 @@ std::vector<String> Split(const String& str, char delimiter) {
   return ret;
 }
 
+
+/**
+ * Checks if string is a number.
+ * Must match regex: (\\+|\\-|)\\d+
+*/
+template<class String>
+bool IsNumber(const String& str) {
+
+  static const std::regex expr{"(\\+|\\-|)\\d+"};
+  return std::regex_match(str, expr);
+}
+
+
 // @todo refactoring: move following into the speciel files and add comments
 
 namespace StringIteration {
@@ -154,11 +168,11 @@ inline static const std::unordered_map<WordDelimiter, std::string> baseDelimsTab
 
 };
 
-inline WordDelimiter operator & (WordDelimiter a, WordDelimiter b) {
-    return static_cast<WordDelimiter>(static_cast<int>(a) & static_cast<int>(b));
+inline WordDelimiter operator & (WordDelimiter left, WordDelimiter right) {
+    return static_cast<WordDelimiter>(static_cast<int>(left) & static_cast<int>(right));
 }
-inline WordDelimiter operator | (WordDelimiter a, WordDelimiter b) {
-    return static_cast<WordDelimiter>(static_cast<int>(a) | static_cast<int>(b));
+inline WordDelimiter operator | (WordDelimiter left, WordDelimiter right) {
+    return static_cast<WordDelimiter>(static_cast<int>(left) | static_cast<int>(right));
 }
 
 inline bool IsDelimiter(char symbol, WordDelimiter delimiter) {
@@ -192,6 +206,8 @@ public:
         , m_CurIter{m_Str.begin() + offset}
     {}
     ~SmartIterator() = default;
+
+    const RawStrType& GetString() const { return m_Str; }
 
     const IterType Begin() const { return m_Str.begin(); }
     const IterType End()   const { return m_Str.end(); }
@@ -371,3 +387,17 @@ private:
 }; // class SmartIterator
 
 } // namespace StringIteration
+
+
+#define CONCAT_INTERNAL(first, second) \
+    first##second
+
+#define CONCAT(first, second) \
+    CONCAT_INTERNAL(first, second)
+
+
+#define STRINGIFY_INTERNAL(value) \
+    #value
+
+#define STRINGIFY(value) \
+    STRINGIFY_INTERNAL(value)

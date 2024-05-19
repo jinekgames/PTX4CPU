@@ -7,6 +7,7 @@ set(sources
 
 set(includes
     ${EMULATOR_API_DIR}
+    ${EMULATOR_DIR}
     ${TRANSLATOR_DIR}
 )
 
@@ -16,7 +17,7 @@ list(APPEND sources
 )
 
 list(APPEND includes
-    ${UTILS_DIR}/cmd_parser
+    ${UTILS_DIR}
 )
 
 

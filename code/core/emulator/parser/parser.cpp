@@ -1,13 +1,10 @@
 #include <parser.h>
 
-#include <logger.h>
+#include <logger/logger.h>
 #include <string_utils.h>
 
 
-namespace PTX2ASM {
-
-using namespace ParserInternal;
-
+using namespace PTX4CPU;
 
 // Constructors and Destructors
 
@@ -20,8 +17,7 @@ Parser::Parser(const std::string& source) {
     PRINT_I("PTX file is loaded and ready for execution");
 }
 
-
-// Private realizations
+// Public realizations
 
 Result Parser::Load(const std::string& source) {
 
@@ -39,7 +35,7 @@ Result Parser::Load(const std::string& source) {
 
     PreprocessCode(code);
     auto data = ConvertCode(code);
-    m_DataIter.SwapData(std::move(data));
+    m_DataIter = {std::move(data)};
 
     if (!m_PtxProps.IsValid())
         return {"The source PTX file is missing PTX properties"};
@@ -53,10 +49,78 @@ Result Parser::Load(const std::string& source) {
 
     // @todo implementation: add global vars processing if existed
 
-    m_State = State::Loaded;
+    m_State = State::Ready;
 
     return {};
 }
+
+std::vector<ThreadExecutor> Parser::MakeThreadExecutors(const std::string& funcName,
+                                                        const Types::PTXVarList& arguments,
+                                                        uint3_32 threadsCount) const {
+
+    // Find kernel
+    auto funcIter = FindFunction(funcName, arguments);
+    if (funcIter == m_FuncsList.end()) {
+        PRINT_E("Function with such name (\"%s\") and corespondent arguments "
+                "is not stated in the PTX file", funcName.c_str());
+        return {};
+    }
+    auto& func = *funcIter;
+
+    // Convert arguments
+    auto pAgumentsTable = std::make_shared<Types::VarsTable>(&m_GlobalVarsTable);
+    Types::PTXVarList::size_type i = 0;
+    for (auto& [name, var] : func.arguments) {
+        pAgumentsTable->AppendVar(name, arguments[i]->MakeReference());
+        ++i;
+    }
+
+    // Create executors
+    std::vector<ThreadExecutor> ret;
+    for (uint3_32::type x = 0; x < threadsCount.x; ++x) {
+        for (uint3_32::type y = 0; y < threadsCount.y; ++y) {
+            for (uint3_32::type z = 0; z < threadsCount.z; ++z) {
+                ret.push_back(std::move(
+                    ThreadExecutor{m_DataIter, func, pAgumentsTable, {x, y, z}}
+                ));
+            }
+        }
+    }
+
+    return ret;
+}
+
+std::pair<std::string, Types::PtxVarDesc> Parser::ParsePtxVar(const std::string& entry) {
+
+    std::string name;
+    Types::PtxVarDesc desc;
+    // Sample string:
+    // .reg .f64 dbl
+    const StringIteration::SmartIterator iter{entry};
+
+    desc.attributes.push_back(iter.ReadWord2()); // contains memory location only
+
+    auto typeStr = iter.ReadWord2();
+    desc.type = Types::GetFromStr(typeStr);
+
+    iter.Skip(StringIteration::CodeDelimiter);
+    name = iter.ReadWord2(false, StringIteration::AllSpaces);
+
+    return {name, desc};
+}
+
+Parser::ParsedPtxVectorName Parser::ParseVectorName(const std::string& name) {
+
+    ParsedPtxVectorName ret;
+    StringIteration::SmartIterator iter{name};
+    ret.name = iter.ReadWord2(false, StringIteration::WordDelimiter::Dot);
+    iter.Skip(StringIteration::WordDelimiter::Dot);
+    if (iter.IsValid())
+        ret.key = *iter.GetIter();
+    return ret;
+}
+
+// Private realizations
 
 void Parser::ClearCodeComments(std::string& code) {
 
@@ -150,7 +214,7 @@ Parser::PreprocessData Parser::ConvertCode(std::string& code) {
     return ret;
 }
 
-Data Parser::ConvertCode(const PreprocessData& code) {
+Data::Type Parser::ConvertCode(const PreprocessData& code) {
 
     return {code.begin(), code.end()};
 }
@@ -161,7 +225,8 @@ void Parser::PreprocessCode(PreprocessData& code) const {
 
     // Parce properties' directives
     for (auto iter = code.begin(); iter != code.end();) {
-        if (iter->find(".version") != std::string::npos) {
+        // @todo refactoring: move parsers into Dirictives class
+        if (iter->find(Dirictives::VERSION) != std::string::npos) {
             auto i = std::find_if(iter->begin(), iter->end(), [](const char c) {
                 return std::isdigit(c);
             });
@@ -184,7 +249,7 @@ void Parser::PreprocessCode(PreprocessData& code) const {
             int8_t versionMinor = std::atoi(iter->substr(dotIdx + 1, endIdx - dotIdx - 1).c_str());
             m_PtxProps.version = { versionMajor, versionMinor };
             iter = code.erase(iter);
-        } else if (iter->find(".target") != std::string::npos) {
+        } else if (iter->find(Dirictives::TARGET) != std::string::npos) {
             size_t delimIdx = iter->find("_", 9);
             if (delimIdx == std::string::npos)
                 break;
@@ -198,7 +263,7 @@ void Parser::PreprocessCode(PreprocessData& code) const {
 
             m_PtxProps.target = std::atoi(iter->substr(delimIdx + 1, endIdx - delimIdx - 1).c_str());
             iter = code.erase(iter);
-        } else if (iter->find(".address_size") != std::string::npos) {
+        } else if (iter->find(Dirictives::ADDRESS_SIZE) != std::string::npos) {
             auto i = std::find_if(iter->begin(), iter->end(), [](const char c) {
                 return std::isdigit(c);
             });
@@ -226,7 +291,7 @@ void Parser::PreprocessCode(PreprocessData& code) const {
     m_State = State::Preprocessed;
 }
 
-bool Parser::InitVTable() {
+bool Parser::InitVTable() const {
 
     using namespace StringIteration;
 
@@ -253,7 +318,7 @@ bool Parser::InitVTable() {
         if (!isFunc)
             continue;
 
-        Function func;
+        Types::Function func;
 
         // get returns, name and arguments
         lineIter.GoToNextNonSpace();
@@ -303,9 +368,10 @@ bool Parser::InitVTable() {
             func.end   = m_DataIter.GetOffset() - 1;
         }
 
-        auto funcFound = std::find_if(m_FuncsList.begin(), m_FuncsList.end(), [&func](const Function& f) {
-            return (f.name == func.name);
-        });
+        auto funcFound = std::find_if(m_FuncsList.begin(), m_FuncsList.end(),
+            [&func](const Types::Function& f) {
+                return (f.name == func.name);
+            });
         if(funcFound != m_FuncsList.end()) {
             // @todo implementation: maybe better to merge values, not remove olds
             m_FuncsList.erase(std::move(funcFound));
@@ -316,18 +382,26 @@ bool Parser::InitVTable() {
     return true;
 }
 
-std::pair<std::string, Parser::VarPtxType> Parser::ParsePtxVar(const std::string& entry) {
+Types::FuncsList::iterator Parser::FindFunction(const std::string& funcName,
+                                                const Types::PTXVarList& arguments) const {
 
-    std::string name;
-    Parser::VarPtxType type;
-    // Sample string:
-    // .reg .f64 dbl
-    const StringIteration::SmartIterator iter{entry};
-    type.attributes.push_back(iter.ReadWord2()); // contains memory location only
-    type.type = iter.ReadWord2();
-    name = iter.ReadWord2();
-    return {name, type};
+    return std::find_if(m_FuncsList.begin(), m_FuncsList.end(),
+        [&](const Types::FuncsList::value_type& func) {
+            // is entry
+            if (!func.attributes.contains(KernelAttributes::ENTRY))
+                return false;
+            // correct name
+            if (func.name != funcName)
+                return false;
+            // correct arguments
+            if (func.arguments.size() != arguments.size())
+                return false;
+            Types::PTXVarList::size_type i = 0;
+            for (auto& arg : func.arguments) {
+                if (!arguments[i] || arg.second.type != arguments[i]->GetPTXType())
+                    return false;
+                ++i;
+            }
+            return true;
+        });
 }
-
-
-};  // namespace PTX2ASM

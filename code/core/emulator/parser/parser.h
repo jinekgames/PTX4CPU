@@ -7,30 +7,33 @@
 #include <tuple>
 #include <vector>
 
+#include <executor.h>
 #include <result.h>
 #include <parser_types.h>
+#include <parser_data.h>
 
 
-namespace PTX2ASM {
+namespace PTX4CPU {
 
 /**
- * Stores PTX source file and provide iteraion by instructions of a file and functions it is consisting of
+ * Stores PTX source file and provide iteraion by instructions of a file and
+ * functions it is consisting of
 */
 class Parser {
 
 public:
 
-    using Data            = ParserInternal::Data;
-    using DataIterator    = ParserInternal::DataIterator;
-    using Function        = ParserInternal::Function;
-    using PtxProperties   = ParserInternal::PtxProperties;
-    using VarsTable       = ParserInternal::VarsTable;
-    using VirtualVar      = ParserInternal::VirtualVar;
-    using VirtualVarsList = ParserInternal::VirtualVarsList;
-    using VarPtxType      = ParserInternal::VarPtxType;
-
     // Preprocessing code type (each instruction into one line)
     using PreprocessData = std::list<std::string>;
+
+    enum class State {
+        // Source is not loaded
+        NotLoaded,
+        // Preprocessing stage passed
+        Preprocessed,
+        // Code is ready for processing
+        Ready,
+    };
 
     Parser() = default;
     /**
@@ -39,11 +42,11 @@ public:
     Parser(const std::string& source);
     Parser(const Parser&) = delete;
     Parser(Parser&& right)
-        : m_DataIter   (std::move(right.m_DataIter))
-        , m_State      (std::move(right.m_State))
-        , m_PtxProps   (std::move(right.m_PtxProps))
-        , m_VarsTable  (std::move(right.m_VarsTable))
-        , m_FuncsList  (std::move(right.m_FuncsList)) {
+        : m_DataIter        {std::move(right.m_DataIter)}
+        , m_State           {std::move(right.m_State)}
+        , m_PtxProps        {std::move(right.m_PtxProps)}
+        , m_GlobalVarsTable {std::move(right.m_GlobalVarsTable)}
+        , m_FuncsList       {std::move(right.m_FuncsList)} {
 
         right.m_State      = State::NotLoaded;
     }
@@ -57,7 +60,7 @@ public:
         m_DataIter  = std::move(right.m_DataIter);
         m_State     = std::move(right.m_State);
         m_PtxProps  = std::move(right.m_PtxProps);
-        std::swap(m_VarsTable, right.m_VarsTable);
+        std::swap(m_GlobalVarsTable, right.m_GlobalVarsTable);
         m_FuncsList = std::move(right.m_FuncsList);
 
         right.m_State      = State::NotLoaded;
@@ -75,6 +78,30 @@ public:
      * TODO: directives and includes processing
     */
     Result Load(const std::string& source);
+
+    State GetState() { return m_State; }
+
+    /**
+     * Prepare executors for each thread, which could be runned asynchronously
+    */
+    std::vector<ThreadExecutor> MakeThreadExecutors(const std::string& funcName,
+                                                    const Types::PTXVarList& arguments,
+                                                    uint3_32 threadsCount) const;
+
+    /**
+     * Parses a PTX var from the input string `entry`
+    */
+    static std::pair<std::string, Types::PtxVarDesc> ParsePtxVar(const std::string& entry);
+
+    struct ParsedPtxVectorName {
+        char        key = 'x';
+        std::string name;
+    };
+
+    /**
+     * Extracts an access key (should be one of xyzw) and real variable name
+    */
+    static ParsedPtxVectorName ParseVectorName(const std::string& name);
 
 private:
 
@@ -95,7 +122,7 @@ private:
     /**
      * Convert list of instructions into vector type
     */
-    static Data ConvertCode(const PreprocessData& code);
+    static Data::Type ConvertCode(const PreprocessData& code);
 
     /**
      * Preprocessing code
@@ -112,63 +139,73 @@ private:
      * global defined variables
      * and defined funtions with their own virtual tables
     */
-    bool InitVTable();
+    bool InitVTable() const;
 
     /**
-     * Allocates the memory for the functions arguments
+     * Finds an appropriate funtion according to the specified signature
+     * Retuns an iterator of the functions'table, pointing to the function
+     * descriptor or the end iterator, if no fuction found
     */
-    static void AllocateFunctionsMemory() {};
+    Types::FuncsList::iterator FindFunction(const std::string& funcName,
+                                            const Types::PTXVarList& arguments) const;
 
 private:
 
-    DataIterator m_DataIter;
-
-    enum class State {
-        // Source is not loaded
-        NotLoaded,
-        // Preprocessing stage passed
-        Preprocessed,
-        // Code is ready for processing
-        Loaded,
-    };
+    mutable Data::Iterator m_DataIter;
 
     mutable State m_State = State::NotLoaded;
 
-    mutable PtxProperties m_PtxProps;
+    mutable Types::PtxProperties m_PtxProps;
+
+    struct Dirictives {
+        inline static const auto VERSION      = ".version";
+        inline static const auto TARGET       = ".target";
+        inline static const auto ADDRESS_SIZE = ".address_size";
+        inline static const auto DWARF        = "@@DWARF";
+        inline static const auto LOC          = ".loc";
+        inline static const auto C_STYLE      = "#";
+    };
 
     // list of dirictives which are not trailed by {} of ;
     inline static const std::vector<std::string> m_FreeDirictives = {
-        ".version",
-        ".target",
-        ".address_size",
+        Dirictives::VERSION,
+        Dirictives::TARGET,
+        Dirictives::ADDRESS_SIZE,
         // debug dirictives
         // @todo imlementation: @@DWARF dirictive
-        // "@@DWARF",
+        // Dirictives::DWARF,
         // @todo imlementation: .loc dirictive
-        // ".loc",
+        // Dirictives::LOC,
         // C-style preprocessor dirictives
         // @todo imlementation: C-style dirictives
-        // "#",
+        // Dirictives::C_STYLE,
+    };
+
+    struct KernelAttributes {
+        inline static const auto ENTRY          = ".entry";
+        inline static const auto FUNC           = ".func";
+        inline static const auto FUNCTION       = ".function";
+        inline static const auto CALLPROTOTYPE  = ".callprototype";
+        inline static const auto ALIAS          = ".alias";
     };
 
     // list of dirictives which are efining a fucntion
     inline static const std::vector<std::string> m_FuncDefDirictives = {
-        ".entry",
-        ".func",
-        ".function",
+        KernelAttributes::ENTRY,
+        KernelAttributes::FUNC,
+        KernelAttributes::FUNCTION,
         // @todo imlementation: .callprototype dirictive
-        // ".callprototype",
+        // KernelAttributes::CALLPROTOTYPE,
         // @todo imlementation: .alias dirictive
-        // ".alias",
+        // KernelAttributes::ALIAS,
     };
 
-    VarsTable m_VarsTable;
-
-    static std::pair<std::string, VarPtxType> ParsePtxVar(const std::string& entry);
+    // Global file variables
+    mutable Types::VarsTable m_GlobalVarsTable;
 
     // A list of functions stated in the PTX
-    std::vector<Function> m_FuncsList;
+    mutable Types::FuncsList m_FuncsList;
 
 };
 
-};  // namespace PTX2ASM
+};  // namespace PTX4CPU
