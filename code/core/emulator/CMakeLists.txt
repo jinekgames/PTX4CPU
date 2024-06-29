@@ -7,13 +7,16 @@ set(JSON_PARSER_DIR    ${3RDPARTY_DIR}/json)
 
 
 set(translator_sources
-    ${TRANSLATOR_DIR}/translator.cpp
-    ${TRANSLATOR_DIR}/translator_interface.cpp
-    ${PARSER_DIR}/parser.cpp
-    ${EMULATOR_UTILS_DIR}/version.cpp
     ${EXECUTOR_DIR}/executor.cpp
     ${EXECUTOR_DIR}/instruction.cpp
     ${EXECUTOR_DIR}/dispatch_table.cpp
+    ${TRANSLATOR_DIR}/translator.cpp
+    ${TRANSLATOR_DIR}/translator_interface.cpp
+    ${PARSER_DIR}/parser.cpp
+    ${PARSER_DIR}/types/parser_data.cpp
+    ${PARSER_DIR}/types/ptx_function.cpp
+    ${PARSER_DIR}/types/ptx_types.cpp
+    ${PARSER_DIR}/types/virtual_var.cpp
 )
 
 set(translator_includes
@@ -49,11 +52,17 @@ set(includes
 
 include_directories(${includes})
 
+add_subdirectory(${EMULATOR_UTILS_DIR})
 add_subdirectory(${DTABLE_RUNNERS_DIR})
 
-add_library(emulatorlib SHARED ${sources} $<TARGET_OBJECTS:dTableRunnersObj>)
+set(objs
+    $<TARGET_OBJECTS:emulatorUtils>
+    $<TARGET_OBJECTS:runnersDispatchTable>
+)
 
-set_target_properties(emulatorlib PROPERTIES OUTPUT_NAME ${EMULATOR_LIB_NAME})
+add_library(emulatorLib SHARED ${sources} ${objs})
+
+set_target_properties(emulatorLib PROPERTIES OUTPUT_NAME ${EMULATOR_LIB_NAME})
 
 # Getting a commit hash
 
@@ -71,4 +80,4 @@ endif()
 string(STRIP ${GIT_HASH} GIT_HASH)
 message(STATUS "Building from commit: ${GIT_HASH}")
 
-target_compile_definitions(emulatorlib PRIVATE -DPROJECT_GIT_COMMIT="${GIT_HASH}")
+target_compile_definitions(emulatorLib PRIVATE -DPROJECT_GIT_COMMIT="${GIT_HASH}")

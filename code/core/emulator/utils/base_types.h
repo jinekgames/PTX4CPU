@@ -3,6 +3,8 @@
 #include <cstdint>
 
 
+namespace BaseTypes {
+
 template<class T>
 struct _v3 {
     using type = T;
@@ -34,3 +36,5 @@ struct _v4 {
 using int4     = _v4<int64_t>;
 using uint4    = _v4<uint64_t>;
 using uint4_32 = _v4<uint32_t>;
+
+}  // namespace BaseTypes
