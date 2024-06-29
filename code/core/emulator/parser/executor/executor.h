@@ -1,7 +1,6 @@
 #pragma once
 
 #include <result.h>
-#include <parser_data.h>
 #include <parser_types.h>
 #include <utils/base_types.h>
 
@@ -17,7 +16,8 @@ private:
 public:
 
     ThreadExecutor(const Data::Iterator& iterator, const Types::Function& func,
-                   const std::shared_ptr<Types::VarsTable>& arguments, const uint3_32& threadId);
+                   const std::shared_ptr<Types::VarsTable>& arguments,
+                   const BaseTypes::uint3_32& threadId);
     ThreadExecutor(const ThreadExecutor&) = delete;
     ThreadExecutor(ThreadExecutor&& right);
     ~ThreadExecutor() = default;
@@ -31,7 +31,7 @@ public:
     /**
      * Run a given count of instruction in a thread from the last break point
     */
-    Result Run(Data::Iterator::Size instructionsCount) const;
+    Result Run(Data::Iterator::SizeType instructionsCount) const;
 
     /**
      * Run a function till the end
@@ -49,7 +49,7 @@ private:
 
     void AppendConstants() const;
 
-    uint4_32 m_ThreadId;
+    BaseTypes::uint4_32 m_ThreadId;
 
     mutable Data::Iterator m_DataIter;
 

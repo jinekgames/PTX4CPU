@@ -28,7 +28,7 @@ Translator::Translator(const std::string& source)
 // Public methods
 
 Result Translator::ExecuteFunc(const std::string& funcName, PtxInputData* pArgs,
-                               const uint3_32& gridSize) {
+                               const BaseTypes::uint3_32& gridSize) {
 
     if (m_Parser.GetState() != Parser::State::Ready) {
         PRINT_E("Parser is not ready for execution");

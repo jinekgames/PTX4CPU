@@ -1,14 +1,14 @@
-#include <cmd_parser/cmd_parser.h>
-#include <emulator_api.h>
-#include <helpers.h>
-#include <utils/string_utils.h>
-
 #include <array>
 #include <fstream>
 #include <iostream>
 #include <memory>
 #include <sstream>
 #include <tuple>
+
+#include <cmd_parser.h>
+#include <emulator_api.h>
+#include <helpers.h>
+#include <utils/string_utils.h>
 
 #include "logo_ascii.h"
 
@@ -83,7 +83,7 @@ bool SaveOutputData(const std::string& filepath, PtxExecArgs& execArgs) {
 
 } // anonimous namespace
 
-// @todo implementation: add ability to export parsed ptx file
+// @todo implementation: add ability to export preprocessed ptx file
 
 int main(size_t argc, char** argv) {
     Parser args(argc, argv);
@@ -91,30 +91,38 @@ int main(size_t argc, char** argv) {
     if (args.Contains("help")) {
 
         std::cout <<
-R"(This tool traslate PTX assemble file to x86-copatible ones
-
-See usage docs here:
+R"(
+See usage docs here: https://github.com/jinekgames/PTX4CPU/blob/main/README.md
 
 Commands:
-   --help      - show this message
-   --run       - runs a given kernel
-                 Params:
-                     --kernel  - name of kernel to execute
-                     --args    - path to the .json contaning execution arguments
-                     --threads - count of kernel execution threads
-                     --save-output  - [optional] path to the .json where execution output will be written
-                                      if argument was not specified, output will be printed to console
-                                      if argument was specified with empty value, original arguments .json will be used
-                 Example:
-                     TranslatorCmd.exe --test-run input_file.ptx --kernel _Z9addKernelPiPKiS1_ --args arguments.json --save-output
-   --test-load - do a test load and preparsing of a .ptx file
-                 Example:
-                     TranslatorCmd.exe --test-load input_file.ptx
-   --test-json - tests if an arguments configuration .json is valid
-                 Example:
-                     TranslatorCmd.exe --test-json arguments.json
-)" << ASCII_LOGO_CUDA4CPU << std::endl;
+   --help         - show this message
+   --run          - run a given kernel
+                    Params:
+                        --kernel  - name of kernel to execute
+                        --args    - path to the .json contaning execution arguments
+                        --threads - count of kernel execution threads
+                        --save-output  - [optional] path to the .json where execution output will be written
+                                         if argument was not specified, output will be printed to console
+                                         if argument was specified with empty value, original arguments .json will be used
+                    Example:
+                        TranslatorCmd.exe --test-run input_file.ptx --kernel _Z9addKernelPiPKiS1_ --args arguments.json --save-output
+   --test-load    - do a test load and preparsing of a .ptx file
+                    Example:
+                        TranslatorCmd.exe --test-load input_file.ptx
+   --test-json    - test if an arguments configuration .json is valid
+                    Example:
+                        TranslatorCmd.exe --test-json arguments.json
+   -v, --version,
+   --about        - show "about" info
+)" << std::endl;
 
+        return 0;
+
+    } else if (args.Contains("v") || args.Contains("version") || args.Contains("about")) {
+
+        std::cout << "PTX4CPU v" << PTX4CPU_VERSION << std::endl;
+        std::cout << "This tool allows to run PTX assemble files on the CPU power" << std::endl;
+        std::cout << ASCII_LOGO_CUDA4CPU << std::endl;
         return 0;
 
     } else if (args.Contains("test-load")) {
@@ -206,7 +214,7 @@ Commands:
 
         // Execute PTX
 
-        uint3_32 gridSize = { threadsCount, 1, 1 };
+        BaseTypes::uint3_32 gridSize = { threadsCount, 1, 1 };
 
         auto res = pTranslator->ExecuteFunc(kernelName, *pExecVars, gridSize);
 

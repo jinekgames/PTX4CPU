@@ -10,7 +10,6 @@
 #include <executor.h>
 #include <result.h>
 #include <parser_types.h>
-#include <parser_data.h>
 
 
 namespace PTX4CPU {
@@ -86,7 +85,7 @@ public:
     */
     std::vector<ThreadExecutor> MakeThreadExecutors(const std::string& funcName,
                                                     const Types::PTXVarList& arguments,
-                                                    uint3_32 threadsCount) const;
+                                                    BaseTypes::uint3_32 threadsCount) const;
 
     /**
      * Parses a PTX var from the input string `entry`

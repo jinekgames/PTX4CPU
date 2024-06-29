@@ -10,10 +10,11 @@
 #define LOGS_DEFAULT_TAG "PTX4CPU"
 #define LOGS_LAYER_TAG "validation layer"
 
+#define FORCE_DEBUG_LOGS 1
 #define STRIP_DEBUG_LOGS 0
 
 // Enables debug logs if true
-#if defined(DEBUG_BUILD) && !STRIP_DEBUG_LOGS
+#if FORCE_DEBUG_LOGS || defined(DEBUG_BUILD) && !STRIP_DEBUG_LOGS
 // @todo implementation: move this into runtime config
 #define DEBUG_LOGS 1
 #else
@@ -47,32 +48,37 @@ static std::unordered_map<LogType, const char*> logsTypeStrings = {
 // @todo implementation: add ability to separate logging files for threads
 
 template<class... Args>
-void _app_log_message(LogType type, const char* tag, const char* file, int line, Args... args) {
+void _app_log_message(LogType type, const char* tag, const char* file, int line,
+                      Args... args) {
 
-    static const size_t bufSize = _MAX_PATH;
-    static const size_t fileStrMinLen = 30;
+    constexpr size_t bufSize = _MAX_PATH;
+    constexpr size_t fileStrMinLen = 30;
 
     char buf[bufSize];
-    auto msgSize = std::snprintf(buf, bufSize, args...);
+    const auto msgSize = std::snprintf(buf, bufSize, args...);
 
-    std::string fileStr = std::vformat("({}:{})", std::make_format_args(
-                                           std::filesystem::path(file).filename().string(),
-                                           line));
-    size_t spacesCount = (fileStr.length() < fileStrMinLen)
-                         ? fileStrMinLen - fileStr.length()
-                         : 1u;
-    std::string spaces(spacesCount, ' ');
+    const std::string fileStr =
+        std::vformat("({}:{})", std::make_format_args(
+                     std::filesystem::path(file).filename().string(),
+                     line));
+    const std::string::size_type spacesCount = (fileStr.length() < fileStrMinLen)
+                                               ? fileStrMinLen - fileStr.length()
+                                               : 1u;
+    const std::string spaces(spacesCount, ' ');
 
-    std::string output =
+    const std::string output =
         std::vformat("{}  {}{}{}{}\t: {}{}",
-                     std::make_format_args(tag, fileStr, spaces, logsTypeColors[type],
-                         logsTypeStrings[type], std::string_view(buf, buf + msgSize), COLOR_RESET));
+                     std::make_format_args(tag, fileStr, spaces,
+                                           logsTypeColors[type],
+                                           logsTypeStrings[type],
+                                           std::string_view(buf, buf + msgSize),
+                                           COLOR_RESET));
 
     std::printf("%s\n", output.c_str());
 }
 
 #else
-#error "logs are not implemented for this platform"
+#error logs are not implemented for this platform
 #endif
 
 #define PRINT_TAG_E(tag, ...) _app_log_message(LogType::Error,   tag, __FILE__, __LINE__, __VA_ARGS__)

@@ -192,7 +192,7 @@ inline static Result ParseJson(PtxInputData& inputData,
 
             PRINT_V("Parsing %s json arg of type %s", (isScalar) ? "scalar" : "vector", typeStr.c_str());
 
-            const auto type = Types::GetFromStr(typeStr);
+            const auto type = Types::StrToPTXType(typeStr);
 
             if (isScalar) {
                 auto valueParser = argParser[VALUE_KEY];

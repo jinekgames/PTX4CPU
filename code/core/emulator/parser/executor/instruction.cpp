@@ -15,7 +15,7 @@ InstructionRunner::InstructionRunner(const std::string& instruction, const Threa
     if (m_pExecutor) {
         PRINT_V("[%d,%d,%d]:%lu: > %s",
                 m_pExecutor->m_ThreadId.x, m_pExecutor->m_ThreadId.y, m_pExecutor->m_ThreadId.z,
-                m_pExecutor->m_DataIter.GetOffset(),
+                m_pExecutor->m_DataIter.Offset(),
                 instruction.c_str());
     }
 
@@ -32,14 +32,14 @@ void InstructionRunner::FindRunner() {
      * Erase type from the command, it will be processed by the runner
     */
 
-    auto command = m_InstructionIter.ReadWord2();
+    auto command = m_InstructionIter.ReadWord();
 
     auto dotIdx = command.find_last_of('.');
     if (dotIdx != 0 && dotIdx != std::string::npos)
     {
         command.erase(dotIdx);
         // shift back to type start to read from the runner
-        m_InstructionIter.Shift(dotIdx - m_InstructionIter.GetOffset());
+        m_InstructionIter.Shift(dotIdx - m_InstructionIter.Offset());
     }
 
     auto found = m_DispatchTable.find(command);
@@ -56,5 +56,5 @@ Result InstructionRunner::Run() {
         return m_Runner(m_pExecutor, m_InstructionIter);
 
     return {Result::Code::NotOk, "Runner for the given instruction not found. Skipped (" +
-                                 m_InstructionIter.GetString() + ")"};
+                                 m_InstructionIter.Data() + ")"};
 }

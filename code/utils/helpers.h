@@ -17,12 +17,9 @@ namespace PTX4CPU {
 namespace Helpers {
 
 
-inline uint64_t GetTick() {
-#ifdef WIN32
-    return GetTickCount64();
-#else
-#error "GetTick() is not implemented for this platform"
-#endif
+inline auto GetTick() {
+    const auto time = std::chrono::high_resolution_clock::now().time_since_epoch();
+    return std::chrono::duration_cast<std::chrono::milliseconds>(time).count();
 }
 
 inline void Sleep(uint64_t timeMs) {

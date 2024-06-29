@@ -56,7 +56,7 @@ Result Parser::Load(const std::string& source) {
 
 std::vector<ThreadExecutor> Parser::MakeThreadExecutors(const std::string& funcName,
                                                         const Types::PTXVarList& arguments,
-                                                        uint3_32 threadsCount) const {
+                                                        BaseTypes::uint3_32 threadsCount) const {
 
     // Find kernel
     auto funcIter = FindFunction(funcName, arguments);
@@ -77,9 +77,9 @@ std::vector<ThreadExecutor> Parser::MakeThreadExecutors(const std::string& funcN
 
     // Create executors
     std::vector<ThreadExecutor> ret;
-    for (uint3_32::type x = 0; x < threadsCount.x; ++x) {
-        for (uint3_32::type y = 0; y < threadsCount.y; ++y) {
-            for (uint3_32::type z = 0; z < threadsCount.z; ++z) {
+    for (BaseTypes::uint3_32::type x = 0; x < threadsCount.x; ++x) {
+        for (BaseTypes::uint3_32::type y = 0; y < threadsCount.y; ++y) {
+            for (BaseTypes::uint3_32::type z = 0; z < threadsCount.z; ++z) {
                 ret.push_back(std::move(
                     ThreadExecutor{m_DataIter, func, pAgumentsTable, {x, y, z}}
                 ));
@@ -98,13 +98,13 @@ std::pair<std::string, Types::PtxVarDesc> Parser::ParsePtxVar(const std::string&
     // .reg .f64 dbl
     const StringIteration::SmartIterator iter{entry};
 
-    desc.attributes.push_back(iter.ReadWord2()); // contains memory location only
+    desc.attributes.push_back(iter.ReadWord()); // contains memory location only
 
-    auto typeStr = iter.ReadWord2();
-    desc.type = Types::GetFromStr(typeStr);
+    auto typeStr = iter.ReadWord();
+    desc.type = Types::StrToPTXType(typeStr);
 
     iter.Skip(StringIteration::CodeDelimiter);
-    name = iter.ReadWord2(false, StringIteration::AllSpaces);
+    name = iter.ReadWord(false, StringIteration::AllSpaces);
 
     return {name, desc};
 }
@@ -113,10 +113,10 @@ Parser::ParsedPtxVectorName Parser::ParseVectorName(const std::string& name) {
 
     ParsedPtxVectorName ret;
     StringIteration::SmartIterator iter{name};
-    ret.name = iter.ReadWord2(false, StringIteration::WordDelimiter::Dot);
+    ret.name = iter.ReadWord(false, StringIteration::WordDelimiter::Dot);
     iter.Skip(StringIteration::WordDelimiter::Dot);
     if (iter.IsValid())
-        ret.key = *iter.GetIter();
+        ret.key = *iter.Current();
     return ret;
 }
 
@@ -301,14 +301,14 @@ bool Parser::InitVTable() const {
     }
 
     // Parse functions
-    for (; m_DataIter.IsValid(); m_DataIter.Next()) {
+    for (; m_DataIter.IsValid(); ++m_DataIter) {
 
-        auto& line = *m_DataIter.GetIter();
-        const SmartIterator lineIter{line};
+        const auto& line = *m_DataIter.Current();
+        SmartIterator lineIter{line};
 
         bool isFunc = false;
         std::string buf;
-        while(!(buf = lineIter.ReadWord2()).empty()) {
+        while(!(buf = lineIter.ReadWord()).empty()) {
             if (std::find(m_FuncDefDirictives.begin(), m_FuncDefDirictives.end(), buf) != m_FuncDefDirictives.end()) {
                 isFunc = true;
                 break;
@@ -326,18 +326,18 @@ bool Parser::InitVTable() const {
         // we're now located at eigther returns or name (due to ended on a special dirictive)
         if (lineIter.IsInBracket()) {
             // return (it is single)
-            auto startIter = lineIter.GetIter();
+            auto startIter = lineIter.Current();
             auto endIter   = lineIter.ExitBracket();
             func.returns.emplace(ParsePtxVar({startIter, endIter}));
         }
         // now it is the name
-        func.name = lineIter.ReadWord2();
+        func.name = lineIter.ReadWord();
         // and right after the name we got the arguments
         lineIter.GoToNextNonSpace();
         lineIter.EnterBracket();
         // arguments
         while(lineIter.IsInBracket() && lineIter.IsValid()) {
-            auto argStr = lineIter.ReadWord2(false, Brackets | Punct);
+            auto argStr = lineIter.ReadWord(false, Brackets | Punct);
             func.arguments.emplace(ParsePtxVar(argStr));
             lineIter.Skip(AllSpaces | Brackets);
         }
@@ -347,25 +347,25 @@ bool Parser::InitVTable() const {
         for(;;) {
             if (lineIter.IsBracket())
                 lineIter.ExitBracket();
-            buf = lineIter.ReadWord2();
+            buf = lineIter.ReadWord();
             if (buf.empty())
                 break;
             if (buf.front() == '.') {
                 auto& attribute = func.attributes[buf];
-                buf = lineIter.ReadWord2(true);
+                buf = lineIter.ReadWord(true);
                 if (buf.front() != '.')
                     attribute = buf;
             }
         }
 
         // Next to the function declaration we eigther get a body or nothing
-        m_DataIter.Next();
+        ++m_DataIter;
         if (m_DataIter.IsBlockStart()) {
-            m_DataIter.Next();
+            ++m_DataIter;
             // We are inside the body
-            func.start = m_DataIter.GetOffset();
+            func.start = m_DataIter.Offset();
             m_DataIter.ExitBlock();
-            func.end   = m_DataIter.GetOffset() - 1;
+            func.end   = m_DataIter.Offset() - 1;
         }
 
         auto funcFound = std::find_if(m_FuncsList.begin(), m_FuncsList.end(),
