@@ -4,9 +4,9 @@
 
 
 #if !HAS_FIXED_FLOAT_SUPPORT
-#pragma message("WARNING: "                                              \
-                "Fixed floating point types are not supported by the "   \
-                "compiler. All float with size > 64 will be traited as " \
+#pragma message("WARNING: "                                               \
+                "Fixed floating point types are not supported by the "    \
+                "compiler. All floats with size > 64 will be traited as " \
                 "float64")
 #endif  // #if !HAS_FIXED_FLOAT_SUPPORT
 
