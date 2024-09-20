@@ -12,8 +12,6 @@
 #include <logger/logger.h>
 
 
-// @todo refactoring: move all of the functions' implementations into the ./virtual_vars.cpp
-
 namespace PTX4CPU {
 namespace Types {
 

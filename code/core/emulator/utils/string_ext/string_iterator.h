@@ -99,7 +99,6 @@ public:
     using BracketStack = std::vector<Bracket>;
 
     SmartIterator() = delete;
-    // @todo refactoring: remove this ability
     SmartIterator(Str& str,  P::SizeType offset = 0);
     SmartIterator(Str&& str, P::SizeType offset = 0);
     ~SmartIterator() = default;
