@@ -33,6 +33,6 @@ inline static auto ASCII_LOGO_CUDA4CPU = R"(
 
              PTX4CPU - Run-time PTX Interpritator
              https://github.com/jinekgames/PTX4CPU
-             Eugene Kalinin, 2024
+             Kalinin Eugene, 2024
 
 )";

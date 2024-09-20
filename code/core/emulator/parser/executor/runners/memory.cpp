@@ -8,8 +8,8 @@
 #ifdef COMPILE_SAFE_CHECKS
 #ifdef WIN32
 #include <Windows.h>
-#endif
-#endif
+#endif  // #ifdef WIN32
+#endif  // #ifdef COMPILE_SAFE_CHECKS
 
 using namespace PTX4CPU;
 
@@ -33,14 +33,14 @@ Result DispatchTable::RegisterMemory(const ThreadExecutor* pExecutor,
 
     // move back to start for parsing
     iter.Reset();
-    const auto [nameWithCount, desc] = Parser::ParsePtxVar(iter.GetString());
+    const auto [nameWithCount, desc] = Parser::ParsePtxVar(iter.Data());
 
     // Parse real name and count
     StringIteration::SmartIterator nameIter{nameWithCount};
 
-    const auto name = nameIter.ReadWord2();
+    const auto name = nameIter.ReadWord();
 
-    const auto countStr = nameIter.ReadWord2();
+    const auto countStr = nameIter.ReadWord();
     uint64_t count = 0;
     std::from_chars(countStr.data(), countStr.data() + countStr.length(), count);
 
@@ -55,6 +55,7 @@ Result DispatchTable::RegisterMemory(const ThreadExecutor* pExecutor,
 }
 
 namespace {
+
 template<Types::PTXType ptxType>
 Result Dereference(Types::PTXVar* ptrVar, Types::getVarType<ptxType>& value, char ptrKey = 'x') {
 
@@ -109,7 +110,8 @@ Result DereferenceAndSet(Types::PTXVar* ptrVar, const Types::getVarType<ptxType>
 
     return {};
 }
-}
+
+}  // anonimous namespace
 
 template<Types::PTXType ptxType>
 Result DispatchTable::LoadParamInternal(const ThreadExecutor* pExecutor,
@@ -150,11 +152,11 @@ Result DispatchTable::LoadParam(const ThreadExecutor* pExecutor,
     // Sample instruction:
     // ld.param.u64   %rd1,   [_Z9addKernelPiPKiS1__param_0];
 
-    const auto typeStr = iter.ReadWord2();
-    const auto type    = Types::GetFromStr(typeStr);
+    const auto typeStr = iter.ReadWord();
+    const auto type    = Types::StrToPTXType(typeStr);
 
-    const auto valueFullName = iter.ReadWord2();
-    const auto ptrFullName   = iter.ReadWord2();
+    const auto valueFullName = iter.ReadWord();
+    const auto ptrFullName   = iter.ReadWord();
 
     Result result;
     PTXTypedOp(type,
@@ -206,11 +208,11 @@ Result DispatchTable::SetParam(const ThreadExecutor* pExecutor,
     // Sample instruction:
     // ld.param.u64   %rd1,   [_Z9addKernelPiPKiS1__param_0];
 
-    const auto typeStr = iter.ReadWord2();
-    const auto type    = Types::GetFromStr(typeStr);
+    const auto typeStr = iter.ReadWord();
+    const auto type    = Types::StrToPTXType(typeStr);
 
-    const auto ptrFullName   = iter.ReadWord2();
-    const auto valueFullName = iter.ReadWord2();
+    const auto ptrFullName   = iter.ReadWord();
+    const auto valueFullName = iter.ReadWord();
 
     Result result;
     PTXTypedOp(type,
@@ -228,11 +230,11 @@ template<bool copyAsReference>
 Result DispatchTable::CopyVarInternal(const ThreadExecutor* pExecutor,
                                       InstructionRunner::InstructionIter& iter) {
 
-    const auto typeStr = iter.ReadWord2();
-    const auto type = Types::GetFromStr(typeStr);
+    const auto typeStr = iter.ReadWord();
+    const auto type    = Types::StrToPTXType(typeStr);
 
-    const auto dstFullName = iter.ReadWord2();
-    const auto srcFullName = iter.ReadWord2();
+    const auto dstFullName = iter.ReadWord();
+    const auto srcFullName = iter.ReadWord();
     const auto dstDesc = Parser::ParseVectorName(dstFullName);
     const auto srcDesc = Parser::ParseVectorName(srcFullName);
 

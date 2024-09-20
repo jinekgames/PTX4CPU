@@ -31,7 +31,7 @@ struct ITranslator {
      * @return Result
     */
     virtual Result ExecuteFunc(const std::string& funcName, PtxExecArgs pArgs,
-                               const uint3_32& gridSize) = 0;
+                               const BaseTypes::uint3_32& gridSize) = 0;
 
 };
 

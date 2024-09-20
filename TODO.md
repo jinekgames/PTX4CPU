@@ -6,17 +6,21 @@
     The most important task for now. For now the project could open a given _.ptx_ and parse it. It can also parse and half-run an 'add' PTX sample.
     Even now parcing engine don't fully cover the _PTX_ spec (if not talking about the all operations' support). Such places are marked in code with `@todo implementation:`.
 
+    We currently can run a PTX with the command line. The PTX which support is currently implemented is located in the [rel_add_op.ptx](.\ext\cuda_ptx_samples\rel_add_op.ptx) file.
+
     Also there is a list of core features need to be implemented.
 
     The nearest tasks:
 
-    1. Add ability to run kernels
+    1. Parsing engine redesign
 
-        The kernels should be runned with a special cmd command. The data provided to a kernel as an arguments should be stored in storage in the format such as _json/xml/csv_ (i think _json_).
+        Current implementation of PTX-file parser is very poor and won't allow to cover the PTX language features. It is to be redesigned the way the instruction is parsed and stored. May be it will be needed to refactor the ibstructions torage format too, but currently not planned
 
-        We currently can run a PTX with the command line. The PTX which support is currently implemented is located in the [rel_add_op.ptx](.\ext\cuda_ptx_samples\rel_add_op.ptx) file.
+    1. Add autotests (locally-runned)
 
-        The following steps are to cover all of sample PTX's instructions and add arguments serialization support.
+        It is about creating the environment for intergaration autotests to be runned locally. They should run the supported PTX samples and check the output `.json` with the expected.
+
+        It is also a good idea to make some unittests environment.
 
     Long term tasks:
 
@@ -24,7 +28,11 @@
 
     1. Implement a threads' synchronization logic.
 
-    1. Support more comlex kernels.
+    1. Support more comlex kernels (_there should be the list_). It is about coverage of PTX. The following things are now planned to be supported: predicates, synchronizations, C-style dirictives, includes.
+
+    1. Provide warp-based execution, blocked execution, shared memory.
+
+    1. Provide efficient multithreaded execution (see the **Optimization** paragraph).
 
 
 - ### Refactoring
@@ -40,11 +48,11 @@
 
     - A kernel is ran on as many threads is possible currently. It'll be better to create only as many logical threads, as the system has physiscally. The threads should be executed till the some break (e.g. synchronization point) and the logical thread should switch the execution to another ready thread (not stated in another logical thread to try keep l1 and l2 caches)
 
-    - We can improve memory consuption bu using not a smart pointers, but a raw pointer for the virtual cariables memory
+    - We can improve memory consuption by simplifying the used data types.
 
     - I struction's parsing logic should be removed from the threads executions tep into the prepass, which will prepare the low-memory list of isntructions and links to the arguments
 
 
 - ### Documentation
 
-    A documentation for the architecture and usage should be provided. The exciting small aount of docs should be updated before the code is publicly opened.
+    A documentation for the architecture and usage should be provided. The existed small amount of docs should be updated before the code is publicly opened.

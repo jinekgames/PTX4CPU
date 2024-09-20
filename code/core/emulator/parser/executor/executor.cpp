@@ -9,7 +9,7 @@ using namespace PTX4CPU;
 
 ThreadExecutor::ThreadExecutor(const Data::Iterator& iterator, const Types::Function& func,
                                const std::shared_ptr<Types::VarsTable>& arguments,
-                               const uint3_32& threadId)
+                               const BaseTypes::uint3_32& threadId)
     : m_ThreadId{threadId}
     , m_DataIter{iterator}
     , m_Func{func}
@@ -48,16 +48,16 @@ void ThreadExecutor::Reset() const {
     }
 }
 
-Result ThreadExecutor::Run(Data::Iterator::Size instructionsCount) const {
+Result ThreadExecutor::Run(Data::Iterator::SizeType instructionsCount) const {
 
     const std::string logPrefix = std::vformat("ThreadExecutor[{},{},{}]",
         std::make_format_args(m_ThreadId.x, m_ThreadId.y, m_ThreadId.z));
 
     PRINT_I("%s: Starting a function execution (offset:%llu)",
-            logPrefix.c_str(), m_DataIter.GetOffset());
+            logPrefix.c_str(), m_DataIter.Offset());
 
-    for (; m_DataIter.IsValid() && m_DataIter.GetOffset() - m_Func.start < instructionsCount;
-         m_DataIter.Next()) {
+    for (; m_DataIter.IsValid() && m_DataIter.Offset() - m_Func.start < instructionsCount;
+         ++m_DataIter) {
 
         decltype(auto) instStr = m_DataIter.ReadInstruction();
 
@@ -67,17 +67,17 @@ Result ThreadExecutor::Run(Data::Iterator::Size instructionsCount) const {
         if(!res) {
             if (res == Result::Code::NotOk) {
                 PRINT_W("%s Execution warning (offset:%llu): %s",
-                        logPrefix.c_str(), m_DataIter.GetOffset(), res.msg.c_str());
+                        logPrefix.c_str(), m_DataIter.Offset(), res.msg.c_str());
             } else {
                 res.msg = std::vformat("(offset:{}): {}",
-                    std::make_format_args(m_DataIter.GetOffset(), res.msg));
+                    std::make_format_args(m_DataIter.Offset(), res.msg));
                 return res;
             }
         }
     }
 
     PRINT_I("%s: Execution paused (offset:%llu)",
-            logPrefix.c_str(), m_DataIter.GetOffset());
+            logPrefix.c_str(), m_DataIter.Offset());
 
     return {};
 }

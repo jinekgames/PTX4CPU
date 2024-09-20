@@ -29,12 +29,12 @@ Result DispatchTable::Op2Internal(const ThreadExecutor* pExecutor,
                                   InstructionRunner::InstructionIter& iter,
                                   pOpProc OpProc) {
 
-    const auto typeStr = iter.ReadWord2();
-    const auto type = Types::GetFromStr(typeStr);
+    const auto typeStr = iter.ReadWord();
+    const auto type    = Types::StrToPTXType(typeStr);
 
-    const auto dstFullName  = iter.ReadWord2();
-    const auto leftFullName = iter.ReadWord2();
-    const auto rghtFullName = iter.ReadWord2();
+    const auto dstFullName  = iter.ReadWord();
+    const auto leftFullName = iter.ReadWord();
+    const auto rghtFullName = iter.ReadWord();
 
     const auto dstDesc  = Parser::ParseVectorName(dstFullName);
     const auto leftDesc = Parser::ParseVectorName(leftFullName);
