@@ -16,6 +16,12 @@
 
         Current implementation of PTX-file parser is very poor and won't allow to cover the PTX language features. It is to be redesigned the way the instruction is parsed and stored. May be it will be needed to refactor the ibstructions torage format too, but currently not planned
 
+    1. Add autotests (locally-runned)
+
+        It is about creating the environment for intergaration autotests to be runned locally. They should run the supported PTX samples and check the output `.json` with the expected.
+
+        It is also a good idea to make some unittests environment.
+
     Long term tasks:
 
     1. Add a filtration logic accorting to the _PTX_ version and gpu's _SM\_##_ type.

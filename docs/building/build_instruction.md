@@ -16,5 +16,8 @@ git submodule update --init --recursive
 mkdir build
 cd build
 cmake ..
+cmake --build .
 ```
 
+or just use any other ability to build from the CMakeLists.txt stored in the
+project's root directory.
