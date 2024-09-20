@@ -2,7 +2,7 @@
 
 #include <format>
 
-#include <instruction.h>
+#include <instruction_runner.h>
 
 
 using namespace PTX4CPU;

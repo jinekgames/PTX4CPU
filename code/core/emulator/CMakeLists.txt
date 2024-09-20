@@ -11,8 +11,8 @@ set(emulator_sources
     ${EXECUTOR_DIR}/dispatch_table.h
     ${EXECUTOR_DIR}/executor.cpp
     ${EXECUTOR_DIR}/executor.h
-    ${EXECUTOR_DIR}/instruction.cpp
-    ${EXECUTOR_DIR}/instruction.h
+    ${EXECUTOR_DIR}/instruction_runner.cpp
+    ${EXECUTOR_DIR}/instruction_runner.h
     ${PARSER_DIR}/parser.cpp
     ${PARSER_DIR}/parser.h
     ${PARSER_DIR}/parser_types.h
