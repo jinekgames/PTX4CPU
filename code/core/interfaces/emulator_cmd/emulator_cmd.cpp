@@ -29,10 +29,10 @@ std::string ReadFile(const std::string& filepath) {
 }
 
 auto CreateTranslator(const std::string& src) {
-    PTX4CPU::ITranslator* rawPtr = nullptr;
-    EMULATOR_CreateTranslator(&rawPtr, src);
+    PTX4CPU::IEmulator* rawPtr = nullptr;
+    EMULATOR_CreateEmulator(&rawPtr, src);
 
-    return std::unique_ptr<PTX4CPU::ITranslator>{rawPtr};
+    return std::unique_ptr<PTX4CPU::IEmulator>{rawPtr};
 }
 
 auto ParseArgsJson(const std::string& json) {

@@ -17,7 +17,7 @@
 #endif
 
 
-#include <translator_interface.h>
+#include <emulator/emulator_interface.h>
 
 #include <string>
 
@@ -29,7 +29,7 @@
  * @param source      source code of a PTX
 */
 extern "C" EMULATOR_EXPORT_API void EMULATOR_CC
-EMULATOR_CreateTranslator(PTX4CPU::ITranslator** translator, const std::string& source);
+EMULATOR_CreateEmulator(PTX4CPU::IEmulator** translator, const std::string& source);
 
 struct PtxInputData;
 using PtxExecArgs = PtxInputData*;

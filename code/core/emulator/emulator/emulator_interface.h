@@ -12,9 +12,9 @@ using PtxExecArgs = PtxInputData*;
 
 namespace PTX4CPU {
 
-struct ITranslator {
+struct IEmulator {
 
-    ITranslator();
+    IEmulator();
 
     /**
      * Execute named function from the loaded PTX.

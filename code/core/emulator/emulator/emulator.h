@@ -4,12 +4,12 @@
 #include <vector>
 #include <utility>
 
-#include <translator_interface.h>
+#include <emulator/emulator_interface.h>
 #include <parser.h>
 
 namespace PTX4CPU {
 
-class Translator : public ITranslator {
+class Emulator : public IEmulator {
 
 public:
 
@@ -19,21 +19,21 @@ public:
 
 public:
 
-    Translator();
+    Emulator();
     /**
      * @param source source code of a PTX
     */
-    Translator(const std::string& source);
-    Translator(const Translator&) = delete;
-    Translator(Translator&& right)
+    Emulator(const std::string& source);
+    Emulator(const Emulator&) = delete;
+    Emulator(Emulator&& right)
         : m_Parser(std::move(right.m_Parser)) {
 
         right.m_Parser = {};
     }
-    ~Translator() = default;
+    ~Emulator() = default;
 
-    Translator operator = (const Translator&) = delete;
-    Translator operator = (Translator&& right) {
+    Emulator operator = (const Emulator&) = delete;
+    Emulator operator = (Emulator&& right) {
         m_Parser = std::move(right.m_Parser);
         right.m_Parser = {};
     }

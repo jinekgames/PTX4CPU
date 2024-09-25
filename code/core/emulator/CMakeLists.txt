@@ -24,16 +24,15 @@ set(emulator_sources
     ${PARSER_DIR}/types/ptx_types.h
     ${PARSER_DIR}/types/virtual_var.cpp
     ${PARSER_DIR}/types/virtual_var.h
-    ${TRANSLATOR_DIR}/translator.cpp
-    ${TRANSLATOR_DIR}/translator.h
-    ${TRANSLATOR_DIR}/translator_interface.cpp
-    ${TRANSLATOR_DIR}/translator_interface.h
+    ${EMULATOR_DIR}/emulator/emulator.cpp
+    ${EMULATOR_DIR}/emulator/emulator.h
+    ${EMULATOR_DIR}/emulator/emulator_interface.cpp
+    ${EMULATOR_DIR}/emulator/emulator_interface.h
 )
 
 set(emulator_includes
     ${EXECUTOR_DIR}
     ${JSON_PARSER_DIR}/include
-    ${TRANSLATOR_DIR}
     ${PARSER_DIR}
 )
 
