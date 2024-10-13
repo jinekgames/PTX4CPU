@@ -1,4 +1,13 @@
-# plugins dirs
+# Plugins dirs
 .VSCodeCounter
-# build dir
+
+# Default build dir
 build*/
+
+# Tests output dir
+ext/cuda_ptx_samples/output
+
+# VS Code profiles
+.vscode/*
+!.vscode/c_cpp_properties.json
+!.vscode/launch.json

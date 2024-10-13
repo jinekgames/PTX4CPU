@@ -1,10 +1,16 @@
 #include "runner.h"
 
 
-using namespace PTX4CPU;
+namespace PTX4CPU {
+namespace DispatchTable {
 
-Result DispatchTable::Return(const ThreadExecutor* pExecutor, InstructionRunner::InstructionIter&) {
-    auto& iter = pExecutor->GetIter();
-    iter.Shift(pExecutor->GetFunc().end - iter.Offset());
+Result Return(ThreadExecutor* pExecutor,
+              const Types::Instruction& instruction) {
+
+    PRINT_V("Function '%s' returned", pExecutor->GetFunc()->name.c_str());
+    pExecutor->Finish();
     return {};
 }
+
+}  // namespace DispatchTable
+}  // namespace PTX4CPU

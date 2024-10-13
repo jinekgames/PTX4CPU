@@ -11,13 +11,13 @@ namespace PTX4CPU {
 namespace Data {
 
 // Interating code type (base work) (each instruction into one line)
-using Type = std::vector<std::string>;
+using RawData = std::vector<std::string>;
 
-class Iterator final : public BaseTypes::IteratorBase<Type> {
+class Iterator final : public BaseTypes::IteratorBase<RawData> {
 
 private:
 
-    using P = BaseTypes::IteratorBase<Type>;
+    using P = BaseTypes::IteratorBase<RawData>;
 
 public:
 

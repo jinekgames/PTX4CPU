@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <optional>
 #include <string>
 #include <vector>
 #include <unordered_map>
@@ -13,18 +14,56 @@
 namespace PTX4CPU {
 namespace Types {
 
+struct Instruction {
+
+    explicit Instruction(const std::string& intructionStr);
+
+    struct Predicate {
+
+        explicit Predicate(const std::string& predicateStr);
+
+        // Represents whether the positive or negative result is target
+        bool isNegative = false;
+        // Variable name storing the processed parameter
+        std::string varName;
+
+        static constexpr auto PRED_PREFIX_SYMB   = '@';
+        static constexpr auto PRED_NEGATIVE_SYMB = '!';
+    };
+
+    std::string    GetStrType() const;
+    Types::PTXType GetPtxType() const;
+
+    // Predicative execution param (optional)
+    std::optional<Predicate> predicate;
+    // Instruction name
+    std::string name;
+
+    using ArgsList = std::vector<std::string>;
+
+    // Instruction execution arguments
+    ArgsList args;
+};
+
+/**
+ * PTX function's description with the list of instructions
+*/
 struct Function
 {
-    Function()                = default;
-    Function(const Function&) = default;
-    Function(Function&& right);
-    ~Function()               = default;
-    Function& operator = (const Function&) = delete;
-    Function& operator = (Function&& right);
+public:
 
-private:
+    Function()                 = default;
+    Function(const Function&)  = delete;
+    Function(Function&& right) = default;
+    ~Function()                = default;
 
-    static void Move(Function& left, Function& right);
+    Function& operator = (const Function&)  = delete;
+    Function& operator = (Function&& right) = default;
+
+public:
+
+    // Insert isntructions from current position till the end of the block
+    void InsertInstructions(Data::Iterator& iter);
 
 public:
 
@@ -36,10 +75,12 @@ public:
     std::unordered_map<std::string, PtxVarDesc> arguments;
     // returning value name to it's type
     std::unordered_map<std::string, PtxVarDesc> returns;
-    // Index of m_Data pointed to the first instruction of the function body
-    Data::Iterator::SizeType start = Data::Iterator::Npos;
-    // Index of m_Data pointed to the first index after the last instruction of the function body
-    Data::Iterator::SizeType end   = Data::Iterator::Npos;
+
+    // List of function's instructions
+    using Instructions = std::vector<Instruction>;
+
+    Instructions instructions;
+
 };
 
 using FuncsList = std::vector<Types::Function>;

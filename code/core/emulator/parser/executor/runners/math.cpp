@@ -5,72 +5,35 @@
 #include <sstream>
 
 
-using namespace PTX4CPU;
+namespace PTX4CPU {
+namespace DispatchTable {
 
-template<Types::PTXType type>
-Types::PTXVarPtr DispatchTable::CreateTempValueVarTyped(const std::string& value) {
+using pfnOpProc = Result(*)(Types::PTXType,
+                            const std::vector<Types::ArgumentPair>&);
 
-    std::stringstream ss(value);
-    Types::getVarType<type> realValue;
-    ss >> realValue;
+Result Op2Internal(ThreadExecutor* pExecutor,
+                   const Types::Instruction& instruction,
+                   pfnOpProc OpProc) {
 
-    return Types::PTXVarPtr{new Types::PTXVarTyped<type>{&realValue}};
-}
-
-Types::PTXVarPtr DispatchTable::CreateTempValueVar(Types::PTXType type, const std::string& value) {
-
-    PTXTypedOp(type,
-        return  CreateTempValueVarTyped<_PtxType_>(value);
-    )
-    return nullptr;
-}
-
-Result DispatchTable::Op2Internal(const ThreadExecutor* pExecutor,
-                                  InstructionRunner::InstructionIter& iter,
-                                  pOpProc OpProc) {
-
-    const auto typeStr = iter.ReadWord();
-    const auto type    = Types::StrToPTXType(typeStr);
-
-    const auto dstFullName  = iter.ReadWord();
-    const auto leftFullName = iter.ReadWord();
-    const auto rghtFullName = iter.ReadWord();
-
-    const auto dstDesc  = Parser::ParseVectorName(dstFullName);
-    const auto leftDesc = Parser::ParseVectorName(leftFullName);
-    const auto rghtDesc = Parser::ParseVectorName(rghtFullName);
-
-    auto pDstVar  = pExecutor->GetTable()->FindVar(dstDesc.name);
-    auto pLeftVar = pExecutor->GetTable()->FindVar(leftDesc.name);
-    auto pRghtVar = pExecutor->GetTable()->FindVar(rghtDesc.name);
-
-    // Make a vars for not existed vars
-    Types::PTXVarPtr pLeftTempVar;
-    Types::PTXVarPtr pRghtTempVar;
-    const auto varNamePrefix = '%';
-    if (!pLeftVar && leftFullName.front() != varNamePrefix) {
-        pLeftTempVar = std::move(CreateTempValueVar(type, leftFullName));
-        pLeftVar = pLeftTempVar.get();
-    }
-    if (!pRghtVar && rghtFullName.front() != varNamePrefix) {
-        pRghtTempVar = std::move(CreateTempValueVar(type, rghtFullName));
-        pRghtVar = pRghtTempVar.get();
-    }
+    const auto type = instruction.GetPtxType();
+    const auto args = pExecutor->RetrieveArgs(type, instruction.args);
 
 #ifdef COMPILE_SAFE_CHECKS
-    if (!pDstVar) {
-        return { "Variable \"" + dstFullName + "\" storing the operation product is undefined" };
+    if (args.size() < 1 || !args[0].first) {
+        return { "Variable storing the operation product is undefined" };
     }
-    if (!pLeftVar) {
-        return { "Variable \"" + leftFullName + "\" storing the operation argument is undefined" };
+    if (args.size() < 2 || !args[1].first) {
+        return { "Variable storing the left operation argument is undefined" };
     }
-    if (!pRghtVar) {
-        return { "Variable \"" + rghtFullName + "\" storing the operation argument is undefined" };
+    if (args.size() < 3 || !args[2].first) {
+        return { "Variable storing the right operation argument is undefined" };
     }
-#endif
+    if (args.size() > 3) {
+        PRINT_E("Too much arguments passed");
+    }
+#endif  // #ifdef COMPILE_SAFE_CHECKS
 
-    return OpProc(type, *pDstVar, *pLeftVar, *pRghtVar,
-                  dstDesc.key, leftDesc.key, rghtDesc.key);
+    return OpProc(type, args);
 }
 
 enum class MulMode {
@@ -113,45 +76,54 @@ Result MulOpTyped(Types::PTXVar& dst, Types::PTXVar& left, Types::PTXVar& rght,
 }
 
 template<MulMode mode>
-Result MulOp(Types::PTXType type, Types::PTXVar& dst, Types::PTXVar& left, Types::PTXVar& rght,
-             char dstKey = 'x', char leftKey = 'x', char rghtKey = 'x') {
+Result MulOp(Types::PTXType type,
+             const std::vector<Types::ArgumentPair>& args) {
+
+    const auto& pDst     = args[0].first;
+    const auto& pLeft    = args[1].first;
+    const auto& pRght    = args[2].first;
+
+    const auto  dstKey  = args[0].second;
+    const auto  leftKey = args[1].second;
+    const auto  rghtKey = args[2].second;
 
     PTXTypedOp(type,
-        return MulOpTyped<mode, _PtxType_>(dst, left, rght, dstKey, leftKey, rghtKey);
+        return MulOpTyped<mode, _PtxType_>(*pDst, *pLeft, *pRght,
+                                           dstKey, leftKey, rghtKey);
     )
     return { "Invalid multiplication type" };
 }
 
-Result DispatchTable::MulHi(const ThreadExecutor* pExecutor, InstructionRunner::InstructionIter& iter) {
+Result MulHi(ThreadExecutor* pExecutor, const Types::Instruction &instruction) {
 
     // Instruction sample:
     //  mul.hi.s32   %rd7,   %r1,   4
 
-    auto result = Op2Internal(pExecutor, iter, MulOp<MulMode::Hi>);
+    auto result = Op2Internal(pExecutor, instruction, MulOp<MulMode::Hi>);
     if (!result) {
         PRINT_E("%s", result.msg.c_str());
         return { "Multiplication operation failed" };
     }
     return {};
 }
-Result DispatchTable::MulLo(const ThreadExecutor* pExecutor, InstructionRunner::InstructionIter& iter) {
+Result MulLo(ThreadExecutor* pExecutor, const Types::Instruction &instruction) {
 
     // Instruction sample:
     //  mul.hi.s32   %rd7,   %r1,   4
 
-    auto result = Op2Internal(pExecutor, iter, MulOp<MulMode::Lo>);
+    auto result = Op2Internal(pExecutor, instruction, MulOp<MulMode::Lo>);
     if (!result) {
         PRINT_E("%s", result.msg.c_str());
         return { "Multiplication operation failed" };
     }
     return {};
 }
-Result DispatchTable::MulWide(const ThreadExecutor* pExecutor, InstructionRunner::InstructionIter& iter) {
+Result MulWide(ThreadExecutor* pExecutor, const Types::Instruction &instruction) {
 
     // Instruction sample:
     //  mul.hi.s32   %rd7,   %r1,   4
 
-    auto result = Op2Internal(pExecutor, iter, MulOp<MulMode::Wide>);
+    auto result = Op2Internal(pExecutor, instruction, MulOp<MulMode::Wide>);
     if (!result) {
         PRINT_E("%s", result.msg.c_str());
         return { "Multiplication operation failed" };
@@ -171,24 +143,36 @@ Result AddOpTyped(Types::PTXVar& dst, Types::PTXVar& left, Types::PTXVar& rght,
     return {};
 }
 
-Result AddOp(Types::PTXType type, Types::PTXVar& dst, Types::PTXVar& left, Types::PTXVar& rght,
-             char dstKey = 'x', char leftKey = 'x', char rghtKey = 'x') {
+Result AddOp(Types::PTXType type,
+             const std::vector<Types::ArgumentPair>& args) {
+
+    const auto& pDst     = args[0].first;
+    const auto& pLeft    = args[1].first;
+    const auto& pRght    = args[2].first;
+
+    const auto  dstKey  = args[0].second;
+    const auto  leftKey = args[1].second;
+    const auto  rghtKey = args[2].second;
 
     PTXTypedOp(type,
-        return AddOpTyped<_PtxType_>(dst, left, rght, dstKey, leftKey, rghtKey);
+        return AddOpTyped<_PtxType_>(*pDst, *pLeft, *pRght,
+                                     dstKey, leftKey, rghtKey);
     )
     return { "Invalid multiplication type" };
 }
 
-Result DispatchTable::Add(const ThreadExecutor* pExecutor, InstructionRunner::InstructionIter& iter) {
+Result Add(ThreadExecutor* pExecutor, const Types::Instruction& instruction) {
 
     // Instruction sample:
     //  add.s32   %rd7,   %r1,   4
 
-    auto result = Op2Internal(pExecutor, iter, AddOp);
+    auto result = Op2Internal(pExecutor, instruction, AddOp);
     if (!result) {
         PRINT_E("%s", result.msg.c_str());
         return { "Multiplication operation failed" };
     }
     return {};
 }
+
+}  // namespace DispatchTable
+}  // namespace PTX4CPU

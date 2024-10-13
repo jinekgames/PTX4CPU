@@ -1,22 +1,28 @@
 #include <instruction_runner.h>
 
+#include <format>
+
 #include <executor.h>
 #include <helpers.h>
 #include <logger/logger.h>
+#include <utils/string_utils.h>
 
 
 using namespace PTX4CPU;
 
-InstructionRunner::InstructionRunner(const std::string& instruction, const ThreadExecutor* pExecutor)
+InstructionRunner::InstructionRunner(const Types::Instruction& instruction,
+                                     ThreadExecutor* pExecutor)
     : m_Instruction{instruction}
-    , m_InstructionIter{m_Instruction}
     , m_pExecutor{pExecutor} {
 
     if (m_pExecutor) {
-        PRINT_V("[%d,%d,%d]:%lu: > %s",
-                m_pExecutor->m_ThreadId.x, m_pExecutor->m_ThreadId.y, m_pExecutor->m_ThreadId.z,
-                m_pExecutor->m_DataIter.Offset(),
-                instruction.c_str());
+        PRINT_V("[%d,%d,%d]:%llu > %s %s",
+                m_pExecutor->GetTID().x,
+                m_pExecutor->GetTID().y,
+                m_pExecutor->GetTID().z,
+                m_pExecutor->GetPos(),
+                m_Instruction.name.c_str(),
+                Merge(std::string(", "), m_Instruction.args).c_str());
     }
 
     FindRunner();
@@ -32,29 +38,33 @@ void InstructionRunner::FindRunner() {
      * Erase type from the command, it will be processed by the runner
     */
 
-    auto command = m_InstructionIter.ReadWord();
+    auto command = m_Instruction.name;
 
     auto dotIdx = command.find_last_of('.');
-    if (dotIdx != 0 && dotIdx != std::string::npos)
-    {
+    if (dotIdx != 0 && dotIdx != std::string::npos) {
         command.erase(dotIdx);
-        // shift back to type start to read from the runner
-        m_InstructionIter.Shift(dotIdx - m_InstructionIter.Offset());
     }
 
     auto found = m_DispatchTable.find(command);
-    if (found != m_DispatchTable.end())
+    if (found != m_DispatchTable.end()) {
         m_Runner = found->second;
+    }
 }
 
 Result InstructionRunner::Run() {
 
-    if (!m_pExecutor)
+    if (!m_pExecutor) {
         return {"Invalid executor"};
+    }
 
-    if (m_Runner)
-        return m_Runner(m_pExecutor, m_InstructionIter);
+    if (m_Runner) {
+        return m_Runner(m_pExecutor, m_Instruction);
+    }
 
-    return {Result::Code::NotOk, "Runner for the given instruction not found. Skipped (" +
-                                 m_InstructionIter.Data() + ")"};
+    return {Result::Code::NotOk,
+            std::vformat("Runner for the given instruction not found. "
+                         "Skipped `{} {}`",
+                         std::make_format_args(
+                             m_Instruction.name,
+                             Merge(std::string(", "), m_Instruction.args)))};
 }

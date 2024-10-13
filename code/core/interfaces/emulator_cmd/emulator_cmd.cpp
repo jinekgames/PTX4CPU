@@ -18,7 +18,7 @@ namespace {
 std::string ReadFile(const std::string& filepath) {
 
     std::ifstream sin(filepath);
-    if(!sin.is_open()) {
+    if (!sin.is_open()) {
         std::cout << "ERROR: File '" << filepath << "' opening failed" << std::endl;
         return "";
     }
@@ -67,7 +67,7 @@ bool SaveOutputData(const std::string& filepath, PtxExecArgs& execArgs) {
         std::cout << "Execution output:" << std::endl << std::endl;
     } else {
         fout.open(filepath);
-        if(fout.is_open()) {
+        if (fout.is_open()) {
             pOut = &fout;
             std::cout << "Saving execion output to '" << filepath << "'" << std::endl;
         } else {

@@ -47,12 +47,14 @@ bool IteratorBase<T>::IsValid() const {
 template<class T>
 const typename IteratorBase<T>::IterType
 IteratorBase<T>::Shift(int64_t offset) const {
-    auto absOffset = std::abs(offset);
-    for (int64_t i = 0; IsValid() && i < absOffset; ++i) {
-        if (offset > 0)
+    if (offset > 0) {
+        for (int64_t i = 0; (m_CurIter < End()) && (i < offset); ++i) {
             Next();
-        else
+        }
+    } else {
+        for (int64_t i = 0; (m_CurIter > Begin()) && (i > offset); --i) {
             Prev();
+        }
     }
     return m_CurIter;
 }

@@ -8,7 +8,6 @@ set(DTABLE_RUNNERS_DIR ${EXECUTOR_DIR}/runners)
 
 set(emulator_sources
     ${EXECUTOR_DIR}/dispatch_table.cpp
-    ${EXECUTOR_DIR}/dispatch_table.h
     ${EXECUTOR_DIR}/executor.cpp
     ${EXECUTOR_DIR}/executor.h
     ${EXECUTOR_DIR}/instruction_runner.cpp

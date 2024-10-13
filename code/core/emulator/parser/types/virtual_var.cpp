@@ -25,8 +25,9 @@ PTXVar& PTXVar::operator = (PTXVar&& right) {
 
 void PTXVar::Move(PTXVar& left, PTXVar& right) {
 
-    if(&left == &right)
+    if (&left == &right) {
         return;
+    }
 
     left.pValue = std::move(right.pValue);
 
@@ -66,7 +67,7 @@ void VarsTable::SwapVars(VarsTable& table) {
 }
 
 bool VarsTable::Contains(const std::string& name) {
-    return FindVar(name);
+    return bool{FindVar(name)};
 }
 
 void VarsTable::AppendVar(const std::string& name, PTXVarPtr&& pVar) {
@@ -95,18 +96,18 @@ void VarsTable::Clear() {
     virtualVars.clear();
 }
 
-PTXVar* VarsTable::FindVar(const std::string& name) {
+PTXVarPtr VarsTable::FindVar(const std::string& name) {
     for (const auto* pTable = this; pTable; pTable = pTable->parent) {
         if (pTable->virtualVars.contains(name))
-            return pTable->virtualVars.at(name).get();
+            return pTable->virtualVars.at(name);
     }
     return nullptr;
 }
 
-const PTXVar* VarsTable::FindVar(const std::string& name) const {
+const PTXVarPtr VarsTable::FindVar(const std::string& name) const {
     for (const auto* pTable = this; pTable; pTable = parent) {
         if (pTable->virtualVars.contains(name))
-            return pTable->virtualVars.at(name).get();
+            return pTable->virtualVars.at(name);
     }
     return nullptr;
 }

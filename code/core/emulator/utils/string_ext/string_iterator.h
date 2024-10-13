@@ -78,10 +78,10 @@ inline static const std::unordered_map<WordDelimiter, std::string> baseDelimsTab
     { BackSlash,     "\\" },
 };
 
-inline WordDelimiter operator & (WordDelimiter left, WordDelimiter right) {
+inline constexpr WordDelimiter operator & (WordDelimiter left, WordDelimiter right) {
     return static_cast<WordDelimiter>(static_cast<int>(left) & static_cast<int>(right));
 }
-inline WordDelimiter operator | (WordDelimiter left, WordDelimiter right) {
+inline constexpr WordDelimiter operator | (WordDelimiter left, WordDelimiter right) {
     return static_cast<WordDelimiter>(static_cast<int>(left) | static_cast<int>(right));
 }
 
@@ -134,15 +134,15 @@ public:
     BracketStack::size_type GetBracketDepth() const;
 
     // Checks if iterator is located on the space symbol
-    bool IsSpace()   const { return std::isspace(*P::m_CurIter); }
+    bool IsSpace()   const { return std::isspace(GetChar()); }
     // Checks if iterator is located on the letter
-    bool IsAlpha()   const { return std::isalpha(*P::m_CurIter); }
+    bool IsAlpha()   const { return std::isalpha(GetChar()); }
     // Checks if iterator is located on the upper-case letter
-    bool IsUpper()   const { return std::isupper(*P::m_CurIter); }
+    bool IsUpper()   const { return std::isupper(GetChar()); }
     // Checks if iterator is located on the lower-case letter
-    bool IsLower()   const { return std::islower(*P::m_CurIter); }
+    bool IsLower()   const { return std::islower(GetChar()); }
     // Checks if iterator is located on the digit
-    bool IsDigit()   const { return std::isdigit(*P::m_CurIter); }
+    bool IsDigit()   const { return std::isdigit(GetChar()); }
     // Checks if iterator is located on the bracket
     bool IsBracket() const { return IsBracket(P::m_CurIter); }
 
@@ -180,6 +180,9 @@ public:
     // If `keepLocation` the pointer will be shifted back to start position
     P::RawType ReadWord(bool keepLocation = false,
                         WordDelimiter delimiter = CodeDelimiter) const;
+
+    // Returns current char.
+    P::RawType::value_type GetChar() const { return *P::m_CurIter; }
 
 private:
 

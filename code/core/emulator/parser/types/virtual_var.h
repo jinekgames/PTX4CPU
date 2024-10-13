@@ -17,9 +17,12 @@ namespace Types {
 
 class PTXVar;
 
-using PTXVarPtr  = std::unique_ptr<PTXVar>;
+using PTXVarPtr  = std::shared_ptr<PTXVar>;
 using PTXVarList = std::vector<PTXVarPtr>;
 using IndexType  = int64_t;
+
+// Virtual variable with the access-key
+using ArgumentPair = std::pair<std::shared_ptr<PTXVar>, char>;
 
 template<IndexType size>
 concept VectorSize = size >= 1 && size <= 4;
@@ -54,50 +57,22 @@ public:
 
     template<PTXType ptxType>
     getVarType<ptxType>& Get(IndexType idx = 0) {
-#ifdef COMPILE_SAFE_CHECKS
-        if (idx < 0 || idx >= GetVectorSize() && idx >= GetDynamicSize()) {
-            PRINT_E("Invalid vector access index (should be 0..%d). Treat as 0", GetVectorSize());
-            idx = 0;
-        }
-#endif
-        return static_cast<getVarType<ptxType>*>(pValue.get())[idx];
+        return GetByIdx<ptxType>(idx);
     }
 
     template<PTXType ptxType>
     const getVarType<ptxType>& Get(IndexType idx = 0) const {
-#ifdef COMPILE_SAFE_CHECKS
-        if (idx < 0 || idx >= GetVectorSize() && idx >= GetDynamicSize()) {
-            PRINT_E("Invalid vector access index (should be 0..%d). Treat as 0", GetVectorSize());
-            idx = 0;
-        }
-#endif
-        return static_cast<getVarType<ptxType>*>(pValue.get())[idx];
+        return GetByIdx<ptxType>(idx);
     }
 
     template<PTXType ptxType>
     getVarType<ptxType>& Get(char key) {
-        constexpr std::array<char, 4> appropriateKeys = { 'x', 'y', 'z', 'w' };
-        auto idx = static_cast<IndexType>(std::find(appropriateKeys.begin(), appropriateKeys.end(), key) - appropriateKeys.begin());
-#ifdef COMPILE_SAFE_CHECKS
-        if (idx < 0 || idx >= GetVectorSize() && idx >= GetDynamicSize()) {
-            PRINT_E("Invalid vector access key (should be one of \"xyzw\"). Treat as x");
-            idx = 0;
-        }
-#endif
-        return Get<ptxType>(idx);
+        return GetByKey<ptxType>(key);
     }
 
     template<PTXType ptxType>
     const getVarType<ptxType>& Get(char key) const {
-        constexpr std::array<char, 4> appropriateKeys = "xyzw";
-        auto idx = static_cast<IndexType>(std::find(appropriateKeys.begin(), appropriateKeys.end(), key) - appropriateKeys.begin());
-#ifdef COMPILE_SAFE_CHECKS
-        if (idx < 0 || idx >= GetVectorSize() && idx >= GetDynamicSize()) {
-            PRINT_E("Invalid vector access key (should be one of \"xyzw\"). Treat as x");
-            idx = 0;
-        }
-#endif
-        return Get<ptxType>(idx);
+        return GetByKey<ptxType>(key);
     }
 
     virtual PTXVarPtr       MakeCopy()            = 0;
@@ -142,6 +117,30 @@ protected:
     RawValuePtrType pValue;
 
 private:
+
+    template<PTXType ptxType>
+    getVarType<ptxType>& GetByIdx(IndexType idx = 0) const {
+#ifdef COMPILE_SAFE_CHECKS
+        if (idx < 0 || idx >= GetVectorSize() && idx >= GetDynamicSize()) {
+            PRINT_E("Invalid vector access index (should be 0..%d). Treat as 0", GetVectorSize());
+            idx = 0;
+        }
+#endif
+        return static_cast<getVarType<ptxType>*>(pValue.get())[idx];
+    }
+
+    template<PTXType ptxType>
+    getVarType<ptxType>& GetByKey(char key) const {
+        constexpr std::array<char, 4> appropriateKeys = { 'x', 'y', 'z', 'w' };
+        auto idx = static_cast<IndexType>(std::find(appropriateKeys.begin(), appropriateKeys.end(), key) - appropriateKeys.begin());
+#ifdef COMPILE_SAFE_CHECKS
+        if (idx < 0 || idx >= GetVectorSize() && idx >= GetDynamicSize()) {
+            PRINT_E("Invalid vector access key (should be one of \"xyzw\"). Treat as x");
+            idx = 0;
+        }
+#endif
+        return GetByIdx<ptxType>(idx);
+    }
 
 #ifdef DEBUG_BUILD
     void SetupDebugPtrs() {
@@ -344,8 +343,8 @@ public:
 
     void Clear();
 
-    PTXVar* FindVar(const std::string& name);
-    const PTXVar* FindVar(const std::string& name) const;
+    PTXVarPtr       FindVar(const std::string& name);
+    const PTXVarPtr FindVar(const std::string& name) const;
 
     const VarsTable* GetParent() const;
 
@@ -361,6 +360,16 @@ struct PtxVarDesc {
     std::vector<std::string> attributes;
     PTXType type;
 };
+
+template<PTXType type>
+PTXVarPtr CreateTempValueVarTyped(const std::string& value) {
+
+    std::stringstream ss(value);
+    getVarType<type> realValue;
+    ss >> realValue;
+
+    return PTXVarPtr{new PTXVarTyped<type>{&realValue}};
+}
 
 }  // namespace Types
 }  // namespace PTX4CPU

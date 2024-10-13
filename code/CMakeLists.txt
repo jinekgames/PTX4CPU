@@ -22,7 +22,7 @@ add_subdirectory(${EMULATOR_DIR})
 
 set(EMULATOR_CMD_DIR ${INTERFACES_DIR}/emulator_cmd)
 
-if (BUILD_EMULATOR_CMD)
+if(BUILD_EMULATOR_CMD)
     add_subdirectory(${CMD_PARSER_DIR})
     add_subdirectory(${EMULATOR_CMD_DIR})
 endif()

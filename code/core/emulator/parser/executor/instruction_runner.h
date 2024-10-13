@@ -27,15 +27,16 @@ public:
 
     using RunnerFuncRet   = Result;
     using InstructionIter = const StringIteration::SmartIterator<const std::string>;
-    using RunnerFunc      = std::function<RunnerFuncRet(const ThreadExecutor*, InstructionIter&)>;
+    using RunnerFunc      = std::function<RunnerFuncRet(ThreadExecutor*,
+                                                        const Types::Instruction&)>;
 
-    InstructionRunner(const std::string& instruction, const ThreadExecutor* pExecutor);
+    InstructionRunner(const Types::Instruction& instruction, ThreadExecutor* pExecutor);
     InstructionRunner(const InstructionRunner&) = delete;
-    InstructionRunner(InstructionRunner&&) = delete;
-    ~InstructionRunner() = default;
+    InstructionRunner(InstructionRunner&&)      = delete;
+    ~InstructionRunner()                        = default;
 
     InstructionRunner& operator = (const InstructionRunner&) = delete;
-    InstructionRunner& operator = (InstructionRunner&&) = delete;
+    InstructionRunner& operator = (InstructionRunner&&)      = delete;
 
 private:
 
@@ -47,11 +48,9 @@ public:
 
 private:
 
-    const std::string m_Instruction;
+    const Types::Instruction& m_Instruction;
 
-    InstructionIter m_InstructionIter;
-
-    const ThreadExecutor* m_pExecutor;
+    ThreadExecutor* m_pExecutor;
 
     RunnerFunc m_Runner;
 
