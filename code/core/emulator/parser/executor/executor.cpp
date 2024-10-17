@@ -28,8 +28,7 @@ void ThreadExecutor::Reset() const {
     }
 }
 
-void ThreadExecutor::Finish() const
-{
+void ThreadExecutor::Finish() const {
     m_InstructionPosition = m_pFunc->instructions.size();
 }
 
