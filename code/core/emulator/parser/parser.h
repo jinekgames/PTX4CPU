@@ -200,7 +200,7 @@ private:
         // KernelAttributes::ALIAS,
     };
 
-    static bool IsFuncDefDirictive(const std::string &dirictive);
+    static bool IsFuncDefDirictive(const std::string& dirictive);
 
     // Global file variables
     mutable Types::VarsTable m_GlobalVarsTable;

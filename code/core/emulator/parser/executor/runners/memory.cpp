@@ -46,7 +46,7 @@ Result RegisterMemory(ThreadExecutor* pExecutor,
     const auto& typeStr = instruction.args[0];
     const auto  type    = Types::StrToPTXType(typeStr);
 
-    const auto &nameWithCount = instruction.args[1];
+    const auto& nameWithCount = instruction.args[1];
 
     // Parse real name and count
     StringIteration::SmartIterator nameIter{nameWithCount};
