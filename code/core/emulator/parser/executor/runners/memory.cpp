@@ -276,7 +276,7 @@ Result CopyVarInternal(ThreadExecutor* pExecutor,
                        const Types::Instruction& instruction) {
 
     const auto type = instruction.GetPtxType();
-    const auto args = pExecutor->RetrieveArgs(type, instruction.args);
+    auto args = pExecutor->RetrieveArgs(type, instruction.args);
 
 #ifdef COMPILE_SAFE_CHECKS
     if (args.size() < 1 || !args[0].first) {
@@ -290,16 +290,13 @@ Result CopyVarInternal(ThreadExecutor* pExecutor,
     }
 #endif  // #ifdef COMPILE_SAFE_CHECKS
 
-    auto* pDstVar = args[0].first.get();
-    auto* pSrcVar = args[1].first.get();
-
-    const auto dstKey = args[0].second;
-    const auto srcKey = args[1].second;
+    auto& dst = args[0];
+    auto& src = args[1];
 
     bool result;
     PTXTypedOp(type,
-        result = pDstVar->AssignValue<_PtxType_, copyAsReference>(
-                     *pSrcVar, srcKey, dstKey);
+        result =
+            Types::PTXVar::AssignValue<_PtxType_, copyAsReference>(dst, src);
     )
 
     if (!result) {

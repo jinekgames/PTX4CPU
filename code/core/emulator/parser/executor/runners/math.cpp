@@ -9,14 +9,14 @@ namespace PTX4CPU {
 namespace DispatchTable {
 
 using pfnOpProc = Result(*)(Types::PTXType,
-                            const std::vector<Types::ArgumentPair>&);
+                            std::vector<Types::ArgumentPair>&);
 
 Result Op2Internal(ThreadExecutor* pExecutor,
                    const Types::Instruction& instruction,
                    pfnOpProc OpProc) {
 
     const auto type = instruction.GetPtxType();
-    const auto args = pExecutor->RetrieveArgs(type, instruction.args);
+    auto args = pExecutor->RetrieveArgs(type, instruction.args);
 
 #ifdef COMPILE_SAFE_CHECKS
     if (args.size() < 1 || !args[0].first) {
@@ -43,31 +43,34 @@ enum class MulMode {
 };
 
 template<MulMode mode, Types::PTXType type>
-Result MulOpTyped(Types::PTXVar& dst, Types::PTXVar& left, Types::PTXVar& rght,
-                  char dstKey = 'x', char leftKey = 'x', char rghtKey = 'x') {
+Result MulOpTyped(Types::ArgumentPair& dst, Types::ArgumentPair& left,
+                  Types::ArgumentPair& rght) {
 
     Result result;
 
     using MulResType   = Types::getVarType<Types::GetDoubleSizeType(type)>;
-    using FinalResType = std::conditional_t<mode == MulMode::Wide, MulResType, Types::getVarType<type>>;
+    using FinalResType = std::conditional_t<(mode == MulMode::Wide),
+                                            MulResType,
+                                            Types::getVarType<type>>;
 
-    decltype(auto) mulResult = static_cast<MulResType>(left.Get<type>(leftKey)) *
-                               static_cast<MulResType>(rght.Get<type>(rghtKey));
+    decltype(auto) mulResult =
+        static_cast<MulResType>(Types::PTXVar::Get<type>(left)) *
+        static_cast<MulResType>(Types::PTXVar::Get<type>(rght));
 
     if constexpr (mode == MulMode::Wide) {
-        if (!dst.AssignValue(&mulResult, dstKey)) {
+        if (!Types::PTXVar::AssignValue(dst, &mulResult)) {
             result = { "Failed to assign multiplication product" };
         }
     } else if constexpr (mode == MulMode::Lo) {
         auto pRes = reinterpret_cast<FinalResType*>(&mulResult);
         auto res = *pRes;
-        if (!dst.AssignValue(&res, dstKey)) {
+        if (!Types::PTXVar::AssignValue(dst, &res)) {
             result = { "Failed to assign multiplication product" };
         }
     } else { // mode == MulMode::Hi
         auto pRes = reinterpret_cast<FinalResType*>(&mulResult) + 1;
         auto res = *pRes;
-        if (!dst.AssignValue(&res, dstKey)) {
+        if (!Types::PTXVar::AssignValue(dst, &res)) {
             result = { "Failed to assign multiplication product" };
         }
     }
@@ -77,19 +80,29 @@ Result MulOpTyped(Types::PTXVar& dst, Types::PTXVar& left, Types::PTXVar& rght,
 
 template<MulMode mode>
 Result MulOp(Types::PTXType type,
-             const std::vector<Types::ArgumentPair>& args) {
+             std::vector<Types::ArgumentPair>& args) {
 
-    const auto& pDst     = args[0].first;
-    const auto& pLeft    = args[1].first;
-    const auto& pRght    = args[2].first;
+#ifdef COMPILE_SAFE_CHECKS
+    if (args.size() < 1 || !args[0].first) {
+        return { "Variable storing the operation product is undefined" };
+    }
+    if (args.size() < 2 || !args[1].first) {
+        return { "Variable storing the left operation argument is undefined" };
+    }
+    if (args.size() < 3 || !args[2].first) {
+        return { "Variable storing the right operation argument is undefined" };
+    }
+    if (args.size() > 3) {
+        PRINT_E("Too much arguments passed");
+    }
+#endif  // #ifdef COMPILE_SAFE_CHECKS
 
-    const auto  dstKey  = args[0].second;
-    const auto  leftKey = args[1].second;
-    const auto  rghtKey = args[2].second;
+    auto& dst  = args[0];
+    auto& left = args[1];
+    auto& rght = args[2];
 
     PTXTypedOp(type,
-        return MulOpTyped<mode, _PtxType_>(*pDst, *pLeft, *pRght,
-                                           dstKey, leftKey, rghtKey);
+        return MulOpTyped<mode, _PtxType_>(dst, left, rght);
     )
     return { "Invalid multiplication type" };
 }
@@ -132,31 +145,42 @@ Result MulWide(ThreadExecutor* pExecutor, const Types::Instruction &instruction)
 }
 
 template<Types::PTXType type>
-Result AddOpTyped(Types::PTXVar& dst, Types::PTXVar& left, Types::PTXVar& rght,
-                  char dstKey = 'x', char leftKey = 'x', char rghtKey = 'x') {
+Result AddOpTyped(Types::ArgumentPair& dst, Types::ArgumentPair& left,
+                  Types::ArgumentPair& rght) {
 
     using AddResType = Types::getVarType<type>;
 
-    dst.Get<type>(dstKey) = static_cast<AddResType>(left.Get<type>(leftKey)) +
-                            static_cast<AddResType>(rght.Get<type>(rghtKey));
+    Types::PTXVar::Get<type>(dst) =
+        static_cast<AddResType>(Types::PTXVar::Get<type>(left)) +
+        static_cast<AddResType>(Types::PTXVar::Get<type>(rght));
 
     return {};
 }
 
 Result AddOp(Types::PTXType type,
-             const std::vector<Types::ArgumentPair>& args) {
+             std::vector<Types::ArgumentPair>& args) {
 
-    const auto& pDst     = args[0].first;
-    const auto& pLeft    = args[1].first;
-    const auto& pRght    = args[2].first;
+#ifdef COMPILE_SAFE_CHECKS
+    if (args.size() < 1 || !args[0].first) {
+        return { "Variable storing the operation product is undefined" };
+    }
+    if (args.size() < 2 || !args[1].first) {
+        return { "Variable storing the left operation argument is undefined" };
+    }
+    if (args.size() < 3 || !args[2].first) {
+        return { "Variable storing the right operation argument is undefined" };
+    }
+    if (args.size() > 3) {
+        PRINT_E("Too much arguments passed");
+    }
+#endif  // #ifdef COMPILE_SAFE_CHECKS
 
-    const auto  dstKey  = args[0].second;
-    const auto  leftKey = args[1].second;
-    const auto  rghtKey = args[2].second;
+    auto& dst  = args[0];
+    auto& left = args[1];
+    auto& rght = args[2];
 
     PTXTypedOp(type,
-        return AddOpTyped<_PtxType_>(*pDst, *pLeft, *pRght,
-                                     dstKey, leftKey, rghtKey);
+        return AddOpTyped<_PtxType_>(dst, left, rght);
     )
     return { "Invalid multiplication type" };
 }

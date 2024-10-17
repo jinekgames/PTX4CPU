@@ -75,6 +75,11 @@ public:
         return GetByKey<ptxType>(key);
     }
 
+    template<PTXType ptxType>
+    static getVarType<ptxType>& Get(ArgumentPair &arg) {
+        return arg.first->GetByKey<ptxType>(arg.second);
+    }
+
     virtual PTXVarPtr       MakeCopy()            = 0;
     virtual const PTXVarPtr MakeCopy()      const = 0;
     virtual PTXVarPtr       MakeReference()       = 0;
@@ -110,7 +115,18 @@ public:
         return CopyValue<type, type, copyAsReference>(src, *this, srcKey, dstKey);
     }
 
+    template<PTXType type, bool copyAsReference>
+    static bool AssignValue(ArgumentPair& dst, const ArgumentPair& src) {
+        return CopyValue<type, type, copyAsReference>(*src.first, *dst.first,
+                                                      src.second, dst.second);
+    }
+
     virtual bool AssignValue(void* pValue, char key = 'x') = 0;
+
+    static bool AssignValue(ArgumentPair& arg, void* pValue)
+    {
+        return arg.first->AssignValue(pValue, arg.second);
+    }
 
 protected:
 
