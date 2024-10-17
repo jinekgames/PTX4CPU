@@ -2,13 +2,14 @@
 
 #include <json_parser/parser.h>
 #include <logger/logger.h>
-#include <translator.h>
+#include <emulator/emulator.h>
 
 
 extern "C" EMULATOR_EXPORT_API void EMULATOR_CC
-EMULATOR_CreateTranslator(PTX4CPU::ITranslator** translator, const std::string& source) {
+EMULATOR_CreateEmulator(PTX4CPU::IEmulator** ppEmulator,
+                        const std::string& sourceCode) {
 
-    *translator = new PTX4CPU::Translator(source);
+    *ppEmulator = new PTX4CPU::Emulator(sourceCode);
 }
 
 extern "C" EMULATOR_EXPORT_API void EMULATOR_CC

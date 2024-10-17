@@ -1,34 +1,79 @@
 #include "ptx_function.h"
 
+#include "utils/string_ext/string_iterator.h"
+
 
 namespace PTX4CPU {
 namespace Types {
 
-Function::Function(Function&& right) {
+Instruction::Instruction(const std::string& intructionStr) {
 
-    Move(*this, right);
-}
-
-Function& Function::operator = (Function&& right) {
-
-    Move(*this, right);
-    return *this;
-}
-
-void Function::Move(Function& left, Function& right) {
-
-    if (&left == &right)
+    if (intructionStr.empty()) {
+        PRINT_E("Got empty intruction string");
         return;
+    }
 
-    left.name       = std::move(right.name);
-    left.attributes = std::move(right.attributes);
-    left.arguments  = std::move(right.arguments);
-    left.returns    = std::move(right.returns);
-    left.start      = right.start;
-    left.end        = right.end;
+    const StringIteration::SmartIterator iter{intructionStr};
 
-    right.start = Data::Iterator::Npos;
-    right.end   = Data::Iterator::Npos;
+    // Parse predicate
+    auto predicateStr =
+        iter.ReadWord(true, StringIteration::WordDelimiter::Space);
+    if (predicateStr.front() == Instruction::Predicate::PRED_PREFIX_SYMB) {
+        predicate = Instruction::Predicate{predicateStr};
+        iter.Shift(predicateStr.length());
+    }
+
+    name = iter.ReadWord();
+
+    while (iter.IsValid()) {
+        constexpr auto delimiter = StringIteration::AllSpaces |
+                                   StringIteration::Punct;
+        const auto arg = iter.ReadWord(false, delimiter);
+        if (!arg.empty()) {
+            args.push_back(arg);
+        }
+    }
+}
+
+Instruction::Predicate::Predicate(const std::string& predicateStr) {
+
+    if (predicateStr.empty()) {
+        PRINT_E("Got empty predicate string");
+        return;
+    }
+
+    // Sample string:  @!%predName:
+
+    const StringIteration::SmartIterator iter{predicateStr};
+
+    if (iter.GetChar() == PRED_NEGATIVE_SYMB) {
+        isNegative = true;
+        ++iter;
+    } else {
+        isNegative = false;
+    }
+
+    // Read 'till ':'
+    varName = iter.ReadWord(false, StringIteration::WordDelimiter::Punct);
+}
+
+std::string Instruction::GetStrType() const
+{
+    return name.substr(name.find_last_of('.'));
+}
+
+Types::PTXType Instruction::GetPtxType() const
+{
+    return Types::StrToPTXType(GetStrType());
+}
+
+void Function::InsertInstructions(Data::Iterator& iter) {
+    while (!iter.IsBlockEnd()) {
+        decltype(auto) instructionStr = iter.ReadInstruction();
+        const Types::Instruction instruction{instructionStr};
+        instructions.push_back(instruction);
+        ++iter;
+    }
 }
 
 }  // namespace Types

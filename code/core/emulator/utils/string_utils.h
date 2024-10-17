@@ -6,6 +6,7 @@
 #include <vector>
 #include <type_traits>
 
+#include "string_ext/container_types.h"
 #include "string_ext/string_iterator.h"
 #include "string_ext/string_types.h"
 
@@ -20,7 +21,7 @@ static const std::string LINE_ENDING =
 /**
  * Returns iterator pointed to the first non-space symbol after the given one
 */
-template<class StringIter>
+template<BaseTypes::StringIter StringIter>
 inline StringIter SkipSpaces(const StringIter& iter, const StringIter& end) {
 
     auto ret = iter;
@@ -32,7 +33,7 @@ inline StringIter SkipSpaces(const StringIter& iter, const StringIter& end) {
 /**
  * Returns iterator pointed to the first space symbol after the given one
 */
-template<class StringIter>
+template<BaseTypes::StringIter StringIter>
 inline StringIter FindSpace(const StringIter& iter, const StringIter& end) {
 
     auto ret = iter;
@@ -44,15 +45,17 @@ inline StringIter FindSpace(const StringIter& iter, const StringIter& end) {
 /**
  * Checks if string contains the `comp` from the `from`
 */
-template<class StringIter>
-inline bool ContainsFrom(const StringIter& from, const StringIter& end, const std::string& comp) {
+template<BaseTypes::StringIter StringIter>
+inline bool ContainsFrom(const StringIter& from, const StringIter& end,
+                         const std::string& comp) {
 
     auto compIter = comp.begin();
     for (auto sourceIter = from;
          sourceIter < end && compIter < comp.end();
          ++sourceIter, ++compIter) {
-        if(*sourceIter != *compIter)
+        if (*sourceIter != *compIter){
             return false;
+        }
     }
     return compIter == comp.end();
 }
@@ -60,7 +63,7 @@ inline bool ContainsFrom(const StringIter& from, const StringIter& end, const st
 /**
  * Splits a sting with a delimiter
 */
-template<class String>
+template<BaseTypes::String String>
 inline std::vector<String> Split(const String& str, char delimiter) {
 
   std::vector<std::string> ret;
@@ -73,10 +76,27 @@ inline std::vector<String> Split(const String& str, char delimiter) {
 }
 
 /**
+ * Merges a stings' list with a separator
+*/
+template<BaseTypes::String String, BaseTypes::Iterable<std::string> List>
+inline String Merge(const String& sep, List list) {
+
+  String ret;
+  for (const auto& str : list) {
+    ret += str;
+    if (&str != &list.back())
+    {
+        ret += sep;
+    }
+  }
+  return ret;
+}
+
+/**
  * Checks if string is a number.
  * Must match regex: (\\+|\\-|)\\d+
 */
-template<class String>
+template<BaseTypes::String String>
 inline bool IsNumber(const String& str) {
 
   static const std::regex expr{"(\\+|\\-|)\\d+"};

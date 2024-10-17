@@ -5,19 +5,19 @@
 #include <helpers.h>
 #include <logger/logger.h>
 #include <string_utils.h>
-#include <translator.h>
+#include <emulator/emulator.h>
 
 
 using namespace PTX4CPU;
 
 // Constructors and Destructors
 
-Translator::Translator() {
+Emulator::Emulator() {
 
     // InvalidateTranslation();
 }
 
-Translator::Translator(const std::string& source)
+Emulator::Emulator(const std::string& source)
     : m_Parser(source) {
 
     // InvalidateTranslation();
@@ -27,7 +27,7 @@ Translator::Translator(const std::string& source)
 
 // Public methods
 
-Result Translator::ExecuteFunc(const std::string& funcName, PtxInputData* pArgs,
+Result Emulator::ExecuteFunc(const std::string& funcName, PtxInputData* pArgs,
                                const BaseTypes::uint3_32& gridSize) {
 
     if (m_Parser.GetState() != Parser::State::Ready) {
@@ -55,8 +55,7 @@ Result Translator::ExecuteFunc(const std::string& funcName, PtxInputData* pArgs,
                 exec.GetTID().x, exec.GetTID().y, exec.GetTID().z
             )));
             auto res = exec.Run();
-            if(res)
-            {
+            if (res) {
                 PRINT_I("ThreadExecutor[%lu,%lu,%lu]: Execution finished",
                         exec.GetTID().x, exec.GetTID().y, exec.GetTID().z);
             } else {

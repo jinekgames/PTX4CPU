@@ -1,11 +1,11 @@
 #include <logger/logger.h>
-#include <translator_interface.h>
+#include <emulator/emulator_interface.h>
 #include <utils/string_utils.h>
 #include <version.h>
 
 
 using namespace PTX4CPU;
 
-ITranslator::ITranslator() {
+IEmulator::IEmulator() {
     PRINT_I("Initializing a PTX Translator v%s (Git commit %s)", PTX4CPU_VERSION, ProjectGitCommit);
 }

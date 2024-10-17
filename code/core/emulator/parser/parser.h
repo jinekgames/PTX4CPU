@@ -121,7 +121,7 @@ private:
     /**
      * Convert list of instructions into vector type
     */
-    static Data::Type ConvertCode(const PreprocessData& code);
+    static Data::RawData ConvertCode(const PreprocessData& code);
 
     /**
      * Preprocessing code
@@ -137,8 +137,9 @@ private:
      * Creates a virtual tables cosisted of
      * global defined variables
      * and defined funtions with their own virtual tables
+     * For each function instructions list is inserted.
     */
-    bool InitVTable() const;
+    bool InitVTable();
 
     /**
      * Finds an appropriate funtion according to the specified signature
@@ -198,6 +199,8 @@ private:
         // @todo imlementation: .alias dirictive
         // KernelAttributes::ALIAS,
     };
+
+    static bool IsFuncDefDirictive(const std::string& dirictive);
 
     // Global file variables
     mutable Types::VarsTable m_GlobalVarsTable;

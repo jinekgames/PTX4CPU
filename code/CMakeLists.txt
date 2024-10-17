@@ -8,7 +8,6 @@ set(EMULATOR_DIR     ${CORE_DIR}/emulator)
 set(INTERFACES_DIR   ${CORE_DIR}/interfaces)
 set(EMULATOR_API_DIR ${EMULATOR_DIR}/api)
 set(PARSER_DIR       ${EMULATOR_DIR}/parser)
-set(TRANSLATOR_DIR   ${EMULATOR_DIR}/translator)
 set(CMD_PARSER_DIR   ${UTILS_DIR}/cmd_parser)
 
 
@@ -23,7 +22,7 @@ add_subdirectory(${EMULATOR_DIR})
 
 set(EMULATOR_CMD_DIR ${INTERFACES_DIR}/emulator_cmd)
 
-if (BUILD_EMULATOR_CMD)
+if(BUILD_EMULATOR_CMD)
     add_subdirectory(${CMD_PARSER_DIR})
     add_subdirectory(${EMULATOR_CMD_DIR})
 endif()

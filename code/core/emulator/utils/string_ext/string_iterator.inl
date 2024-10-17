@@ -47,7 +47,11 @@ template<BaseTypes::String Str>
 const typename SmartIterator<Str>::P::IterType
 SmartIterator<Str>::Prev() const {
 
-    if (IsBracket(P::m_CurIter)) {
+    if(P::m_CurIter <= Begin()) {
+        P::m_CurIter;
+    }
+
+    if ((P::m_CurIter < End()) && IsBracket(P::m_CurIter)) {
         auto bracket = bracketsTable.at(*P::m_CurIter);
         constexpr auto openType = BaseTypes::ReverseStringIter<P::IterType>
                                   ? Open : Close;
@@ -59,10 +63,7 @@ SmartIterator<Str>::Prev() const {
         }
     }
 
-    if(P::IsValid()) {
-        --P::m_CurIter;
-    }
-    return P::m_CurIter;
+    return --P::m_CurIter;
 }
 
 template<BaseTypes::String Str>

@@ -44,7 +44,7 @@ Result Parser::Load(const std::string& source) {
             m_PtxProps.version.first, m_PtxProps.version.second,
             m_PtxProps.target, m_PtxProps.addressSize);
 
-    if(!InitVTable())
+    if (!InitVTable())
         return {"Failed to init included functions table"};
 
     // @todo implementation: add global vars processing if existed
@@ -62,7 +62,7 @@ std::vector<ThreadExecutor> Parser::MakeThreadExecutors(const std::string& funcN
     auto funcIter = FindFunction(funcName, arguments);
     if (funcIter == m_FuncsList.end()) {
         PRINT_E("Function with such name (\"%s\") and corespondent arguments "
-                "is not stated in the PTX file", funcName.c_str());
+                "is not found in the PTX file", funcName.c_str());
         return {};
     }
     auto& func = *funcIter;
@@ -81,7 +81,7 @@ std::vector<ThreadExecutor> Parser::MakeThreadExecutors(const std::string& funcN
         for (BaseTypes::uint3_32::type y = 0; y < threadsCount.y; ++y) {
             for (BaseTypes::uint3_32::type z = 0; z < threadsCount.z; ++z) {
                 ret.push_back(std::move(
-                    ThreadExecutor{m_DataIter, func, pAgumentsTable, {x, y, z}}
+                    ThreadExecutor{&func, pAgumentsTable, {x, y, z}}
                 ));
             }
         }
@@ -115,8 +115,11 @@ Parser::ParsedPtxVectorName Parser::ParseVectorName(const std::string& name) {
     StringIteration::SmartIterator iter{name};
     ret.name = iter.ReadWord(false, StringIteration::WordDelimiter::Dot);
     iter.Skip(StringIteration::WordDelimiter::Dot);
-    if (iter.IsValid())
+    if (iter.IsValid()) {
         ret.key = *iter.Current();
+    } else {
+        ret.key = 'x';
+    }
     return ret;
 }
 
@@ -214,7 +217,7 @@ Parser::PreprocessData Parser::ConvertCode(std::string& code) {
     return ret;
 }
 
-Data::Type Parser::ConvertCode(const PreprocessData& code) {
+Data::RawData Parser::ConvertCode(const PreprocessData& code) {
 
     return {code.begin(), code.end()};
 }
@@ -291,7 +294,7 @@ void Parser::PreprocessCode(PreprocessData& code) const {
     m_State = State::Preprocessed;
 }
 
-bool Parser::InitVTable() const {
+bool Parser::InitVTable() {
 
     using namespace StringIteration;
 
@@ -308,8 +311,8 @@ bool Parser::InitVTable() const {
 
         bool isFunc = false;
         std::string buf;
-        while(!(buf = lineIter.ReadWord()).empty()) {
-            if (std::find(m_FuncDefDirictives.begin(), m_FuncDefDirictives.end(), buf) != m_FuncDefDirictives.end()) {
+        while (!(buf = lineIter.ReadWord()).empty()) {
+            if (IsFuncDefDirictive(buf)) {
                 isFunc = true;
                 break;
             }
@@ -336,7 +339,7 @@ bool Parser::InitVTable() const {
         lineIter.GoToNextNonSpace();
         lineIter.EnterBracket();
         // arguments
-        while(lineIter.IsInBracket() && lineIter.IsValid()) {
+        while (lineIter.IsInBracket() && lineIter.IsValid()) {
             auto argStr = lineIter.ReadWord(false, Brackets | Punct);
             func.arguments.emplace(ParsePtxVar(argStr));
             lineIter.Skip(AllSpaces | Brackets);
@@ -344,17 +347,20 @@ bool Parser::InitVTable() const {
 
         // parse attributes
         lineIter.Reset();
-        for(;;) {
-            if (lineIter.IsBracket())
+        for (;;) {
+            if (lineIter.IsBracket()) {
                 lineIter.ExitBracket();
+            }
             buf = lineIter.ReadWord();
-            if (buf.empty())
+            if (buf.empty()) {
                 break;
+            }
             if (buf.front() == '.') {
                 auto& attribute = func.attributes[buf];
                 buf = lineIter.ReadWord(true);
-                if (buf.front() != '.')
+                if (buf.front() != '.') {
                     attribute = buf;
+                }
             }
         }
 
@@ -363,16 +369,19 @@ bool Parser::InitVTable() const {
         if (m_DataIter.IsBlockStart()) {
             ++m_DataIter;
             // We are inside the body
-            func.start = m_DataIter.Offset();
+            func.InsertInstructions(m_DataIter);
+            if (!m_DataIter.IsBlockEnd()) {
+                PRINT_E("Function is not fully initialized. "
+                        "Intructions list is not complete.");
+            }
             m_DataIter.ExitBlock();
-            func.end   = m_DataIter.Offset() - 1;
         }
 
         auto funcFound = std::find_if(m_FuncsList.begin(), m_FuncsList.end(),
             [&func](const Types::Function& f) {
                 return (f.name == func.name);
             });
-        if(funcFound != m_FuncsList.end()) {
+        if (funcFound != m_FuncsList.end()) {
             // @todo implementation: maybe better to merge values, not remove olds
             m_FuncsList.erase(std::move(funcFound));
         }
@@ -404,4 +413,11 @@ Types::FuncsList::iterator Parser::FindFunction(const std::string& funcName,
             }
             return true;
         });
+}
+
+bool Parser::IsFuncDefDirictive(const std::string &dirictive)
+{
+    return (std::find(m_FuncDefDirictives.begin(),
+                      m_FuncDefDirictives.end(), dirictive)
+            != m_FuncDefDirictives.end());
 }

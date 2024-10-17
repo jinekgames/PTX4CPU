@@ -158,20 +158,20 @@ using getVarType =
 
 #define PTX_Internal_TypedOp_Construct_First(runtimeType, constType, ...) \
     if (runtimeType == constType) {                                       \
-        const Types::PTXType _PtxType_ = constType;                       \
+        constexpr Types::PTXType _PtxType_ = constType;                   \
         __VA_ARGS__                                                       \
     }
 
 #define PTX_Internal_TypedOp_Construct_Middle(runtimeType, constType, ...) \
-    else if (runtimeType == constType) {                                      \
-        const Types::PTXType _PtxType_ = constType;                           \
-        __VA_ARGS__                                                           \
+    else if (runtimeType == constType) {                                   \
+        constexpr Types::PTXType _PtxType_ = constType;                    \
+        __VA_ARGS__                                                        \
     }
 
 #define PTX_Internal_TypedOp_Construct_Default(runtimeType, ...)                                 \
     else {                                                                                       \
         PRINT_E("Unknown type PTXType(%d). Casting to .s64", static_cast<int32_t>(runtimeType)); \
-        const Types::PTXType _PtxType_ = Types::PTXType::S64;                                    \
+        constexpr Types::PTXType _PtxType_ = Types::PTXType::S64;                                \
         __VA_ARGS__                                                                              \
     }
 

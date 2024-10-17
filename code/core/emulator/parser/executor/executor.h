@@ -4,10 +4,12 @@
 #include <parser_types.h>
 #include <utils/base_types.h>
 
+#include <utility>
+#include <vector>
 
 namespace PTX4CPU {
 
-class ThreadExecutor {
+class ThreadExecutor final {
 
 private:
 
@@ -15,52 +17,80 @@ private:
 
 public:
 
-    ThreadExecutor(const Data::Iterator& iterator, const Types::Function& func,
-                   const std::shared_ptr<Types::VarsTable>& arguments,
+    ThreadExecutor(const Types::Function* pFunc,
+                   const std::shared_ptr<Types::VarsTable>& pArguments,
                    const BaseTypes::uint3_32& threadId);
-    ThreadExecutor(const ThreadExecutor&) = delete;
-    ThreadExecutor(ThreadExecutor&& right);
-    ~ThreadExecutor() = default;
+    ThreadExecutor(const ThreadExecutor&)  = delete;
+    ThreadExecutor(ThreadExecutor&& right) = default;
+    ~ThreadExecutor()                      = default;
 
-    ThreadExecutor& operator = (const ThreadExecutor&) = delete;
-    ThreadExecutor& operator = (ThreadExecutor&& right);
+    ThreadExecutor& operator = (const ThreadExecutor&)  = delete;
+    ThreadExecutor& operator = (ThreadExecutor&& right) = default;
 
-    // Prepare for running
     void Reset() const;
 
     /**
-     * Run a given count of instruction in a thread from the last break point
+     * Moves iteration to the end of instruction list
     */
-    Result Run(Data::Iterator::SizeType instructionsCount) const;
+    void Finish() const;
+
+    /**
+     * Run a given count of instruction from the last break point
+    */
+    Result Run(Data::Iterator::SizeType instructionsCount);
 
     /**
      * Run a function till the end
     */
-    Result Run() const {
-        return Run(m_Func.end - m_Func.start);
+    Result Run() {
+        return Run(m_pFunc->instructions.size());
     }
 
-    auto                   GetTID()   const { return m_ThreadId; }
-    Types::VarsTable*      GetTable() const { return m_pVarsTable.get(); }
-    const Types::Function& GetFunc()  const { return m_Func; }
-    Data::Iterator&        GetIter()  const { return m_DataIter; }
+    /**
+     * @brief
+     * Retrieve the virtual variable for the given name
+     * If a temp value was passed insted of existed name, it will be created as
+     * a temp virtual variable.
+     * @param type operation type (needed for creating a temp var)
+     * @param arg  argument string
+     * @return virtual variable pointers
+    */
+    Types::ArgumentPair RetrieveArg(
+        Types::PTXType type, const std::string& arg) const;
+    /**
+     * @brief
+     * Retrieve the virtual variables from the list
+     * @note
+     * See `ThreadExecutor::RetrieveArg` description
+    */
+    std::vector<Types::ArgumentPair> RetrieveArgs(
+        Types::PTXType type, Types::Instruction::ArgsList args) const;
+
+    auto                    GetTID()   const { return m_ThreadId; }
+    auto                    GetPos()   const { return m_InstructionPosition; }
+    Types::VarsTable*       GetTable()       { return m_pVarsTable.get(); }
+    const Types::VarsTable* GetTable() const { return m_pVarsTable.get(); }
+    const Types::Function*  GetFunc()  const { return m_pFunc; }
 
 private:
 
+    /**
+     * Inserts predefined constants to the vars table
+     * (e.g. `%tid`)
+    */
     void AppendConstants() const;
 
     BaseTypes::uint4_32 m_ThreadId;
 
-    mutable Data::Iterator m_DataIter;
+    const Types::Function* m_pFunc;
 
-    Types::Function m_Func;
+    // Position of instrunction in the given fucntion.
+    mutable Types::Function::Instructions::size_type m_InstructionPosition = 0;
 
     // Stored for keeping an ownershit
     const std::shared_ptr<Types::VarsTable> m_pArguments;
 
-    mutable std::shared_ptr<Types::VarsTable> m_pVarsTable;
-
-    friend class InstructionRunner;
+    std::shared_ptr<Types::VarsTable> m_pVarsTable;
 
 };
 

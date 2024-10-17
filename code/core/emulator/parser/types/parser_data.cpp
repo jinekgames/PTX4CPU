@@ -93,11 +93,13 @@ bool Iterator::IsBlockEnd() const {
 }
 
 const Iterator::IterType Iterator::ExitBlock() const {
-    if (!IsInBlock())
+    if (!IsInBlock()) {
         return m_CurIter;
+    }
     const auto targetLvl = GetBlockDepth() - 1;
-    while (IsValid() && GetBlockDepth() != targetLvl)
+    while (IsValid() && GetBlockDepth() != targetLvl) {
         Next();
+    }
     return m_CurIter;
 }
 
@@ -110,10 +112,11 @@ bool Iterator::IsValid() const {
 }
 
 const Iterator::IterType Iterator::Reset() const {
-    if (m_Data)
+    if (m_Data) {
         m_CurIter = m_Data->begin();
-    else
+    } else {
         m_CurIter = {};
+    }
     m_BlocksFallCount = 0;
     return m_CurIter;
 }

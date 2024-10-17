@@ -8,11 +8,10 @@ set(DTABLE_RUNNERS_DIR ${EXECUTOR_DIR}/runners)
 
 set(emulator_sources
     ${EXECUTOR_DIR}/dispatch_table.cpp
-    ${EXECUTOR_DIR}/dispatch_table.h
     ${EXECUTOR_DIR}/executor.cpp
     ${EXECUTOR_DIR}/executor.h
-    ${EXECUTOR_DIR}/instruction.cpp
-    ${EXECUTOR_DIR}/instruction.h
+    ${EXECUTOR_DIR}/instruction_runner.cpp
+    ${EXECUTOR_DIR}/instruction_runner.h
     ${PARSER_DIR}/parser.cpp
     ${PARSER_DIR}/parser.h
     ${PARSER_DIR}/parser_types.h
@@ -24,16 +23,15 @@ set(emulator_sources
     ${PARSER_DIR}/types/ptx_types.h
     ${PARSER_DIR}/types/virtual_var.cpp
     ${PARSER_DIR}/types/virtual_var.h
-    ${TRANSLATOR_DIR}/translator.cpp
-    ${TRANSLATOR_DIR}/translator.h
-    ${TRANSLATOR_DIR}/translator_interface.cpp
-    ${TRANSLATOR_DIR}/translator_interface.h
+    ${EMULATOR_DIR}/emulator/emulator.cpp
+    ${EMULATOR_DIR}/emulator/emulator.h
+    ${EMULATOR_DIR}/emulator/emulator_interface.cpp
+    ${EMULATOR_DIR}/emulator/emulator_interface.h
 )
 
 set(emulator_includes
     ${EXECUTOR_DIR}
     ${JSON_PARSER_DIR}/include
-    ${TRANSLATOR_DIR}
     ${PARSER_DIR}
 )
 
