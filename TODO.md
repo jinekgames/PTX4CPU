@@ -12,9 +12,12 @@
 
     The nearest tasks:
 
-    1. Parsing engine redesign
+    1. Fix linux build.
+    1. Add export function for connection from ext native SW.
 
-        Current implementation of PTX-file parser is very poor and won't allow to cover the PTX language features. It is to be redesigned the way the instruction is parsed and stored. May be it will be needed to refactor the ibstructions torage format too, but currently not planned
+    x. Parsing engine redesign
+
+        Preparse instruction name and type and store them in enum-type in instruction descriptor.
 
     1. Add autotests (locally-runned)
 
