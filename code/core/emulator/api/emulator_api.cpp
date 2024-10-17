@@ -6,9 +6,10 @@
 
 
 extern "C" EMULATOR_EXPORT_API void EMULATOR_CC
-EMULATOR_CreateEmulator(PTX4CPU::IEmulator** translator, const std::string& source) {
+EMULATOR_CreateEmulator(PTX4CPU::IEmulator** ppEmulator,
+                        const std::string& sourceCode) {
 
-    *translator = new PTX4CPU::Emulator(source);
+    *ppEmulator = new PTX4CPU::Emulator(sourceCode);
 }
 
 extern "C" EMULATOR_EXPORT_API void EMULATOR_CC

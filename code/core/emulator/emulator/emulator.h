@@ -24,19 +24,12 @@ public:
      * @param source source code of a PTX
     */
     Emulator(const std::string& source);
-    Emulator(const Emulator&) = delete;
-    Emulator(Emulator&& right)
-        : m_Parser(std::move(right.m_Parser)) {
-
-        right.m_Parser = {};
-    }
+    Emulator(const Emulator&)  = delete;
+    Emulator(Emulator&& right) = default;
     ~Emulator() = default;
 
-    Emulator operator = (const Emulator&) = delete;
-    Emulator operator = (Emulator&& right) {
-        m_Parser = std::move(right.m_Parser);
-        right.m_Parser = {};
-    }
+    Emulator& operator = (const Emulator&)  = delete;
+    Emulator& operator = (Emulator&& right) = default;
 
 private:
 

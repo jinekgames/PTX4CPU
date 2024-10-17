@@ -25,11 +25,12 @@
 /**
  * Create translator object
  *
- * @param translator  pointer to poiner where object will be put
- * @param source      source code of a PTX
+ * @param ppEmulator double poiner where object will be put
+ * @param sourceCode source code of a PTX
 */
 extern "C" EMULATOR_EXPORT_API void EMULATOR_CC
-EMULATOR_CreateEmulator(PTX4CPU::IEmulator** translator, const std::string& source);
+EMULATOR_CreateEmulator(PTX4CPU::IEmulator** ppEmulator,
+                        const std::string& sourceCode);
 
 struct PtxInputData;
 using PtxExecArgs = PtxInputData*;

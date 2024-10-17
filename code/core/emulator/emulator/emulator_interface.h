@@ -15,6 +15,7 @@ namespace PTX4CPU {
 struct IEmulator {
 
     IEmulator();
+    virtual ~IEmulator() = default;
 
     /**
      * Execute named function from the loaded PTX.

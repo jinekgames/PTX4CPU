@@ -28,7 +28,7 @@ std::string ReadFile(const std::string& filepath) {
     return input.str();
 }
 
-auto CreateTranslator(const std::string& src) {
+auto CreateEmulator(const std::string& src) {
     PTX4CPU::IEmulator* rawPtr = nullptr;
     EMULATOR_CreateEmulator(&rawPtr, src);
 
@@ -105,13 +105,13 @@ Commands:
                                          if argument was not specified, output will be printed to console
                                          if argument was specified with empty value, original arguments .json will be used
                     Example:
-                        TranslatorCmd.exe --test-run input_file.ptx --kernel _Z9addKernelPiPKiS1_ --args arguments.json --save-output
+                        EmulatorCmd.exe --test-run input_file.ptx --kernel _Z9addKernelPiPKiS1_ --args arguments.json --save-output
    --test-load    - do a test load and preparsing of a .ptx file
                     Example:
-                        TranslatorCmd.exe --test-load input_file.ptx
+                        EmulatorCmd.exe --test-load input_file.ptx
    --test-json    - test if an arguments configuration .json is valid
                     Example:
-                        TranslatorCmd.exe --test-json arguments.json
+                        EmulatorCmd.exe --test-json arguments.json
    -v, --version,
    --about        - show "about" info
 )" << std::endl;
@@ -135,14 +135,14 @@ Commands:
             return 1;
         }
 
-        auto pTranslator{std::move(CreateTranslator(input))};
+        auto pEmulator{std::move(CreateEmulator(input))};
 
-        if (!pTranslator) {
-            std::cout << "ERROR: Failed to create a Translator object" << std::endl;
+        if (!pEmulator) {
+            std::cout << "ERROR: Failed to create a Emulator object" << std::endl;
             return 1;
         }
 
-        std::cout << "Translator was successfully created" << std::endl;
+        std::cout << "Emulator was successfully created" << std::endl;
         return 0;
 
     } else if (args.Contains("test-json")) {
@@ -195,7 +195,7 @@ Commands:
             return 1;
         }
 
-        // Create Translator
+        // Create Emulator
 
         const auto input = ReadFile(inputPath);
         if (input.empty()) {
@@ -203,20 +203,20 @@ Commands:
             return 1;
         }
 
-        auto pTranslator{std::move(CreateTranslator(input))};
+        auto pEmulator{std::move(CreateEmulator(input))};
 
-        if (!pTranslator) {
-            std::cout << "ERROR: Failed to create a Translator object" << std::endl;
+        if (!pEmulator) {
+            std::cout << "ERROR: Failed to create an Emulator object" << std::endl;
             return 1;
         }
 
-        std::cout << "Translator was successfully created" << std::endl;
+        std::cout << "Emulator was successfully created" << std::endl;
 
         // Execute PTX
 
         BaseTypes::uint3_32 gridSize = { threadsCount, 1, 1 };
 
-        auto res = pTranslator->ExecuteFunc(kernelName, *pExecVars, gridSize);
+        auto res = pEmulator->ExecuteFunc(kernelName, *pExecVars, gridSize);
 
         if (res) {
             std::cout << "Kernel finished execution" << std::endl;
