@@ -184,10 +184,14 @@ Commands:
             }
         }
 
-        std::cout << "Starting execution of kernel '" << kernelName << "'from '"
-                  << inputPath << "' in " << threadsCount << " treads" << std::endl;
+        std::cout << "Starting execution of kernel '" << kernelName
+                  << "'from '" << inputPath << "' in " << threadsCount
+                  << " treads" << std::endl;
 
         // Parse PTX execution arguments
+
+        std::cout << "Using argument from '" << argsJsonPath << "'"
+                  << std::endl;
 
         auto pExecVars = ParseArgsJson(ReadFile(argsJsonPath));
         if (!pExecVars) {
