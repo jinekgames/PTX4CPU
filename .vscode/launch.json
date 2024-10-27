@@ -80,6 +80,16 @@
             "cwd": "${workspaceFolder}/build/bin/Debug",
             "environment": [],
             "console": "integratedTerminal"
+        },
+        {
+            "name": "(msvc) Emulator Auto Test",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/Debug/autotests.exe",
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/build/bin/Debug",
+            "environment": [],
+            "console": "integratedTerminal"
         }
     ]
 }
