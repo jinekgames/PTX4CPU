@@ -24,6 +24,10 @@ uint64_t RegisterMemoryInternal(ThreadExecutor* pExecutor,
     for (i = 1; i <= count; ++i) {
         const std::string numberedName = name + std::to_string(i);
         pExecutor->GetTable()->AppendVar<ptxType>(numberedName);
+        PRINT_V("Reg var %s : %s",
+                name.c_str(),
+                std::to_string(
+                    pExecutor->GetTable()->GetVar(numberedName)).c_str());
     }
     return i - 1;
 }
