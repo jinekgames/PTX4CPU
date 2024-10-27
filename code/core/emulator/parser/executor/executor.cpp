@@ -41,6 +41,8 @@ Result ThreadExecutor::Run(Data::Iterator::SizeType instructionsCount) {
             logPrefix.c_str(), m_pFunc->name.c_str(),
             m_InstructionPosition, m_pFunc->instructions.size());
 
+    DebugLogVars();
+
     Data::Iterator::SizeType runIdx = 0;
 
     for (; m_InstructionPosition < m_pFunc->instructions.size() &&
@@ -99,10 +101,16 @@ std::vector<Types::ArgumentPair> ThreadExecutor::RetrieveArgs(
 
     std::vector<Types::ArgumentPair> ret;
     ret.reserve(args.size());
+    PRINT_V("Instruction args:");
     for (const auto& arg : args) {
         ret.push_back(RetrieveArg(type, arg));
+        PRINT_V("%s : %s", arg.c_str(), std::to_string(*ret.back().first).c_str());
     }
     return ret;
+}
+
+void ThreadExecutor::DebugLogVars() const {
+    PRINT_V("Executor arguments\n%s", std::to_string(*m_pVarsTable).c_str());
 }
 
 void ThreadExecutor::AppendConstants() const {

@@ -7,6 +7,10 @@ set(DTABLE_RUNNERS_DIR ${EXECUTOR_DIR}/runners)
 
 
 set(emulator_sources
+    ${EMULATOR_DIR}/emulator/emulator.cpp
+    ${EMULATOR_DIR}/emulator/emulator.h
+    ${EMULATOR_DIR}/emulator/emulator_interface.cpp
+    ${EMULATOR_DIR}/emulator/emulator_interface.h
     ${EXECUTOR_DIR}/dispatch_table.cpp
     ${EXECUTOR_DIR}/executor.cpp
     ${EXECUTOR_DIR}/executor.h
@@ -23,10 +27,6 @@ set(emulator_sources
     ${PARSER_DIR}/types/ptx_types.h
     ${PARSER_DIR}/types/virtual_var.cpp
     ${PARSER_DIR}/types/virtual_var.h
-    ${EMULATOR_DIR}/emulator/emulator.cpp
-    ${EMULATOR_DIR}/emulator/emulator.h
-    ${EMULATOR_DIR}/emulator/emulator_interface.cpp
-    ${EMULATOR_DIR}/emulator/emulator_interface.h
 )
 
 set(emulator_includes
@@ -44,6 +44,19 @@ set(emulator_api_sources
 set(emulator_api_includes
     ${EMULATOR_API_DIR}
 )
+
+
+if(UNIX)
+    set_source_files_properties(
+        ${EMULATOR_API_DIR}/emulator_api.cpp
+        ${EMULATOR_DIR}/emulator/emulator.cpp
+        ${EXECUTOR_DIR}/executor.cpp
+        ${PARSER_DIR}/parser.cpp
+        ${PARSER_DIR}/types/ptx_function.cpp
+        ${PARSER_DIR}/types/ptx_types.cpp
+        PROPERTIES COMPILE_FLAGS "-Wno-format-security"
+    )
+endif()
 
 
 set(sources

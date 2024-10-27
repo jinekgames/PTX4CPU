@@ -5,7 +5,9 @@
 #include <string>
 
 
-#define HAS_FIXED_FLOAT_SUPPORT (__STDCPP_FLOAT16_T__ == 1)
+// @todo implemetation: enable support for gcc
+#define HAS_FIXED_FLOAT_SUPPORT false
+// #define HAS_FIXED_FLOAT_SUPPORT (__STDCPP_FLOAT16_T__ == 1)
 
 
 namespace PTX4CPU {
@@ -158,20 +160,20 @@ using getVarType =
 
 #define PTX_Internal_TypedOp_Construct_First(runtimeType, constType, ...) \
     if (runtimeType == constType) {                                       \
-        constexpr Types::PTXType _PtxType_ = constType;                   \
+        constexpr PTX4CPU::Types::PTXType _PtxType_ = constType;          \
         __VA_ARGS__                                                       \
     }
 
 #define PTX_Internal_TypedOp_Construct_Middle(runtimeType, constType, ...) \
     else if (runtimeType == constType) {                                   \
-        constexpr Types::PTXType _PtxType_ = constType;                    \
+        constexpr PTX4CPU::Types::PTXType _PtxType_ = constType;           \
         __VA_ARGS__                                                        \
     }
 
 #define PTX_Internal_TypedOp_Construct_Default(runtimeType, ...)                                 \
     else {                                                                                       \
         PRINT_E("Unknown type PTXType(%d). Casting to .s64", static_cast<int32_t>(runtimeType)); \
-        constexpr Types::PTXType _PtxType_ = Types::PTXType::S64;                                \
+        constexpr PTX4CPU::Types::PTXType _PtxType_ = PTX4CPU::Types::PTXType::S64;              \
         __VA_ARGS__                                                                              \
     }
 
@@ -179,27 +181,27 @@ using getVarType =
 // Use `_PtxType_` as a compile-time type value
 // @param type run-time type
 // @param variadic_argument code which needs a compile-time type
-#define PTXTypedOp(type, ...)                                                              \
-    do {                                                                                   \
-        PTX_Internal_TypedOp_Construct_First(type,     Types::PTXType::B8,    __VA_ARGS__) \
-        PTX_Internal_TypedOp_Construct_Middle(type, Types::PTXType::B16,   __VA_ARGS__)    \
-        PTX_Internal_TypedOp_Construct_Middle(type, Types::PTXType::B32,   __VA_ARGS__)    \
-        PTX_Internal_TypedOp_Construct_Middle(type, Types::PTXType::B64,   __VA_ARGS__)    \
-        /*PTX_Internal_TypedOp_Construct_Middle(type, Types::PTXType::B128,  __VA_ARGS__)*/    \
-        PTX_Internal_TypedOp_Construct_Middle(type, Types::PTXType::S8,    __VA_ARGS__)    \
-        PTX_Internal_TypedOp_Construct_Middle(type, Types::PTXType::S16,   __VA_ARGS__)    \
-        PTX_Internal_TypedOp_Construct_Middle(type, Types::PTXType::S32,   __VA_ARGS__)    \
-        PTX_Internal_TypedOp_Construct_Middle(type, Types::PTXType::S64,   __VA_ARGS__)    \
-        PTX_Internal_TypedOp_Construct_Middle(type, Types::PTXType::U8,    __VA_ARGS__)    \
-        PTX_Internal_TypedOp_Construct_Middle(type, Types::PTXType::U16,   __VA_ARGS__)    \
-        PTX_Internal_TypedOp_Construct_Middle(type, Types::PTXType::U32,   __VA_ARGS__)    \
-        PTX_Internal_TypedOp_Construct_Middle(type, Types::PTXType::U64,   __VA_ARGS__)    \
-        PTX_Internal_TypedOp_Construct_Middle(type, Types::PTXType::F16,   __VA_ARGS__)    \
-        PTX_Internal_TypedOp_Construct_Middle(type, Types::PTXType::F16X2, __VA_ARGS__)    \
-        PTX_Internal_TypedOp_Construct_Middle(type, Types::PTXType::F32,   __VA_ARGS__)    \
-        PTX_Internal_TypedOp_Construct_Middle(type, Types::PTXType::F64,   __VA_ARGS__)    \
-        /*PTX_Internal_TypedOp_Construct_Middle(type, Types::PTXType::Pred,  __VA_ARGS__)*/    \
-        PTX_Internal_TypedOp_Construct_Default(type, __VA_ARGS__)                          \
+#define PTXTypedOp(type, ...)                                                                        \
+    do {                                                                                             \
+        PTX_Internal_TypedOp_Construct_First(type,  PTX4CPU::Types::PTXType::B8,    __VA_ARGS__)     \
+        PTX_Internal_TypedOp_Construct_Middle(type, PTX4CPU::Types::PTXType::B16,   __VA_ARGS__)     \
+        PTX_Internal_TypedOp_Construct_Middle(type, PTX4CPU::Types::PTXType::B32,   __VA_ARGS__)     \
+        PTX_Internal_TypedOp_Construct_Middle(type, PTX4CPU::Types::PTXType::B64,   __VA_ARGS__)     \
+        /*PTX_Internal_TypedOp_Construct_Middle(type, PTX4CPU::Types::PTXType::B128,  __VA_ARGS__)*/ \
+        PTX_Internal_TypedOp_Construct_Middle(type, PTX4CPU::Types::PTXType::S8,    __VA_ARGS__)     \
+        PTX_Internal_TypedOp_Construct_Middle(type, PTX4CPU::Types::PTXType::S16,   __VA_ARGS__)     \
+        PTX_Internal_TypedOp_Construct_Middle(type, PTX4CPU::Types::PTXType::S32,   __VA_ARGS__)     \
+        PTX_Internal_TypedOp_Construct_Middle(type, PTX4CPU::Types::PTXType::S64,   __VA_ARGS__)     \
+        PTX_Internal_TypedOp_Construct_Middle(type, PTX4CPU::Types::PTXType::U8,    __VA_ARGS__)     \
+        PTX_Internal_TypedOp_Construct_Middle(type, PTX4CPU::Types::PTXType::U16,   __VA_ARGS__)     \
+        PTX_Internal_TypedOp_Construct_Middle(type, PTX4CPU::Types::PTXType::U32,   __VA_ARGS__)     \
+        PTX_Internal_TypedOp_Construct_Middle(type, PTX4CPU::Types::PTXType::U64,   __VA_ARGS__)     \
+        PTX_Internal_TypedOp_Construct_Middle(type, PTX4CPU::Types::PTXType::F16,   __VA_ARGS__)     \
+        PTX_Internal_TypedOp_Construct_Middle(type, PTX4CPU::Types::PTXType::F16X2, __VA_ARGS__)     \
+        PTX_Internal_TypedOp_Construct_Middle(type, PTX4CPU::Types::PTXType::F32,   __VA_ARGS__)     \
+        PTX_Internal_TypedOp_Construct_Middle(type, PTX4CPU::Types::PTXType::F64,   __VA_ARGS__)     \
+        /*PTX_Internal_TypedOp_Construct_Middle(type, PTX4CPU::Types::PTXType::Pred,  __VA_ARGS__)*/ \
+        PTX_Internal_TypedOp_Construct_Default(type, __VA_ARGS__)                                    \
     } while (0);
 
 }  // namespace Types

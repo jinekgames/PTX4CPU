@@ -56,6 +56,8 @@ void InsertScalarVar(PtxInputData& inputData, nlohmann::json& valueParser) {
 
     // Init var value
     auto value = valueParser.get<RealType>();
+    PRINT_V("Arg value: %s", std::to_string(value).c_str());
+
     std::stringstream ss{std::ios::in};
     // Value converted to PTX variable
     Types::PTXVarPtr pPTXVar{new Types::PTXVarTyped<type>(&value)};
@@ -84,11 +86,15 @@ void InsertVectorVar(PtxInputData& inputData, nlohmann::json& vectorParser) {
         writeVectorData = false;
     }
 
+    PRINT_V("Arg vector size: %s", std::to_string(vectorSize).c_str());
+
     Types::PTXVarPtr pPTXVec{new Types::PTXVarTyped<type>(vectorSize)};
     if (writeVectorData) {
         for (Types::IndexType i = 0; i < vectorSize; ++i) {
             auto& valueParser = vectorParser[i];
-            pPTXVec->Get<type>(i) = valueParser.get<RealType>();
+            auto value = valueParser.get<RealType>();
+            PRINT_V("Arg value: [%llu] %s", i, std::to_string(value).c_str());
+            pPTXVec->Get<type>(i) = value;
         }
     }
 

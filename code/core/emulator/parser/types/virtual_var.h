@@ -11,7 +11,6 @@
 
 #include <logger/logger.h>
 
-
 namespace PTX4CPU {
 namespace Types {
 
@@ -127,6 +126,8 @@ public:
     {
         return arg.first->AssignValue(pValue, arg.second);
     }
+
+    std::string ToStr() const;
 
 protected:
 
@@ -364,6 +365,8 @@ public:
 
     const VarsTable* GetParent() const;
 
+    std::string ToStr() const;
+
 private:
 
     std::map<std::string, PTXVarPtr> virtualVars;
@@ -389,3 +392,12 @@ PTXVarPtr CreateTempValueVarTyped(const std::string& value) {
 
 }  // namespace Types
 }  // namespace PTX4CPU
+
+namespace std {
+inline std::string to_string(const PTX4CPU::Types::PTXVar& var) {
+    return var.ToStr();
+}
+inline std::string to_string(const PTX4CPU::Types::VarsTable& table) {
+    return table.ToStr();
+}
+}  // namespace std

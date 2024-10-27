@@ -72,6 +72,8 @@ public:
     const Types::VarsTable* GetTable() const { return m_pVarsTable.get(); }
     const Types::Function*  GetFunc()  const { return m_pFunc; }
 
+    void DebugLogVars() const;
+
 private:
 
     /**
