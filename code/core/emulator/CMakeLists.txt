@@ -22,6 +22,9 @@ set(emulator_sources
     ${PARSER_DIR}/parser.cpp
     ${PARSER_DIR}/parser.h
     ${PARSER_DIR}/parser_types.h
+    ${PARSER_DIR}/ext_parsers/ext_parsers.cpp
+    ${PARSER_DIR}/ext_parsers/ext_parsers.h
+    ${PARSER_DIR}/ext_parsers/json_parser/parser.h
     ${PARSER_DIR}/types/parser_data.cpp
     ${PARSER_DIR}/types/parser_data.h
     ${PARSER_DIR}/types/ptx_function.cpp

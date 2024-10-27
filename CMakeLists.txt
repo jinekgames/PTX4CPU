@@ -10,10 +10,11 @@ project(PTX4CPU
         LANGUAGES CXX)
 
 
-# @todo implementation: move this into runtime config
+# @todo implementation: maybe move some of these into a runtime config
 option(COMPILE_SAFE_CHECKS        "If set, the additional data checking will be compiled" ON)
 option(USE_DEBUG_FEATURES         "Compile debug features even in non-debug build"        ON)
 option(EXTENDED_VARIABLES_LOGGING "Build extended debug logging of variables content"     OFF)
+option(BUILD_TESTS                "Build autotests executable"                            ON)
 
 
 if(!WIN32 OR !UNIX)

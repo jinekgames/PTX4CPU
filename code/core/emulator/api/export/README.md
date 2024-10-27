@@ -15,6 +15,8 @@ The API interface consists of the following header files:
 
 All these headers are originally stored in directory `code/core/emulator/api/export`. On building they are copied to `api` folder inside your building directory.
 
+All these headers are originally stored in directory `code/core/emulator/api/export`. On building they are copied to `api` folder inside your building directory.
+
 
 ## API usage
 
