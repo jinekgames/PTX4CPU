@@ -103,6 +103,16 @@ inline bool IsNumber(const String& str) {
   return std::regex_match(str, expr);
 }
 
+/**
+ * A wrapper for strings formatting with C++23 API
+ */
+template<class ...Args, BaseTypes::String String = std::string>
+inline String FormatString(const char* fmt, Args... args) {
+
+    return std::vformat(fmt, std::make_format_args(args...));
+}
+
+
 
 #define CONCAT_INTERNAL(first, second) \
     first##second

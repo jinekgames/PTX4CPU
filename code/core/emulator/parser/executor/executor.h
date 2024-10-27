@@ -66,8 +66,8 @@ public:
     std::vector<Types::ArgumentPair> RetrieveArgs(
         Types::PTXType type, Types::Instruction::ArgsList args) const;
 
-    auto                    GetTID()   const { return m_ThreadId; }
-    auto                    GetPos()   const { return m_InstructionPosition; }
+    inline auto             GetTID()   const { return m_ThreadId; }
+    inline auto             GetPos()   const { return m_InstructionPosition; }
     Types::VarsTable*       GetTable()       { return m_pVarsTable.get(); }
     const Types::VarsTable* GetTable() const { return m_pVarsTable.get(); }
     const Types::Function*  GetFunc()  const { return m_pFunc; }

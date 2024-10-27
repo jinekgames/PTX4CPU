@@ -1,4 +1,5 @@
 set(sources
+    ${CODE_DIR}/utils/logger/logger.h
     ${EMULATOR_UTILS_DIR}/base_types.h
     ${EMULATOR_UTILS_DIR}/iterator.h
     ${EMULATOR_UTILS_DIR}/iterator.inl
@@ -11,5 +12,12 @@ set(sources
     ${EMULATOR_UTILS_DIR}/version.cpp
     ${EMULATOR_UTILS_DIR}/version.h
 )
+
+if(UNIX)
+    set_source_files_properties(
+        ${CODE_DIR}/utils/logger/logger.h
+        PROPERTIES COMPILE_FLAGS "-Wno-format-security"
+    )
+endif()
 
 add_library(emulatorUtils OBJECT ${sources})

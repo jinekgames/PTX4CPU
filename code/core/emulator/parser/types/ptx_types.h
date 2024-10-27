@@ -36,45 +36,45 @@ enum class PTXType : uint32_t {
     None = 0,
 
     // untyped bits 8-bit
-    B8    = (uint32_t)PTXTypeBase::B     | ((uint32_t)PTXTypeBitSize::b8  << 16),
+    B8    = (uint32_t)PTXTypeBase::B     | ((uint32_t)PTXTypeBitSize::b8   << 16),
     // untyped bits 16-bit
-    B16   = (uint32_t)PTXTypeBase::B     | ((uint32_t)PTXTypeBitSize::b16 << 16),
+    B16   = (uint32_t)PTXTypeBase::B     | ((uint32_t)PTXTypeBitSize::b16  << 16),
     // untyped bits 32-bit
-    B32   = (uint32_t)PTXTypeBase::B     | ((uint32_t)PTXTypeBitSize::b32 << 16),
+    B32   = (uint32_t)PTXTypeBase::B     | ((uint32_t)PTXTypeBitSize::b32  << 16),
     // untyped bits 64-bit
-    B64   = (uint32_t)PTXTypeBase::B     | ((uint32_t)PTXTypeBitSize::b64 << 16),
+    B64   = (uint32_t)PTXTypeBase::B     | ((uint32_t)PTXTypeBitSize::b64  << 16),
     // untyped bits 128-bit
     B128  = (uint32_t)PTXTypeBase::B     | ((uint32_t)PTXTypeBitSize::b128 << 16),
 
     // signed integer 8-bit
-    S8    = (uint32_t)PTXTypeBase::S     | ((uint32_t)PTXTypeBitSize::b8  << 16),
+    S8    = (uint32_t)PTXTypeBase::S     | ((uint32_t)PTXTypeBitSize::b8   << 16),
     // signed integer 16-bit
-    S16   = (uint32_t)PTXTypeBase::S     | ((uint32_t)PTXTypeBitSize::b16 << 16),
+    S16   = (uint32_t)PTXTypeBase::S     | ((uint32_t)PTXTypeBitSize::b16  << 16),
     // signed integer 32-bit
-    S32   = (uint32_t)PTXTypeBase::S     | ((uint32_t)PTXTypeBitSize::b32 << 16),
+    S32   = (uint32_t)PTXTypeBase::S     | ((uint32_t)PTXTypeBitSize::b32  << 16),
     // signed integer 64-bit
-    S64   = (uint32_t)PTXTypeBase::S     | ((uint32_t)PTXTypeBitSize::b64 << 16),
+    S64   = (uint32_t)PTXTypeBase::S     | ((uint32_t)PTXTypeBitSize::b64  << 16),
 
     // unsigned integer 8-bit
-    U8    = (uint32_t)PTXTypeBase::U     | ((uint32_t)PTXTypeBitSize::b8  << 16),
+    U8    = (uint32_t)PTXTypeBase::U     | ((uint32_t)PTXTypeBitSize::b8   << 16),
     // unsigned integer 16-bit
-    U16   = (uint32_t)PTXTypeBase::U     | ((uint32_t)PTXTypeBitSize::b16 << 16),
+    U16   = (uint32_t)PTXTypeBase::U     | ((uint32_t)PTXTypeBitSize::b16  << 16),
     // unsigned integer 32-bit
-    U32   = (uint32_t)PTXTypeBase::U     | ((uint32_t)PTXTypeBitSize::b32 << 16),
+    U32   = (uint32_t)PTXTypeBase::U     | ((uint32_t)PTXTypeBitSize::b32  << 16),
     // unsigned integer 64-bit
-    U64   = (uint32_t)PTXTypeBase::U     | ((uint32_t)PTXTypeBitSize::b64 << 16),
+    U64   = (uint32_t)PTXTypeBase::U     | ((uint32_t)PTXTypeBitSize::b64  << 16),
 
     // floating-point 16-bit
-    F16   = (uint32_t)PTXTypeBase::F     | ((uint32_t)PTXTypeBitSize::b16 << 16),
+    F16   = (uint32_t)PTXTypeBase::F     | ((uint32_t)PTXTypeBitSize::b16  << 16),
     // floating-point 16-bit half precision
-    F16X2 = (uint32_t)PTXTypeBase::FHalf | ((uint32_t)PTXTypeBitSize::b32 << 16),
+    F16X2 = (uint32_t)PTXTypeBase::FHalf | ((uint32_t)PTXTypeBitSize::b32  << 16),
     // floating-point 32-bit
-    F32   = (uint32_t)PTXTypeBase::F     | ((uint32_t)PTXTypeBitSize::b32 << 16),
+    F32   = (uint32_t)PTXTypeBase::F     | ((uint32_t)PTXTypeBitSize::b32  << 16),
     // floating-point 64-bit
-    F64   = (uint32_t)PTXTypeBase::F     | ((uint32_t)PTXTypeBitSize::b64 << 16),
+    F64   = (uint32_t)PTXTypeBase::F     | ((uint32_t)PTXTypeBitSize::b64  << 16),
 
     // predicate
-    Pred  = PTXTypeBase::Pred,
+    Pred  = (uint32_t)PTXTypeBase::Pred,
 };
 
 inline PTXType operator & (PTXType left, PTXType right) {

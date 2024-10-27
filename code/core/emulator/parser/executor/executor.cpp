@@ -34,8 +34,8 @@ void ThreadExecutor::Finish() const {
 
 Result ThreadExecutor::Run(Data::Iterator::SizeType instructionsCount) {
 
-    const std::string logPrefix = std::vformat("ThreadExecutor[{},{},{}]",
-        std::make_format_args(m_ThreadId.x, m_ThreadId.y, m_ThreadId.z));
+    const std::string logPrefix = FormatString("ThreadExecutor[{},{},{}]",
+        m_ThreadId.x, m_ThreadId.y, m_ThreadId.z);
 
     PRINT_I("%s: Starting a function '%s' execution (offset:%llu of %llu)",
             logPrefix.c_str(), m_pFunc->name.c_str(),
@@ -59,8 +59,8 @@ Result ThreadExecutor::Run(Data::Iterator::SizeType instructionsCount) {
                         logPrefix.c_str(), m_InstructionPosition,
                         res.msg.c_str());
             } else {
-                res.msg = std::vformat("(offset:{}): {}",
-                    std::make_format_args(m_InstructionPosition, res.msg));
+                res.msg = FormatString("(offset:{}): {}",
+                                       m_InstructionPosition, res.msg);
                 return res;
             }
         }

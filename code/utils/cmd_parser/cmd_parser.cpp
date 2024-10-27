@@ -6,7 +6,13 @@
 namespace {
 
 bool IsCommand(const std::string_view& arg) {
+#if defined(WIN32)
     return arg._Starts_with("-");
+#elif defined(linux)
+    return arg.starts_with("-");
+#else
+#error "IsCommand() not implemented for the platform"
+#endif
 }
 
 } // anonimous namespace

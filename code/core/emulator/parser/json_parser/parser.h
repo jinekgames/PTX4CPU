@@ -56,7 +56,7 @@ void InsertScalarVar(PtxInputData& inputData, nlohmann::json& valueParser) {
 
     // Init var value
     auto value = valueParser.get<RealType>();
-    std::stringstream ss(1);
+    std::stringstream ss{std::ios::in};
     // Value converted to PTX variable
     Types::PTXVarPtr pPTXVar{new Types::PTXVarTyped<type>(&value)};
     // Retrive address of converted variable

@@ -1,5 +1,7 @@
 #include "ptx_types.h"
 
+#include <algorithm>
+
 #include <logger/logger.h>
 
 
