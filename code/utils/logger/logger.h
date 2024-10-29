@@ -5,10 +5,13 @@
 #include <format>
 #include <unordered_map>
 
+#if defined(linux)
+#include <linux/limits.h>
+#endif
+
 #include "log_color.h"
 
 #define LOGS_DEFAULT_TAG "PTX4CPU"
-#define LOGS_LAYER_TAG "validation layer"
 
 #define FORCE_DEBUG_LOGS 1
 #define STRIP_DEBUG_LOGS 0
@@ -35,7 +38,7 @@ static std::unordered_map<LogType, const char*> logsTypeColors = {
     { LogType::Error,   COLOR_RED    },
 };
 
-#if defined(WIN32) || defined(LINUX) || defined(MAC_OS)
+#if defined(WIN32) || defined(linux) || defined(MAC_OS)
 
 static std::unordered_map<LogType, const char*> logsTypeStrings = {
     { LogType::Debug,   "Debug"   },
@@ -44,34 +47,48 @@ static std::unordered_map<LogType, const char*> logsTypeStrings = {
     { LogType::Error,   "Error"   },
 };
 
+constexpr auto SystemMaxPath() {
+#if defined(WIN32)
+    return _MAX_PATH;
+#elif defined(linux)
+    return PATH_MAX;
+#else
+#error "SystemMaxPath() not implemente for your platform"
+#endif
+}
+
 // @todo implementation: add logging to file
 // @todo implementation: add ability to separate logging files for threads
 
+// @todo refactoring: use FormatString for formatting and C++23 API
 template<class... Args>
 void _app_log_message(LogType type, const char* tag, const char* file, int line,
                       Args... args) {
 
-    constexpr size_t bufSize = _MAX_PATH;
+    constexpr size_t bufSize = SystemMaxPath();
     constexpr size_t fileStrMinLen = 30;
 
     char buf[bufSize];
     const auto msgSize = std::snprintf(buf, bufSize, args...);
 
+    const auto filename = std::filesystem::path(file).filename().string();
+
     const std::string fileStr =
         std::vformat("({}:{})", std::make_format_args(
-                     std::filesystem::path(file).filename().string(),
-                     line));
+                     filename, line));
     const std::string::size_type spacesCount = (fileStr.length() < fileStrMinLen)
                                                ? fileStrMinLen - fileStr.length()
                                                : 1u;
     const std::string spaces(spacesCount, ' ');
+
+    const std::string_view msgStr{buf, buf + msgSize};
 
     const std::string output =
         std::vformat("{}  {}{}{}{}\t: {}{}",
                      std::make_format_args(tag, fileStr, spaces,
                                            logsTypeColors[type],
                                            logsTypeStrings[type],
-                                           std::string_view(buf, buf + msgSize),
+                                           msgStr,
                                            COLOR_RESET));
 
     std::printf("%s\n", output.c_str());

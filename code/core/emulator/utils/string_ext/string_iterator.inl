@@ -25,9 +25,11 @@ template<BaseTypes::String Str>
 const typename SmartIterator<Str>::P::IterType
 SmartIterator<Str>::Next() const {
 
+    using Iter = SmartIterator<Str>::P::IterType;
+
     if (IsBracket(P::m_CurIter)) {
         auto bracket = bracketsTable.at(*P::m_CurIter);
-        constexpr auto openType = BaseTypes::ReverseStringIter<P::IterType>
+        constexpr auto openType = BaseTypes::IsReverseStringIter<Iter>
                                   ? Close : Open;
         if (bracket.second == openType) {
             m_BracketsStack.push_back(bracket.first);
@@ -47,13 +49,15 @@ template<BaseTypes::String Str>
 const typename SmartIterator<Str>::P::IterType
 SmartIterator<Str>::Prev() const {
 
+    using Iter = SmartIterator<Str>::P::IterType;
+
     if(P::m_CurIter <= Begin()) {
         P::m_CurIter;
     }
 
     if ((P::m_CurIter < End()) && IsBracket(P::m_CurIter)) {
         auto bracket = bracketsTable.at(*P::m_CurIter);
-        constexpr auto openType = BaseTypes::ReverseStringIter<P::IterType>
+        constexpr auto openType = BaseTypes::IsReverseStringIter<Iter>
                                   ? Open : Close;
         if (bracket.second == openType) {
             m_BracketsStack.push_back(bracket.first);
@@ -129,9 +133,11 @@ template<BaseTypes::String Str>
 const typename SmartIterator<Str>::P::IterType
 SmartIterator<Str>::EnterBracket(bool reverse, bool recursive) const {
 
-    auto CheckBracket = [=](const typename P::IterType& iter) {
+    using Iter = SmartIterator<Str>::P::IterType;
+
+    auto CheckBracket = [=](const Iter& iter) {
         const auto openType =
-            BaseTypes::ReverseStringIter<P::IterType> && reverse
+            BaseTypes::IsReverseStringIter<Iter> && reverse
             ? Close : Open;
         return WhichBracket(iter).second == openType;
     };
@@ -154,7 +160,9 @@ template<BaseTypes::String Str>
 const typename SmartIterator<Str>::P::IterType
 SmartIterator<Str>::ExitBracket(bool enterFirst) const {
 
-    constexpr auto openType = BaseTypes::ReverseStringIter<P::IterType>
+    using Iter = SmartIterator<Str>::P::IterType;
+
+    constexpr auto openType = BaseTypes::IsReverseStringIter<Iter>
                               ? Close : Open;
     if (enterFirst && (WhichBracket(P::m_CurIter).second == openType)) {
         EnterBracket();

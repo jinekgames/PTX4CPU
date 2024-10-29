@@ -34,12 +34,14 @@ void ThreadExecutor::Finish() const {
 
 Result ThreadExecutor::Run(Data::Iterator::SizeType instructionsCount) {
 
-    const std::string logPrefix = std::vformat("ThreadExecutor[{},{},{}]",
-        std::make_format_args(m_ThreadId.x, m_ThreadId.y, m_ThreadId.z));
+    const std::string logPrefix = FormatString("ThreadExecutor[{},{},{}]",
+        m_ThreadId.x, m_ThreadId.y, m_ThreadId.z);
 
     PRINT_I("%s: Starting a function '%s' execution (offset:%llu of %llu)",
             logPrefix.c_str(), m_pFunc->name.c_str(),
             m_InstructionPosition, m_pFunc->instructions.size());
+
+    DebugLogVars();
 
     Data::Iterator::SizeType runIdx = 0;
 
@@ -54,13 +56,13 @@ Result ThreadExecutor::Run(Data::Iterator::SizeType instructionsCount) {
         auto res = runner.Run();
 
         if (!res) {
-            if (res == Result::Code::NotOk) {
+            if (res != Result::Code::Fail) {
                 PRINT_W("%s Execution warning (offset:%llu): %s",
                         logPrefix.c_str(), m_InstructionPosition,
                         res.msg.c_str());
             } else {
-                res.msg = std::vformat("(offset:{}): {}",
-                    std::make_format_args(m_InstructionPosition, res.msg));
+                res.msg = FormatString("(offset:{}): {}",
+                                       m_InstructionPosition, res.msg);
                 return res;
             }
         }
@@ -99,10 +101,22 @@ std::vector<Types::ArgumentPair> ThreadExecutor::RetrieveArgs(
 
     std::vector<Types::ArgumentPair> ret;
     ret.reserve(args.size());
+#ifdef EXTENDED_VARIABLES_LOGGING
+    PRINT_V("Instruction args:");
+#endif
     for (const auto& arg : args) {
         ret.push_back(RetrieveArg(type, arg));
+#ifdef EXTENDED_VARIABLES_LOGGING
+        PRINT_V("%s : %s", arg.c_str(), std::to_string(*ret.back().first).c_str());
+#endif
     }
     return ret;
+}
+
+void ThreadExecutor::DebugLogVars() const {
+#ifdef EXTENDED_VARIABLES_LOGGING
+    PRINT_V("Executor arguments\n%s", std::to_string(*m_pVarsTable).c_str());
+#endif
 }
 
 void ThreadExecutor::AppendConstants() const {

@@ -1,5 +1,7 @@
 #include "virtual_var.h"
 
+#include <utils/string_utils.h>
+
 
 namespace PTX4CPU {
 namespace Types {
@@ -35,6 +37,41 @@ void PTXVar::Move(PTXVar& left, PTXVar& right) {
     left.SetupDebugPtrs();
     right.SetupDebugPtrs();
 #endif
+}
+
+std::string PTXVar::ToStr() const {
+
+    std::string ret;
+
+    const auto size     = GetVectorSize();
+    const bool isVector = (size != 1);
+    const auto type     = GetPTXType();
+
+    if (isVector) {
+        ret += "{ ";
+    }
+
+    for (PTX4CPU::Types::IndexType idx = 0; idx < size; ++idx) {
+
+        std::string valueStr;
+
+        PTXTypedOp(type,
+            const auto value = Get<_PtxType_>(idx);
+            valueStr = std::to_string(value);
+        )
+
+        ret += valueStr;
+
+        if (idx != size - 1) {
+            ret += ", ";
+        }
+    }
+
+    if (isVector) {
+        ret += " }";
+    }
+
+    return ret;
 }
 
 VarsTable::VarsTable(const VarsTable* pParentTable)
@@ -113,6 +150,30 @@ const PTXVarPtr VarsTable::FindVar(const std::string& name) const {
 }
 
 const VarsTable* VarsTable::GetParent() const { return parent; }
+
+std::string VarsTable::ToStr() const {
+
+    std::string ret;
+
+    ret += "{\n";
+
+    for (const auto varIt : virtualVars) {
+        const auto& name     = varIt.first;
+        const auto  pValue   = varIt.second;
+        const auto  valueStr = (pValue)
+                               ? pValue->ToStr()
+                               : "nullptr";
+        ret += FormatString("\"{}\": {}\n", name, valueStr);
+    }
+
+    if (parent) {
+        ret += parent->ToStr();
+    }
+
+    ret += "}";
+
+    return ret;
+}
 
 }  // namespace Types
 }  // namespace PTX4CPU

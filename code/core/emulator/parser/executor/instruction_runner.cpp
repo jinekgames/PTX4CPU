@@ -62,9 +62,8 @@ Result InstructionRunner::Run() {
     }
 
     return {Result::Code::NotOk,
-            std::vformat("Runner for the given instruction not found. "
+            FormatString("Runner for the given instruction not found. "
                          "Skipped `{} {}`",
-                         std::make_format_args(
-                             m_Instruction.name,
-                             Merge(std::string(", "), m_Instruction.args)))};
+                         m_Instruction.name,
+                         Merge(std::string(", "), m_Instruction.args))};
 }

@@ -5,6 +5,7 @@
 #include <string>
 
 
+// @todo implemetation: enable support for gcc
 #define HAS_FIXED_FLOAT_SUPPORT (__STDCPP_FLOAT16_T__ == 1)
 
 
@@ -36,45 +37,45 @@ enum class PTXType : uint32_t {
     None = 0,
 
     // untyped bits 8-bit
-    B8    = (uint32_t)PTXTypeBase::B     | ((uint32_t)PTXTypeBitSize::b8  << 16),
+    B8    = (uint32_t)PTXTypeBase::B     | ((uint32_t)PTXTypeBitSize::b8   << 16),
     // untyped bits 16-bit
-    B16   = (uint32_t)PTXTypeBase::B     | ((uint32_t)PTXTypeBitSize::b16 << 16),
+    B16   = (uint32_t)PTXTypeBase::B     | ((uint32_t)PTXTypeBitSize::b16  << 16),
     // untyped bits 32-bit
-    B32   = (uint32_t)PTXTypeBase::B     | ((uint32_t)PTXTypeBitSize::b32 << 16),
+    B32   = (uint32_t)PTXTypeBase::B     | ((uint32_t)PTXTypeBitSize::b32  << 16),
     // untyped bits 64-bit
-    B64   = (uint32_t)PTXTypeBase::B     | ((uint32_t)PTXTypeBitSize::b64 << 16),
+    B64   = (uint32_t)PTXTypeBase::B     | ((uint32_t)PTXTypeBitSize::b64  << 16),
     // untyped bits 128-bit
     B128  = (uint32_t)PTXTypeBase::B     | ((uint32_t)PTXTypeBitSize::b128 << 16),
 
     // signed integer 8-bit
-    S8    = (uint32_t)PTXTypeBase::S     | ((uint32_t)PTXTypeBitSize::b8  << 16),
+    S8    = (uint32_t)PTXTypeBase::S     | ((uint32_t)PTXTypeBitSize::b8   << 16),
     // signed integer 16-bit
-    S16   = (uint32_t)PTXTypeBase::S     | ((uint32_t)PTXTypeBitSize::b16 << 16),
+    S16   = (uint32_t)PTXTypeBase::S     | ((uint32_t)PTXTypeBitSize::b16  << 16),
     // signed integer 32-bit
-    S32   = (uint32_t)PTXTypeBase::S     | ((uint32_t)PTXTypeBitSize::b32 << 16),
+    S32   = (uint32_t)PTXTypeBase::S     | ((uint32_t)PTXTypeBitSize::b32  << 16),
     // signed integer 64-bit
-    S64   = (uint32_t)PTXTypeBase::S     | ((uint32_t)PTXTypeBitSize::b64 << 16),
+    S64   = (uint32_t)PTXTypeBase::S     | ((uint32_t)PTXTypeBitSize::b64  << 16),
 
     // unsigned integer 8-bit
-    U8    = (uint32_t)PTXTypeBase::U     | ((uint32_t)PTXTypeBitSize::b8  << 16),
+    U8    = (uint32_t)PTXTypeBase::U     | ((uint32_t)PTXTypeBitSize::b8   << 16),
     // unsigned integer 16-bit
-    U16   = (uint32_t)PTXTypeBase::U     | ((uint32_t)PTXTypeBitSize::b16 << 16),
+    U16   = (uint32_t)PTXTypeBase::U     | ((uint32_t)PTXTypeBitSize::b16  << 16),
     // unsigned integer 32-bit
-    U32   = (uint32_t)PTXTypeBase::U     | ((uint32_t)PTXTypeBitSize::b32 << 16),
+    U32   = (uint32_t)PTXTypeBase::U     | ((uint32_t)PTXTypeBitSize::b32  << 16),
     // unsigned integer 64-bit
-    U64   = (uint32_t)PTXTypeBase::U     | ((uint32_t)PTXTypeBitSize::b64 << 16),
+    U64   = (uint32_t)PTXTypeBase::U     | ((uint32_t)PTXTypeBitSize::b64  << 16),
 
     // floating-point 16-bit
-    F16   = (uint32_t)PTXTypeBase::F     | ((uint32_t)PTXTypeBitSize::b16 << 16),
+    F16   = (uint32_t)PTXTypeBase::F     | ((uint32_t)PTXTypeBitSize::b16  << 16),
     // floating-point 16-bit half precision
-    F16X2 = (uint32_t)PTXTypeBase::FHalf | ((uint32_t)PTXTypeBitSize::b32 << 16),
+    F16X2 = (uint32_t)PTXTypeBase::FHalf | ((uint32_t)PTXTypeBitSize::b32  << 16),
     // floating-point 32-bit
-    F32   = (uint32_t)PTXTypeBase::F     | ((uint32_t)PTXTypeBitSize::b32 << 16),
+    F32   = (uint32_t)PTXTypeBase::F     | ((uint32_t)PTXTypeBitSize::b32  << 16),
     // floating-point 64-bit
-    F64   = (uint32_t)PTXTypeBase::F     | ((uint32_t)PTXTypeBitSize::b64 << 16),
+    F64   = (uint32_t)PTXTypeBase::F     | ((uint32_t)PTXTypeBitSize::b64  << 16),
 
     // predicate
-    Pred  = PTXTypeBase::Pred,
+    Pred  = (uint32_t)PTXTypeBase::Pred,
 };
 
 inline PTXType operator & (PTXType left, PTXType right) {
@@ -158,20 +159,20 @@ using getVarType =
 
 #define PTX_Internal_TypedOp_Construct_First(runtimeType, constType, ...) \
     if (runtimeType == constType) {                                       \
-        constexpr Types::PTXType _PtxType_ = constType;                   \
+        constexpr PTX4CPU::Types::PTXType _PtxType_ = constType;          \
         __VA_ARGS__                                                       \
     }
 
 #define PTX_Internal_TypedOp_Construct_Middle(runtimeType, constType, ...) \
     else if (runtimeType == constType) {                                   \
-        constexpr Types::PTXType _PtxType_ = constType;                    \
+        constexpr PTX4CPU::Types::PTXType _PtxType_ = constType;           \
         __VA_ARGS__                                                        \
     }
 
 #define PTX_Internal_TypedOp_Construct_Default(runtimeType, ...)                                 \
     else {                                                                                       \
         PRINT_E("Unknown type PTXType(%d). Casting to .s64", static_cast<int32_t>(runtimeType)); \
-        constexpr Types::PTXType _PtxType_ = Types::PTXType::S64;                                \
+        constexpr PTX4CPU::Types::PTXType _PtxType_ = PTX4CPU::Types::PTXType::S64;              \
         __VA_ARGS__                                                                              \
     }
 
@@ -179,28 +180,40 @@ using getVarType =
 // Use `_PtxType_` as a compile-time type value
 // @param type run-time type
 // @param variadic_argument code which needs a compile-time type
-#define PTXTypedOp(type, ...)                                                              \
-    do {                                                                                   \
-        PTX_Internal_TypedOp_Construct_First(type,     Types::PTXType::B8,    __VA_ARGS__) \
-        PTX_Internal_TypedOp_Construct_Middle(type, Types::PTXType::B16,   __VA_ARGS__)    \
-        PTX_Internal_TypedOp_Construct_Middle(type, Types::PTXType::B32,   __VA_ARGS__)    \
-        PTX_Internal_TypedOp_Construct_Middle(type, Types::PTXType::B64,   __VA_ARGS__)    \
-        /*PTX_Internal_TypedOp_Construct_Middle(type, Types::PTXType::B128,  __VA_ARGS__)*/    \
-        PTX_Internal_TypedOp_Construct_Middle(type, Types::PTXType::S8,    __VA_ARGS__)    \
-        PTX_Internal_TypedOp_Construct_Middle(type, Types::PTXType::S16,   __VA_ARGS__)    \
-        PTX_Internal_TypedOp_Construct_Middle(type, Types::PTXType::S32,   __VA_ARGS__)    \
-        PTX_Internal_TypedOp_Construct_Middle(type, Types::PTXType::S64,   __VA_ARGS__)    \
-        PTX_Internal_TypedOp_Construct_Middle(type, Types::PTXType::U8,    __VA_ARGS__)    \
-        PTX_Internal_TypedOp_Construct_Middle(type, Types::PTXType::U16,   __VA_ARGS__)    \
-        PTX_Internal_TypedOp_Construct_Middle(type, Types::PTXType::U32,   __VA_ARGS__)    \
-        PTX_Internal_TypedOp_Construct_Middle(type, Types::PTXType::U64,   __VA_ARGS__)    \
-        PTX_Internal_TypedOp_Construct_Middle(type, Types::PTXType::F16,   __VA_ARGS__)    \
-        PTX_Internal_TypedOp_Construct_Middle(type, Types::PTXType::F16X2, __VA_ARGS__)    \
-        PTX_Internal_TypedOp_Construct_Middle(type, Types::PTXType::F32,   __VA_ARGS__)    \
-        PTX_Internal_TypedOp_Construct_Middle(type, Types::PTXType::F64,   __VA_ARGS__)    \
-        /*PTX_Internal_TypedOp_Construct_Middle(type, Types::PTXType::Pred,  __VA_ARGS__)*/    \
-        PTX_Internal_TypedOp_Construct_Default(type, __VA_ARGS__)                          \
+#define PTXTypedOp(type, ...)                                                                        \
+    do {                                                                                             \
+        PTX_Internal_TypedOp_Construct_First(type,  PTX4CPU::Types::PTXType::B8,    __VA_ARGS__)     \
+        PTX_Internal_TypedOp_Construct_Middle(type, PTX4CPU::Types::PTXType::B16,   __VA_ARGS__)     \
+        PTX_Internal_TypedOp_Construct_Middle(type, PTX4CPU::Types::PTXType::B32,   __VA_ARGS__)     \
+        PTX_Internal_TypedOp_Construct_Middle(type, PTX4CPU::Types::PTXType::B64,   __VA_ARGS__)     \
+        /*PTX_Internal_TypedOp_Construct_Middle(type, PTX4CPU::Types::PTXType::B128,  __VA_ARGS__)*/ \
+        PTX_Internal_TypedOp_Construct_Middle(type, PTX4CPU::Types::PTXType::S8,    __VA_ARGS__)     \
+        PTX_Internal_TypedOp_Construct_Middle(type, PTX4CPU::Types::PTXType::S16,   __VA_ARGS__)     \
+        PTX_Internal_TypedOp_Construct_Middle(type, PTX4CPU::Types::PTXType::S32,   __VA_ARGS__)     \
+        PTX_Internal_TypedOp_Construct_Middle(type, PTX4CPU::Types::PTXType::S64,   __VA_ARGS__)     \
+        PTX_Internal_TypedOp_Construct_Middle(type, PTX4CPU::Types::PTXType::U8,    __VA_ARGS__)     \
+        PTX_Internal_TypedOp_Construct_Middle(type, PTX4CPU::Types::PTXType::U16,   __VA_ARGS__)     \
+        PTX_Internal_TypedOp_Construct_Middle(type, PTX4CPU::Types::PTXType::U32,   __VA_ARGS__)     \
+        PTX_Internal_TypedOp_Construct_Middle(type, PTX4CPU::Types::PTXType::U64,   __VA_ARGS__)     \
+        PTX_Internal_TypedOp_Construct_Middle(type, PTX4CPU::Types::PTXType::F16,   __VA_ARGS__)     \
+        PTX_Internal_TypedOp_Construct_Middle(type, PTX4CPU::Types::PTXType::F16X2, __VA_ARGS__)     \
+        PTX_Internal_TypedOp_Construct_Middle(type, PTX4CPU::Types::PTXType::F32,   __VA_ARGS__)     \
+        PTX_Internal_TypedOp_Construct_Middle(type, PTX4CPU::Types::PTXType::F64,   __VA_ARGS__)     \
+        /*PTX_Internal_TypedOp_Construct_Middle(type, PTX4CPU::Types::PTXType::Pred,  __VA_ARGS__)*/ \
+        PTX_Internal_TypedOp_Construct_Default(type, __VA_ARGS__)                                    \
     } while (0);
 
 }  // namespace Types
 }  // namespace PTX4CPU
+
+
+#if HAS_FIXED_FLOAT_SUPPORT
+namespace std {
+inline std::string to_string(const std::float16_t& value) {
+    return std::to_string(static_cast<float>(value));
+}
+inline std::string to_string(const std::bfloat16_t& value) {
+    return std::to_string(static_cast<float>(value));
+}
+}  // namespace std
+#endif  // #if HAS_FIXED_FLOAT_SUPPORT

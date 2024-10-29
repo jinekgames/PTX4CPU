@@ -85,7 +85,7 @@ bool SaveOutputData(const std::string& filepath, PtxExecArgs& execArgs) {
 
 // @todo implementation: add ability to export preprocessed ptx file
 
-int main(size_t argc, char** argv) {
+int main(int argc, char** argv) {
     Parser args(argc, argv);
 
     if (args.Contains("help")) {
@@ -184,10 +184,14 @@ Commands:
             }
         }
 
-        std::cout << "Starting execution of kernel '" << kernelName << "'from '"
-                  << inputPath << "' in " << threadsCount << " treads" << std::endl;
+        std::cout << "Starting execution of kernel '" << kernelName
+                  << "'from '" << inputPath << "' in " << threadsCount
+                  << " treads" << std::endl;
 
         // Parse PTX execution arguments
+
+        std::cout << "Using argument from '" << argsJsonPath << "'"
+                  << std::endl;
 
         auto pExecVars = ParseArgsJson(ReadFile(argsJsonPath));
         if (!pExecVars) {

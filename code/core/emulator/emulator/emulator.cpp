@@ -51,9 +51,9 @@ Result Emulator::ExecuteFunc(const std::string& funcName, PtxInputData* pArgs,
 
     for (auto& exec : execs) {
         auto thread = std::thread{[&] {
-            Helpers::Timer threadTimer(std::vformat("Thread [{},{},{}]", std::make_format_args(
-                exec.GetTID().x, exec.GetTID().y, exec.GetTID().z
-            )));
+            Helpers::Timer threadTimer(
+                FormatString("Thread [{},{},{}]",
+                             exec.GetTID().x, exec.GetTID().y, exec.GetTID().z));
             auto res = exec.Run();
             if (res) {
                 PRINT_I("ThreadExecutor[%lu,%lu,%lu]: Execution finished",

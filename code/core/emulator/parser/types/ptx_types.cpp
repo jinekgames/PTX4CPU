@@ -1,13 +1,14 @@
 #include "ptx_types.h"
 
+#include <algorithm>
+
 #include <logger/logger.h>
 
 
 #if !HAS_FIXED_FLOAT_SUPPORT
 #pragma message("WARNING: "                                               \
-                "Fixed floating point types are not supported by the "    \
-                "compiler. All floats with size > 64 will be traited as " \
-                "float64")
+                "Fixed floating point types are not supported. "          \
+                "All floats with size > 64 will be traited as float64")
 #endif  // #if !HAS_FIXED_FLOAT_SUPPORT
 
 
