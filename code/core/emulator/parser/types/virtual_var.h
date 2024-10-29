@@ -393,6 +393,7 @@ PTXVarPtr CreateTempValueVarTyped(const std::string& value) {
 }  // namespace Types
 }  // namespace PTX4CPU
 
+
 namespace std {
 inline std::string to_string(const PTX4CPU::Types::PTXVar& var) {
     return var.ToStr();

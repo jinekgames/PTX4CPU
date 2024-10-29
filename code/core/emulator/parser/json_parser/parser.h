@@ -56,7 +56,10 @@ void InsertScalarVar(PtxInputData& inputData, nlohmann::json& valueParser) {
 
     // Init var value
     auto value = valueParser.get<RealType>();
+
+#ifdef EXTENDED_VARIABLES_LOGGING
     PRINT_V("Arg value: %s", std::to_string(value).c_str());
+#endif
 
     std::stringstream ss{std::ios::in};
     // Value converted to PTX variable
@@ -86,14 +89,20 @@ void InsertVectorVar(PtxInputData& inputData, nlohmann::json& vectorParser) {
         writeVectorData = false;
     }
 
+#ifdef EXTENDED_VARIABLES_LOGGING
     PRINT_V("Arg vector size: %s", std::to_string(vectorSize).c_str());
+#endif
 
     Types::PTXVarPtr pPTXVec{new Types::PTXVarTyped<type>(vectorSize)};
     if (writeVectorData) {
         for (Types::IndexType i = 0; i < vectorSize; ++i) {
             auto& valueParser = vectorParser[i];
             auto value = valueParser.get<RealType>();
+
+#ifdef EXTENDED_VARIABLES_LOGGING
             PRINT_V("Arg value: [%llu] %s", i, std::to_string(value).c_str());
+#endif
+
             pPTXVec->Get<type>(i) = value;
         }
     }
@@ -196,7 +205,10 @@ inline static Result ParseJson(PtxInputData& inputData,
                      "'vector' (for vector) field");
             }
 
-            PRINT_V("Parsing %s json arg of type %s", (isScalar) ? "scalar" : "vector", typeStr.c_str());
+#ifdef EXTENDED_VARIABLES_LOGGING
+            PRINT_V("Parsing %s json arg of type %s",
+                    (isScalar) ? "scalar" : "vector", typeStr.c_str());
+#endif
 
             const auto type = Types::StrToPTXType(typeStr);
 

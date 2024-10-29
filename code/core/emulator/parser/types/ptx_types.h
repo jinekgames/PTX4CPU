@@ -6,8 +6,7 @@
 
 
 // @todo implemetation: enable support for gcc
-#define HAS_FIXED_FLOAT_SUPPORT false
-// #define HAS_FIXED_FLOAT_SUPPORT (__STDCPP_FLOAT16_T__ == 1)
+#define HAS_FIXED_FLOAT_SUPPORT (__STDCPP_FLOAT16_T__ == 1)
 
 
 namespace PTX4CPU {
@@ -206,3 +205,15 @@ using getVarType =
 
 }  // namespace Types
 }  // namespace PTX4CPU
+
+
+#if HAS_FIXED_FLOAT_SUPPORT
+namespace std {
+inline std::string to_string(const std::float16_t& value) {
+    return std::to_string(static_cast<float>(value));
+}
+inline std::string to_string(const std::bfloat16_t& value) {
+    return std::to_string(static_cast<float>(value));
+}
+}  // namespace std
+#endif  // #if HAS_FIXED_FLOAT_SUPPORT
