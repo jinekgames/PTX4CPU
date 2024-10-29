@@ -8,16 +8,16 @@
             "name": "(msvc-Win32) EmulatorCmd Test Run",
             "type": "cppvsdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/bin/EmulatorCmd",
+            "program": "${workspaceFolder}/build/bin/Debug/EmulatorCmd.exe",
             "args": [
                 "--test-run",    "${workspaceFolder}/ext/cuda_ptx_samples/rel_add_op.ptx",
                 "--kernel",      "_Z9addKernelPiPKiS1_",
                 "--args",        "${workspaceFolder}/ext/cuda_ptx_samples/rel_add_op.json",
-                "--threads",     "1",
+                "--threads",     "5",
                 "--save-output", "${workspaceFolder}/ext/cuda_ptx_samples/output/rel_add_op_out.json"
             ],
             "stopAtEntry": false,
-            "cwd": "${workspaceFolder}/build/bin/",
+            "cwd": "${workspaceFolder}/build/bin/Debug",
             "environment": [],
             "console": "integratedTerminal"
         },
