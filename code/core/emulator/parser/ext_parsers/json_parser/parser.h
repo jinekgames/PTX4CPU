@@ -2,6 +2,7 @@
 
 #include <nlohmann/json.hpp>
 
+#include <api/api_types.h>
 #include <logger/logger.h>
 #include <utils/result.h>
 #include <utils/string_utils.h>

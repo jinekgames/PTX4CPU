@@ -54,9 +54,28 @@ Result Parser::Load(const std::string& source) {
     return {};
 }
 
-std::vector<ThreadExecutor> Parser::MakeThreadExecutors(const std::string& funcName,
-                                                        const Types::PTXVarList& arguments,
-                                                        BaseTypes::uint3_32 threadsCount) const {
+Types::Function*
+Parser::GetKernelDescription(const std::string& name) const {
+
+    Types::Function* ret = nullptr;
+
+    const auto it = std::find_if(m_FuncsList.begin(), m_FuncsList.end(),
+        [&](const Types::FuncsList::value_type& func) {
+            return IsKernelFunction(func) && func.name == name;
+        });
+
+    if (it != m_FuncsList.end()) {
+        auto &description = *it;
+        ret = &description;
+    }
+
+    return ret;
+}
+
+std::vector<ThreadExecutor>
+Parser::MakeThreadExecutors(const std::string& funcName,
+                            const Types::PTXVarList& arguments,
+                            BaseTypes::uint3_32 threadsCount) const {
 
     // Find kernel
     auto funcIter = FindFunction(funcName, arguments);
@@ -391,33 +410,46 @@ bool Parser::InitVTable() {
     return true;
 }
 
-Types::FuncsList::iterator Parser::FindFunction(const std::string& funcName,
-                                                const Types::PTXVarList& arguments) const {
+Types::FuncsList::iterator
+Parser::FindFunction(const std::string& funcName,
+                     const Types::PTXVarList& arguments) const {
 
     return std::find_if(m_FuncsList.begin(), m_FuncsList.end(),
         [&](const Types::FuncsList::value_type& func) {
             // is entry
-            if (!func.attributes.contains(KernelAttributes::ENTRY))
+            if (!IsKernelFunction(func)) {
                 return false;
+            }
             // correct name
-            if (func.name != funcName)
+            if (func.name != funcName) {
                 return false;
+            }
             // correct arguments
-            if (func.arguments.size() != arguments.size())
+            if (func.arguments.size() != arguments.size()) {
                 return false;
+            }
             Types::PTXVarList::size_type i = 0;
             for (auto& arg : func.arguments) {
-                if (!arguments[i] || arg.second.type != arguments[i]->GetPTXType())
+                if (!arguments[i] ||
+                    arg.second.type != arguments[i]->GetPTXType()) {
                     return false;
+                }
                 ++i;
             }
             return true;
         });
 }
 
-bool Parser::IsFuncDefDirictive(const std::string &dirictive)
-{
+bool Parser::IsFuncDefDirictive(const std::string &dirictive) {
+
     return (std::find(m_FuncDefDirictives.begin(),
                       m_FuncDefDirictives.end(), dirictive)
             != m_FuncDefDirictives.end());
+}
+
+
+bool Parser::IsKernelFunction(const Types::Function& function) {
+
+    return
+        function.attributes.contains(KernelAttributes::ENTRY);
 }

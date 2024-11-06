@@ -11,6 +11,8 @@
 #include <result.h>
 #include <parser_types.h>
 
+#include "api/api_types.h"
+
 
 namespace PTX4CPU {
 
@@ -78,7 +80,10 @@ public:
     */
     Result Load(const std::string& source);
 
-    State GetState() { return m_State; }
+    inline State GetState() const { return m_State; }
+
+    // Returns description of the given kernel
+    Types::Function* GetKernelDescription(const std::string& name) const;
 
     /**
      * Prepare executors for each thread, which could be runned asynchronously
@@ -101,6 +106,8 @@ public:
      * Extracts an access key (should be one of xyzw) and real variable name
     */
     static ParsedPtxVectorName ParseVectorName(const std::string& name);
+
+    static bool IsKernelFunction(const Types::Function& function);
 
 private:
 

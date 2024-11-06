@@ -28,7 +28,7 @@ Emulator::Emulator(const std::string& source)
 // Public methods
 
 Result Emulator::ExecuteFunc(const std::string& funcName, PtxInputData* pArgs,
-                               const BaseTypes::uint3_32& gridSize) {
+                             const BaseTypes::uint3_32& gridSize) {
 
     if (m_Parser.GetState() != Parser::State::Ready) {
         PRINT_E("Parser is not ready for execution");
@@ -59,8 +59,10 @@ Result Emulator::ExecuteFunc(const std::string& funcName, PtxInputData* pArgs,
                 PRINT_I("ThreadExecutor[%lu,%lu,%lu]: Execution finished",
                         exec.GetTID().x, exec.GetTID().y, exec.GetTID().z);
             } else {
-                PRINT_E("ThreadExecutor[%lu,%lu,%lu]: Execution falied. Error: %s",
-                        exec.GetTID().x, exec.GetTID().y, exec.GetTID().z, res.msg.c_str());
+                PRINT_E("ThreadExecutor[%lu,%lu,%lu]: Execution falied. "
+                        "Error: %s",
+                        exec.GetTID().x, exec.GetTID().y, exec.GetTID().z,
+                        res.msg.c_str());
             }
         }};
         threads.push_back(std::move(thread));
@@ -70,5 +72,27 @@ Result Emulator::ExecuteFunc(const std::string& funcName, PtxInputData* pArgs,
         thread.join();
     }
 
+    return {};
+}
+
+Result Emulator::GetKernelDescriptor(const std::string& name,
+                                     Types::Function** pDescriptor) const {
+
+    if(!pDescriptor) {
+        return { "Null Descriptor pointer passed" };
+    }
+
+    *pDescriptor = nullptr;
+
+    if(m_Parser.GetState() != Parser::State::Ready) {
+        return { "Retiriving kernel descriptor from a not loaded Emulator" };
+    }
+
+    auto* parserDescriptor = m_Parser.GetKernelDescription(name);
+    if(!parserDescriptor) {
+        return { "Kernel descriptor not found" };;
+    }
+
+    *pDescriptor = parserDescriptor;
     return {};
 }
