@@ -73,6 +73,8 @@ Result Emulator::ExecuteFunc(const std::string& funcName,
         thread.join();
     }
 
+    // @todo implementation: destroy arguments descriptor data
+
     return {};
 }
 

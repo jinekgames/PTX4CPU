@@ -111,5 +111,7 @@ message(STATUS "Building from commit: ${GIT_HASH}")
 
 target_compile_definitions(emulatorLib PRIVATE -DPROJECT_GIT_COMMIT="${GIT_HASH}")
 
-# Install API headers
-install(DIRECTORY ${EMULATOR_API_DIR}/export DESTINATION ${CMAKE_BINARY_DIR}/api)
+# Install API headers to build directory
+add_custom_command(TARGET emulatorLib PRE_BUILD
+                   COMMAND ${CMAKE_COMMAND} -E copy_directory
+                   ${EMULATOR_API_DIR}/export ${CMAKE_BINARY_DIR}/api)
