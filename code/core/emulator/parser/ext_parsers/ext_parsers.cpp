@@ -5,13 +5,26 @@
 #include <utils/string_utils.h>
 
 
-template<Types::PTXType type>
-void InsertTypedArg(const void* const pArg, PtxInputData& inputData);
+namespace PTX4CPU {
 
+namespace {
+
+template<Types::PTXType type>
+void InsertTypedArg(const void* const pArg, Types::PtxInputData& inputData) {
+
+    using RealType = Types::getVarType<type>;
+    decltype(auto) pArgReal = reinterpret_cast<const RealType*>(pArg);
+
+    Types::PTXVar* pPtxArg = new Types::PTXVarTyped<type>(pArgReal);
+
+    inputData.execArgs.emplace_back(pPtxArg);
+}
+
+}  // anonimous namespace
 
 Result ParseCudaArgs(const void* const* ppArgs,
                      Types::Function::Arguments& kernelArgs,
-                     PtxInputData& inputData) {
+                     Types::PtxInputData* pInputData) {
 
     const auto argsSize = kernelArgs.size();
 
@@ -22,6 +35,9 @@ Result ParseCudaArgs(const void* const* ppArgs,
         }
         return { "Null Arguments array passed" };
     }
+
+    pInputData      = new Types::PtxInputData{};
+    auto& inputData = *pInputData;
 
     size_t i = 0;
     for (const auto& it : kernelArgs) {
@@ -39,3 +55,5 @@ Result ParseCudaArgs(const void* const* ppArgs,
 
     return {};
 }
+
+}  // namespace PTX4CPU

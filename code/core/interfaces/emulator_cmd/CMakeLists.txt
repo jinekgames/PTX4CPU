@@ -7,7 +7,7 @@ set(sources
 )
 
 set(includes
-    ${EMULATOR_API_DIR}
+    ${EMULATOR_API_DIR}/export
     ${EMULATOR_DIR}
 )
 

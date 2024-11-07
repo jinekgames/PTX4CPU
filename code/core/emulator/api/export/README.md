@@ -2,7 +2,7 @@
 
 The main part of the _Emulator_ is a library (static or dynamic) which implements the backend of a _PTX_ emulation process. The library provides an API for using it's power of _PTX_ emulation.
 
-The API consists of the following header files:
+The API interface consists of the following header files:
 
 - The core header file, which includes other API headers, and provides the basic interface of working with the library:
   - [`emulator_api.h`](./emulator_api.h)
@@ -12,6 +12,8 @@ The API consists of the following header files:
   - [`utils/result.h`](./utils/result.h)
   - [`utils/base_types.h`](./utils/base_types.h)
   - [`api_types.h`](./api_types.h)
+
+All these headers are stored in directory `code/core/emulator/api/export`. After building they are copied to
 
 
 ## API usage

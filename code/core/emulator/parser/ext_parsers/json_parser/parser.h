@@ -2,8 +2,8 @@
 
 #include <nlohmann/json.hpp>
 
-#include <api/api_types.h>
 #include <logger/logger.h>
+#include <utils/api_types.h>
 #include <utils/result.h>
 #include <utils/string_utils.h>
 #include <parser_types.h>
@@ -43,7 +43,8 @@ public:
 constexpr JsonVer JSON_VER_ACTUAL = { 1, 0 };
 
 template<Types::PTXType type>
-void InsertScalarVar(PtxInputData& inputData, nlohmann::json& valueParser) {
+void InsertScalarVar(Types::PtxInputData& inputData,
+                     nlohmann::json& valueParser) {
 
     using RealType         = Types::getVarType<type>;
     constexpr auto ptrType = Types::GetSystemPtrType();
@@ -75,7 +76,8 @@ void InsertScalarVar(PtxInputData& inputData, nlohmann::json& valueParser) {
 }
 
 template<Types::PTXType type>
-void InsertVectorVar(PtxInputData& inputData, nlohmann::json& vectorParser) {
+void InsertVectorVar(Types::PtxInputData& inputData,
+                     nlohmann::json& vectorParser) {
 
     using RealType         = Types::getVarType<type>;
     constexpr auto ptrType = Types::GetSystemPtrType();
@@ -157,10 +159,10 @@ constexpr auto VECTOR_KEY    = "vector";
  *
  * @return Parsing result
 */
-inline static Result ParseJson(PtxInputData& inputData,
+inline static Result ParseJson(Types::PtxInputData& inputData,
                                const std::string& jsonStr) {
 
-    inputData = PtxInputData{};
+    inputData = Types::PtxInputData{};
 
     try {
 
@@ -243,7 +245,7 @@ inline static Result ParseJson(PtxInputData& inputData,
  *
  * @return Serialization result
 */
-inline static Result ExtractJson(const PtxInputData& inputData,
+inline static Result ExtractJson(const Types::PtxInputData& inputData,
                                  std::string& jsonStr) {
 
     jsonStr.clear();

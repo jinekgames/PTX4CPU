@@ -35,18 +35,18 @@ EMULATOR_CreateEmulator(PTX4CPU::IEmulator** ppEmulator,
 /**
  * Processes PTX arguments from CUDA runtime
  *
+ * @param pInputData A pointer to PtxExecArgs where the processing result will
+ * be put.
  * @param pKernel    Descriptor of the kernel to pass arguments to.
  * Could be retrived from Emulator object using
  * `IEmulator::GetKernelDescriptor()` API.
  * @param ppArgs     Arguments passed to CUDA runtime as an array of `void*`
  * pointers
- * @param pInputData A pointer to PtxExecArgs where the processing result will
- * be put.
 */
 extern "C" EMULATOR_EXPORT_API void EMULATOR_CC
-EMULATOR_ProcessArgs(const PtxFuncDescriptor pKernel,
-                     const void* const* ppArgs,
-                     PtxExecArgs* pInputData);
+EMULATOR_ProcessArgs(PtxExecArgs* pInputData,
+                     const PtxFuncDescriptor pKernel,
+                     const void* const* ppArgs);
 
 /**
  * Parses PTX arguments from json

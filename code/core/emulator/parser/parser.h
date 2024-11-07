@@ -8,10 +8,9 @@
 #include <vector>
 
 #include <executor.h>
-#include <result.h>
 #include <parser_types.h>
-
-#include "api/api_types.h"
+#include <utils/api_types.h>
+#include <utils/result.h>
 
 
 namespace PTX4CPU {

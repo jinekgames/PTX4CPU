@@ -27,7 +27,8 @@ Emulator::Emulator(const std::string& source)
 
 // Public methods
 
-Result Emulator::ExecuteFunc(const std::string& funcName, PtxInputData* pArgs,
+Result Emulator::ExecuteFunc(const std::string& funcName,
+                             Types::PtxInputData* pArgs,
                              const BaseTypes::uint3_32& gridSize) {
 
     if (m_Parser.GetState() != Parser::State::Ready) {

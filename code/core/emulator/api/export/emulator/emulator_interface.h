@@ -2,10 +2,9 @@
 
 #include <string>
 
-#include "../utils/result.h"
+#include "../utils/api_types.h"
 #include "../utils/base_types.h"
-
-#include "../api_types.h"
+#include "../utils/result.h"
 
 
 namespace PTX4CPU {
