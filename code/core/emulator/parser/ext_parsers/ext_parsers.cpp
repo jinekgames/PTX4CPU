@@ -24,7 +24,7 @@ void InsertTypedArg(const void* const pArg, Types::PtxInputData& inputData) {
 
 Result ParseCudaArgs(const void* const* ppArgs,
                      Types::Function::Arguments& kernelArgs,
-                     Types::PtxInputData* pInputData) {
+                     Types::PtxInputData** ppInputData) {
 
     const auto argsSize = kernelArgs.size();
 
@@ -36,8 +36,9 @@ Result ParseCudaArgs(const void* const* ppArgs,
         return { "Null Arguments array passed" };
     }
 
-    pInputData      = new Types::PtxInputData{};
-    auto& inputData = *pInputData;
+    auto& pInputData = *ppInputData;
+    pInputData       = new Types::PtxInputData{};
+    auto& inputData  = *pInputData;
 
     size_t i = 0;
     for (const auto& it : kernelArgs) {

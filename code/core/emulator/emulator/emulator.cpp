@@ -28,7 +28,7 @@ Emulator::Emulator(const std::string& source)
 // Public methods
 
 Result Emulator::ExecuteFunc(const std::string& funcName,
-                             Types::PtxInputData* pArgs,
+                             Types::PtxInputData* args,
                              const BaseTypes::uint3_32& gridSize) {
 
     if (m_Parser.GetState() != Parser::State::Ready) {
@@ -39,7 +39,7 @@ Result Emulator::ExecuteFunc(const std::string& funcName,
     PRINT_I("Executing kernel \"%s\" in block [%lu,%lu,%lu]",
             funcName.c_str(), gridSize.x, gridSize.y, gridSize.z);
 
-    auto execs = m_Parser.MakeThreadExecutors(funcName, pArgs->execArgs, gridSize);
+    auto execs = m_Parser.MakeThreadExecutors(funcName, args->execArgs, gridSize);
 
     if (execs.empty()) {
         PRINT_E("Failed to create kernel executors");
@@ -49,6 +49,8 @@ Result Emulator::ExecuteFunc(const std::string& funcName,
     std::list<std::thread> threads;
 
     Helpers::Timer overallTimer("Overall execution");
+
+    bool success = true;
 
     for (auto& exec : execs) {
         auto thread = std::thread{[&] {
@@ -64,6 +66,7 @@ Result Emulator::ExecuteFunc(const std::string& funcName,
                         "Error: %s",
                         exec.GetTID().x, exec.GetTID().y, exec.GetTID().z,
                         res.msg.c_str());
+                success = false;
             }
         }};
         threads.push_back(std::move(thread));
@@ -75,7 +78,10 @@ Result Emulator::ExecuteFunc(const std::string& funcName,
 
     // @todo implementation: destroy arguments descriptor data
 
-    return {};
+    if (success) {
+        return {};
+    }
+    return { "Kernel execution failed" };
 }
 
 Result Emulator::GetKernelDescriptor(const std::string& name,

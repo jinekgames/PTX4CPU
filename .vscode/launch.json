@@ -58,7 +58,7 @@
             "type": "cppvsdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/bin/Debug/EmulatorCmd.exe",
-                        "args": [
+            "args": [
                 "--test-load",
                 "${workspaceFolder}/ext/cuda_ptx_samples/rel_add_op.ptx",
             ],
@@ -72,7 +72,7 @@
             "type": "cppvsdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/bin/Debug/EmulatorCmd.exe",
-                        "args": [
+            "args": [
                 "--test-json",
                 "${workspaceFolder}/ext/cuda_ptx_samples/rel_add_op.json",
             ],

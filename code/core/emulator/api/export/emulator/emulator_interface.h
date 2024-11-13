@@ -24,14 +24,14 @@ struct IEmulator {
      * created.
      *
      * @param funcName compiled name of function
-     * @param pArgs    list of execution args
+     * @param args     list of execution args
      * @param gridSize size of grid
      *
      * @return Result
     */
     virtual Result ExecuteFunc(
         const std::string& funcName,
-        PtxExecArgs pArgs,
+        PtxExecArgs args,
         const BaseTypes::uint3_32& gridSize) = 0;
 
     /**

@@ -38,7 +38,7 @@ EMULATOR_ParseArgsJson(PtxExecArgs* pInputData, const std::string& jsonStr) {
 
 EMULATOR_EXPORT_API void EMULATOR_CC
 EMULATOR_ProcessArgs(PtxExecArgs* pInputData,
-                     const PtxFuncDescriptor pKernel,
+                     const PtxFuncDescriptor kernel,
                      const void* const* ppArgs) {
 
     if(!pInputData) {
@@ -48,18 +48,18 @@ EMULATOR_ProcessArgs(PtxExecArgs* pInputData,
 
     *pInputData = nullptr;
 
-    if (!pKernel) {
+    if (!kernel) {
         PRINT_E("Null Kernel descriptor passed");
         return;
     }
 
-    if(!PTX4CPU::Parser::IsKernelFunction(*pKernel)) {
+    if(!PTX4CPU::Parser::IsKernelFunction(*kernel)) {
         PRINT_E("Non kernel descriptor passed");
         return;
     }
 
     const auto res =
-        PTX4CPU::ParseCudaArgs(ppArgs, pKernel->arguments, *pInputData);
+        PTX4CPU::ParseCudaArgs(ppArgs, kernel->arguments, pInputData);
 
     if(!res) {
         PRINT_E("Failed to parse runtime CUDA args: %s", res.msg.c_str());
