@@ -4,18 +4,31 @@
 #include <parser_types.h>
 #include <utils/string_utils.h>
 
+#include <type_traits>
+
 
 namespace PTX4CPU {
 
 namespace {
 
 template<Types::PTXType type>
-void InsertTypedArg(const void* const pArg, Types::PtxInputData& inputData) {
+void InsertTypedArg(const void* const ptxArg, Types::PtxInputData& inputData) {
 
-    using RealType = Types::getVarType<type>;
-    decltype(auto) pArgReal = reinterpret_cast<const RealType*>(pArg);
+    if constexpr (type != Types::GetSystemPtrType()) {
+        PRINT_E("Using non-pointer type %s as PTX kernel argument. "
+                "Possible types mismatching (System pointer type: %s)",
+                Types::PTXTypeToStr(type).c_str(),
+                Types::PTXTypeToStr(Types::GetSystemPtrType()).c_str());
+    }
 
-    Types::PTXVar* pPtxArg = new Types::PTXVarTyped<type>(pArgReal);
+    // C++ arg type
+    using realType = Types::getVarType<type>;
+    // variable storing the address, which is a ptx kernel argument
+    decltype(auto) pPtxArgReal = reinterpret_cast<const realType *>(&ptxArg);
+
+    // Pass to the virtual var constructor pointer to the value,
+    // which need to be stored in the variables
+    Types::PTXVar* pPtxArg = new Types::PTXVarTyped<type>(pPtxArgReal);
 
     inputData.execArgs.emplace_back(pPtxArg);
 }
@@ -42,8 +55,9 @@ Result ParseCudaArgs(const void* const* ppArgs,
 
     size_t i = 0;
     for (const auto& it : kernelArgs) {
-        auto& argDesc   = it.second;
-        auto  pArgValue = ppArgs[i];
+        const auto& argDesc   = it.second;
+        // ptr to c++ kernel arg. real ptx kernel arg
+        auto*       pArgValue = ppArgs[i];
 
         const auto type = argDesc.type;
 
