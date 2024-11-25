@@ -5,7 +5,7 @@
 #include <string>
 
 
-// @todo implemetation: enable support for gcc
+// @todo implemetation: check support with gcc
 #define HAS_FIXED_FLOAT_SUPPORT (__STDCPP_FLOAT16_T__ == 1)
 
 

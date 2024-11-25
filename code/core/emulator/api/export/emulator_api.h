@@ -17,7 +17,7 @@
 #endif
 
 
-#include <emulator/emulator_interface.h>
+#include "emulator/emulator_interface.h"
 
 #include <string>
 
@@ -32,21 +32,34 @@ extern "C" EMULATOR_EXPORT_API void EMULATOR_CC
 EMULATOR_CreateEmulator(PTX4CPU::IEmulator** ppEmulator,
                         const std::string& sourceCode);
 
-struct PtxInputData;
-using PtxExecArgs = PtxInputData*;
-
 /**
- * Parse PTX arguments from json
+ * Processes PTX arguments from CUDA runtime
  *
- * @param inputData object where PTX execution arguments and temporary
- * variables will be put
- * @param jsonStr   content of a .json with execution arguments
+ * @param pInputData A pointer to PtxExecArgs where the processing result will
+ * be put.
+ * @param kernel     Descriptor of the kernel to pass arguments to.
+ * Could be retrived from Emulator object using
+ * `IEmulator::GetKernelDescriptor()` API.
+ * @param ppArgs     Arguments passed to CUDA runtime as an array of `void*`
+ * pointers
 */
 extern "C" EMULATOR_EXPORT_API void EMULATOR_CC
-EMULATOR_ParseArgsJson(PtxExecArgs* inputData, const std::string& jsonStr);
+EMULATOR_ProcessArgs(PtxExecArgs* pInputData,
+                     const PtxFuncDescriptor kernel,
+                     const void* const* ppArgs);
 
 /**
- * Serialize PTX arguments into json
+ * Parses PTX arguments from json
+ *
+ * @param pInputData object where PTX execution arguments and temporary
+ * variables will be put
+ * @param jsonStr    content of a .json with execution arguments
+*/
+extern "C" EMULATOR_EXPORT_API void EMULATOR_CC
+EMULATOR_ParseArgsJson(PtxExecArgs* pInputData, const std::string& jsonStr);
+
+/**
+ * Serializes PTX arguments into json
  *
  * @param inputData object where PTX execution result and temporary
  * variables will be put

@@ -30,12 +30,11 @@ struct PtxProperties {
     }
 };
 
-}  // namespace Types
-}  // namespace PTX4CPU
-
-
 struct PtxInputData {
     PTX4CPU::Types::PTXVarList execArgs;
     PTX4CPU::Types::PTXVarList outVars;
     PTX4CPU::Types::PTXVarList tempVars;
 };
+
+}  // namespace Types
+}  // namespace PTX4CPU

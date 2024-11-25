@@ -1,21 +1,24 @@
 set(EMULATOR_LIB_NAME "EmulatorCore")
 
 set(JSON_PARSER_DIR    ${3RDPARTY_DIR}/json)
+set(EMULATOR_API_DIR   ${EMULATOR_DIR}/api)
 set(EMULATOR_UTILS_DIR ${EMULATOR_DIR}/utils)
 set(EXECUTOR_DIR       ${PARSER_DIR}/executor)
 set(DTABLE_RUNNERS_DIR ${EXECUTOR_DIR}/runners)
 
 
 set(emulator_sources
+    ${EMULATOR_DIR}/emulator/emulator_interface.cpp
     ${EMULATOR_DIR}/emulator/emulator.cpp
     ${EMULATOR_DIR}/emulator/emulator.h
-    ${EMULATOR_DIR}/emulator/emulator_interface.cpp
-    ${EMULATOR_DIR}/emulator/emulator_interface.h
     ${EXECUTOR_DIR}/dispatch_table.cpp
     ${EXECUTOR_DIR}/executor.cpp
     ${EXECUTOR_DIR}/executor.h
     ${EXECUTOR_DIR}/instruction_runner.cpp
     ${EXECUTOR_DIR}/instruction_runner.h
+    ${PARSER_DIR}/arg_parsers/arg_parsers.cpp
+    ${PARSER_DIR}/arg_parsers/arg_parsers.h
+    ${PARSER_DIR}/arg_parsers/json_parser/parser.h
     ${PARSER_DIR}/parser.cpp
     ${PARSER_DIR}/parser.h
     ${PARSER_DIR}/parser_types.h
@@ -38,11 +41,14 @@ set(emulator_includes
 
 set(emulator_api_sources
     ${EMULATOR_API_DIR}/emulator_api.cpp
-    ${EMULATOR_API_DIR}/emulator_api.h
+    ${EMULATOR_API_DIR}/export/emulator_api.h
+    ${EMULATOR_API_DIR}/export/emulator/emulator_interface.h
+    ${EMULATOR_API_DIR}/export/utils/base_types.h
+    ${EMULATOR_API_DIR}/export/utils/result.h
 )
 
 set(emulator_api_includes
-    ${EMULATOR_API_DIR}
+    ${EMULATOR_API_DIR}/export
 )
 
 
@@ -104,3 +110,8 @@ string(STRIP ${GIT_HASH} GIT_HASH)
 message(STATUS "Building from commit: ${GIT_HASH}")
 
 target_compile_definitions(emulatorLib PRIVATE -DPROJECT_GIT_COMMIT="${GIT_HASH}")
+
+# Install API headers to build directory
+add_custom_command(TARGET emulatorLib PRE_BUILD
+                   COMMAND ${CMAKE_COMMAND} -E copy_directory
+                   ${EMULATOR_API_DIR}/export ${CMAKE_BINARY_DIR}/api)

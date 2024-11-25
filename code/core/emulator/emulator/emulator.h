@@ -14,8 +14,12 @@ class Emulator : public IEmulator {
 public:
 
     // Execute a kernel with the given name from the loaded PTX
-    Result ExecuteFunc(const std::string& funcName, PtxInputData* pArgs,
+    Result ExecuteFunc(const std::string& funcName, PtxExecArgs args,
                        const BaseTypes::uint3_32& gridSize) override;
+
+    // Retrives the description of a kernel with the given name
+    Result GetKernelDescriptor(const std::string& name,
+                               Types::Function** pDescriptor) const override;
 
 public:
 

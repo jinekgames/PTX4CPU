@@ -30,4 +30,4 @@ This command will fully init the PTX and run the kernel in a multithreaded fashi
 
 It is the core feature you are looking for if you are reading this doc.
 
-User should manually prepare a configuration `.json` file with arguments for the kernel. Instruction on how to do this available [here](../../code/core/emulator/parser/json_parser/README.md).
+User should manually prepare a configuration `.json` file with arguments for the kernel. Instruction on how to do this available [here](../../emulator/parser/arg_parsers/json_parser/README.md).

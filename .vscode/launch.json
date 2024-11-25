@@ -38,11 +38,27 @@
             "environment": []
         },
         {
+            "name": "(gcc-Linux) EmulatorCmd Test Run",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/EmulatorCmd",
+            "args": [
+                "--test-run",    "${workspaceFolder}/ext/cuda_ptx_samples/rel_add_op.ptx",
+                "--kernel",      "_Z9addKernelPiPKiS1_",
+                "--args",        "${workspaceFolder}/ext/cuda_ptx_samples/rel_add_op.json",
+                "--threads",     "1",
+                "--save-output", "${workspaceFolder}/ext/cuda_ptx_samples/output/rel_add_op_out.json"
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/build/bin/",
+            "environment": []
+        },
+        {
             "name": "(msvc) EmulatorCmd Test Parse",
             "type": "cppvsdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/bin/Debug/EmulatorCmd.exe",
-                        "args": [
+            "args": [
                 "--test-load",
                 "${workspaceFolder}/ext/cuda_ptx_samples/rel_add_op.ptx",
             ],
@@ -56,7 +72,7 @@
             "type": "cppvsdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/bin/Debug/EmulatorCmd.exe",
-                        "args": [
+            "args": [
                 "--test-json",
                 "${workspaceFolder}/ext/cuda_ptx_samples/rel_add_op.json",
             ],

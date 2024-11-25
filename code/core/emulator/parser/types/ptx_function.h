@@ -69,16 +69,19 @@ public:
 
     // A name of the function stated in the PTX file
     std::string name;
-    // function attribute to it's optional value
-    std::unordered_map<std::string, std::string> attributes;
-    // argument name to it's type
-    std::unordered_map<std::string, PtxVarDesc> arguments;
-    // returning value name to it's type
-    std::unordered_map<std::string, PtxVarDesc> returns;
 
+    // function attribute to it's optional value
+    using Attributes   = std::unordered_map<std::string, std::string>;
+    // argument name to it's type
+    using Arguments    = std::unordered_map<std::string, PtxVarDesc>;
+    // returning value name to it's type
+    using Returns      = std::unordered_map<std::string, PtxVarDesc>;
     // List of function's instructions
     using Instructions = std::vector<Instruction>;
 
+    Attributes   attributes;
+    Arguments    arguments;
+    Returns      returns;
     Instructions instructions;
 
 };
