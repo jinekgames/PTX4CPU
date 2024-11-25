@@ -36,6 +36,6 @@ The core functionality of the library is an ability to load and launch a kernel 
 
 1. Receiving results.
 
-   - If the arguments were passed from the _Runtime_, you need to do nothing, because the values are passed to the kernel via pointers. So, after the `Emulator` finished execution, all your application's data will already contain modified values.
+   - If the arguments were passed from the _Runtime_, you need to do nothing, because the values are passed to the kernel via pointers. So, after the `Emulator` finished execution, all your application's data already contains modified values.
 
    - If you passed arguments by a _json_, you can serialize modified values back with [`EMULATOR_SerializeArgsJson()`](./emulator_api.h).

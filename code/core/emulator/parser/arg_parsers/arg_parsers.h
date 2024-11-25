@@ -21,6 +21,6 @@ namespace PTX4CPU {
 */
 Result ParseCudaArgs(const void* const* ppArgs,
                      Types::Function::Arguments& kernelArgs,
-                     Types::PtxInputData** ppInputData);
+                     PtxExecArgs* ppInputData);
 
 }  // namespace PTX4CPU

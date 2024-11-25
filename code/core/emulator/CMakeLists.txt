@@ -16,12 +16,12 @@ set(emulator_sources
     ${EXECUTOR_DIR}/executor.h
     ${EXECUTOR_DIR}/instruction_runner.cpp
     ${EXECUTOR_DIR}/instruction_runner.h
+    ${PARSER_DIR}/arg_parsers/arg_parsers.cpp
+    ${PARSER_DIR}/arg_parsers/arg_parsers.h
+    ${PARSER_DIR}/arg_parsers/json_parser/parser.h
     ${PARSER_DIR}/parser.cpp
     ${PARSER_DIR}/parser.h
     ${PARSER_DIR}/parser_types.h
-    ${PARSER_DIR}/ext_parsers/ext_parsers.cpp
-    ${PARSER_DIR}/ext_parsers/ext_parsers.h
-    ${PARSER_DIR}/ext_parsers/json_parser/parser.h
     ${PARSER_DIR}/types/parser_data.cpp
     ${PARSER_DIR}/types/parser_data.h
     ${PARSER_DIR}/types/ptx_function.cpp

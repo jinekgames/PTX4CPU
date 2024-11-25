@@ -1,4 +1,4 @@
-#include "ext_parsers.h"
+#include "arg_parsers.h"
 
 #include <logger/logger.h>
 #include <parser_types.h>
@@ -37,7 +37,7 @@ void InsertTypedArg(const void* const ptxArg, Types::PtxInputData& inputData) {
 
 Result ParseCudaArgs(const void* const* ppArgs,
                      Types::Function::Arguments& kernelArgs,
-                     Types::PtxInputData** ppInputData) {
+                     PtxExecArgs* ppInputData) {
 
     const auto argsSize = kernelArgs.size();
 
