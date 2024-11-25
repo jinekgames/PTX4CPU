@@ -7,6 +7,7 @@
 #include <tuple>
 #include <vector>
 
+#include <api/api_types.h>
 #include <executor.h>
 #include <parser_types.h>
 #include <utils/api_types.h>
