@@ -68,6 +68,10 @@ Result ThreadExecutor::Run(Data::Iterator::SizeType instructionsCount) {
         }
     }
 
+    if(m_InstructionPosition > m_pFunc->instructions.size()) {
+        --m_InstructionPosition;
+    }
+
     PRINT_I("%s: Execution paused (offset:%llu of %llu)", logPrefix.c_str(),
             m_InstructionPosition, m_pFunc->instructions.size());
 
