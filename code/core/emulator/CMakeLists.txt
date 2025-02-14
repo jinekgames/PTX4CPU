@@ -109,7 +109,7 @@ endif()
 string(STRIP ${GIT_HASH} GIT_HASH)
 message(STATUS "Building from commit: ${GIT_HASH}")
 
-target_compile_definitions(emulatorLib PRIVATE -DPROJECT_GIT_COMMIT="${GIT_HASH}")
+add_compile_definitions(PROJECT_GIT_COMMIT="${GIT_HASH}")
 
 # Install API headers to build directory
 add_custom_command(TARGET emulatorLib PRE_BUILD
