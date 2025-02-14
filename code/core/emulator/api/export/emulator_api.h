@@ -22,48 +22,75 @@
 #include <string>
 
 
-/**
- * Create translator object
+/** @brief Creates emulator object
  *
- * @param ppEmulator double poiner where object will be put
+ * @param ppEmulator a double poiner where object will be put
  * @param sourceCode source code of a PTX
-*/
-extern "C" EMULATOR_EXPORT_API void EMULATOR_CC
-EMULATOR_CreateEmulator(PTX4CPU::IEmulator** ppEmulator,
-                        const std::string& sourceCode);
-
-/**
- * Processes PTX arguments from CUDA runtime
  *
- * @param pInputData A pointer to PtxExecArgs where the processing result will
- * be put.
- * @param kernel     Descriptor of the kernel to pass arguments to.
- * Could be retrived from Emulator object using
- * `IEmulator::GetKernelDescriptor()` API.
- * @param ppArgs     Arguments passed to CUDA runtime as an array of `void*`
- * pointers
+ * @note `*ppEmulator` should be destoryed with `EMULATOR_DestroyEmulator()`
+ * @note Puts `nullptr` in case of failure
 */
 extern "C" EMULATOR_EXPORT_API void EMULATOR_CC
-EMULATOR_ProcessArgs(PtxExecArgs* pInputData,
-                     const PtxFuncDescriptor kernel,
-                     const void* const* ppArgs);
+EMULATOR_CreateEmulator(
+    PTX4CPU::IEmulator** ppEmulator,
+    const std::string&   sourceCode);
 
-/**
- * Parses PTX arguments from json
+/** @brief Destroys emulator object
+ *
+ * @param pEmulator object to be destroyed
+*/
+extern "C" EMULATOR_EXPORT_API void EMULATOR_CC
+EMULATOR_DestroyEmulator(
+    PTX4CPU::IEmulator* pEmulator);
+
+/** @brief Processes PTX arguments from CUDA runtime
+ *
+ * @param pInputData a pointer to PtxExecArgs where the processing result will
+ * be put
+ * @param kernel     descriptor of the kernel to pass arguments to.
+ * Could be retrived from Emulator object using
+ * `IEmulator::GetKernelDescriptor()` API
+ * @param ppArgs     arguments passed to CUDA runtime as an array of `void*`
+ * pointers
+ *
+ * @note `*pInputData` should be destoryed with `EMULATOR_DestroyArgs()`
+ * @note Puts `PTX4CPU_NULL_HANDLE` in case of failure
+*/
+extern "C" EMULATOR_EXPORT_API void EMULATOR_CC
+EMULATOR_CreateArgs(
+    PTX4CPU::PtxExecArgs*            pInputData,
+    const PTX4CPU::PtxFuncDescriptor kernel,
+    const void* const*               ppArgs);
+
+/** @brief Parses PTX arguments from json
  *
  * @param pInputData object where PTX execution arguments and temporary
  * variables will be put
  * @param jsonStr    content of a .json with execution arguments
+ *
+ * @note `*pInputData` should be destoryed with `EMULATOR_DestroyArgs()`
+ * @note Puts `PTX4CPU_NULL_HANDLE` in case of failure
 */
 extern "C" EMULATOR_EXPORT_API void EMULATOR_CC
-EMULATOR_ParseArgsJson(PtxExecArgs* pInputData, const std::string& jsonStr);
+EMULATOR_CreateArgsJson(
+    PTX4CPU::PtxExecArgs* pInputData,
+    const std::string&    jsonStr);
 
-/**
- * Serializes PTX arguments into json
+/** @brief Destroys PTX arguments
+ *
+ * @param inputData object to be destoryed
+ */
+extern "C" EMULATOR_EXPORT_API void EMULATOR_CC
+EMULATOR_DestroyArgs(
+    PTX4CPU::PtxExecArgs inputData);
+
+/** @brief Serializes PTX arguments into json
  *
  * @param inputData object where PTX execution result and temporary
  * variables will be put
  * @param jsonStr   an output .json with execution resuts
 */
 extern "C" EMULATOR_EXPORT_API void EMULATOR_CC
-EMULATOR_SerializeArgsJson(const PtxExecArgs& inputData, std::string& jsonStr);
+EMULATOR_SerializeArgsJson(
+    PTX4CPU::PtxExecArgs inputData,
+    std::string&         jsonStr);

@@ -99,7 +99,7 @@ Result Emulator::GetKernelDescriptor(const std::string& name,
         return { "Null Descriptor pointer passed" };
     }
 
-    *pDescriptor = nullptr;
+    *pDescriptor = PTX4CPU_NULL_HANDLE;
 
     if(m_Parser.GetState() != Parser::State::Ready) {
         return { "Retiriving kernel descriptor from a not loaded Emulator" };

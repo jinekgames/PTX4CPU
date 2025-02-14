@@ -20,6 +20,22 @@ All these headers are originally stored in directory `code/core/emulator/api/exp
 
 The core functionality of the library is an ability to load and launch a kernel from a _PTX_ file. This section describes how it could be done using the API step by step. Each mentioned function is linked with the file defining it. Detailed documentation for each function is available in the code.
 
+### Main Rules
+
+At first lets highlight the main rules of API usage:
+
+1. All objects (or handles) are allocated/deallocated with the API. This means, all the pointers and handles got with `EMULATOR_Create*()` API should be destroyed then with the correspondent `EMULATOR_Destroy*()` API. If user tries to do it himself it is an undefined behaviour. Objects (or handles) got from not a `EMULATOR_Create*()`, should not be destroyed explicitly. They are alive during the parent object's lifetime.
+
+1. Created object (or handle) should be destroyed at the end of lifetime to prevent memory leaks (if it's asked by previous rule).
+
+1. An object's lifetime is defined by it's purpose. If you won't call any API dependent on the object, it means this is the time to destroy it.
+
+1. Objects' "undefined" value is described in it's creating/retrieving API. It is `PTX4CPU_NULL_HANDLE` for handles and `nullptr` for Emulator interface pointer. An API returns it in case of failure.
+
+### Step-by-step manual
+
+Manual about using an API for it's general purpose:
+
 1. First of all we need to create an `Emulator` object, which will be used for kernel executing. `Emulator` object stores the _PTX_ file and provides methods for _PTX_ execution and overviewing.
 
    To create an `Emulator` object you should call [`EMULATOR_CreateEmulator()`](./emulator_api.h). You will need to pass a _PTX_ files in text format to be loaded into the `Emulator`.

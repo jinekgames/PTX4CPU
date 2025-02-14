@@ -26,7 +26,5 @@ For architecture documentation look [here](./docs/core_functionality/architectur
 
 <br>
 
-@todo update readme according to the updates in architecture
-
 ---
 ***2024, Kalinin Eugene***
