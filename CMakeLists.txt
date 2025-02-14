@@ -14,6 +14,7 @@ project(PTX4CPU
 option(COMPILE_SAFE_CHECKS        "If set, the additional data checking will be compiled" ON)
 option(USE_DEBUG_FEATURES         "Compile debug features even in non-debug build"        ON)
 option(EXTENDED_VARIABLES_LOGGING "Build extended debug logging of variables content"     OFF)
+option(SYNCHRONIZED_EXECUTION     "Execute in 1 thread in one by one fashion"             OFF)
 
 option(BUILD_EMULATOR_CMD         "Build ptx emulator comand-line interface"              ON)
 option(BUILD_TESTS                "Build autotests executable"                            OFF)
@@ -44,11 +45,15 @@ endif()
 add_compile_definitions(PTX4CPU_VERSION="${CMAKE_PROJECT_VERSION}")
 
 if(COMPILE_SAFE_CHECKS)
-    add_compile_definitions(COMPILE_SAFE_CHECKS)
+    add_compile_definitions(OPT_COMPILE_SAFE_CHECKS)
 endif()
 
 if(EXTENDED_VARIABLES_LOGGING)
-    add_compile_definitions(EXTENDED_VARIABLES_LOGGING)
+    add_compile_definitions(OPT_EXTENDED_VARIABLES_LOGGING)
+endif()
+
+if(SYNCHRONIZED_EXECUTION)
+    add_compile_definitions(OPT_SYNCHRONIZED_EXECUTION)
 endif()
 
 

@@ -18,7 +18,7 @@ Result Op2Internal(ThreadExecutor* pExecutor,
     const auto type = instruction.GetPtxType();
     auto args = pExecutor->RetrieveArgs(type, instruction.args);
 
-#ifdef COMPILE_SAFE_CHECKS
+#ifdef OPT_COMPILE_SAFE_CHECKS
     if (args.size() < 1 || !args[0].first) {
         return { "Variable storing the operation product is undefined" };
     }
@@ -31,7 +31,7 @@ Result Op2Internal(ThreadExecutor* pExecutor,
     if (args.size() > 3) {
         PRINT_E("Too much arguments passed");
     }
-#endif  // #ifdef COMPILE_SAFE_CHECKS
+#endif  // #ifdef OPT_COMPILE_SAFE_CHECKS
 
     return OpProc(type, args);
 }
@@ -62,14 +62,14 @@ Result MulOpTyped(Types::ArgumentPair& dst, Types::ArgumentPair& left,
             result = { "Failed to assign multiplication product" };
         }
     } else if constexpr (mode == MulMode::Lo) {
-        auto pRes = reinterpret_cast<FinalResType*>(&mulResult);
-        auto res = *pRes;
+        const auto pRes = reinterpret_cast<FinalResType*>(&mulResult);
+        const auto res = *pRes;
         if (!Types::PTXVar::AssignValue(dst, &res)) {
             result = { "Failed to assign multiplication product" };
         }
     } else { // mode == MulMode::Hi
-        auto pRes = reinterpret_cast<FinalResType*>(&mulResult) + 1;
-        auto res = *pRes;
+        const auto pRes = reinterpret_cast<FinalResType*>(&mulResult) + 1;
+        const auto res = *pRes;
         if (!Types::PTXVar::AssignValue(dst, &res)) {
             result = { "Failed to assign multiplication product" };
         }
@@ -82,7 +82,7 @@ template<MulMode mode>
 Result MulOp(Types::PTXType type,
              std::vector<Types::ArgumentPair>& args) {
 
-#ifdef COMPILE_SAFE_CHECKS
+#ifdef OPT_COMPILE_SAFE_CHECKS
     if (args.size() < 1 || !args[0].first) {
         return { "Variable storing the operation product is undefined" };
     }
@@ -95,7 +95,7 @@ Result MulOp(Types::PTXType type,
     if (args.size() > 3) {
         PRINT_E("Too much arguments passed");
     }
-#endif  // #ifdef COMPILE_SAFE_CHECKS
+#endif  // #ifdef OPT_COMPILE_SAFE_CHECKS
 
     auto& dst  = args[0];
     auto& left = args[1];
@@ -160,7 +160,7 @@ Result AddOpTyped(Types::ArgumentPair& dst, Types::ArgumentPair& left,
 Result AddOp(Types::PTXType type,
              std::vector<Types::ArgumentPair>& args) {
 
-#ifdef COMPILE_SAFE_CHECKS
+#ifdef OPT_COMPILE_SAFE_CHECKS
     if (args.size() < 1 || !args[0].first) {
         return { "Variable storing the operation product is undefined" };
     }
@@ -173,7 +173,7 @@ Result AddOp(Types::PTXType type,
     if (args.size() > 3) {
         PRINT_E("Too much arguments passed");
     }
-#endif  // #ifdef COMPILE_SAFE_CHECKS
+#endif  // #ifdef OPT_COMPILE_SAFE_CHECKS
 
     auto& dst  = args[0];
     auto& left = args[1];

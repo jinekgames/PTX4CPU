@@ -108,7 +108,7 @@ bool VarsTable::Contains(const std::string& name) {
 }
 
 void VarsTable::AppendVar(const std::string& name, PTXVarPtr&& pVar) {
-#ifdef COMPILE_SAFE_CHECKS
+#ifdef OPT_COMPILE_SAFE_CHECKS
     if (virtualVars.contains(name)) {
         PRINT_W("Variable \"%s\" already exists in the current scope. "
                 "It will be overriden", name.c_str());
