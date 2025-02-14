@@ -7,5 +7,6 @@
 using namespace PTX4CPU;
 
 IEmulator::IEmulator() {
-    PRINT_I("Initializing a PTX Translator v%s (Git commit %s)", PTX4CPU_VERSION, ProjectGitCommit);
+    PRINT_I("Initializing a PTX Translator v%s (Git commit %s)",
+            kProductVersion, kProjectGitCommit);
 }

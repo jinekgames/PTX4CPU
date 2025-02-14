@@ -1,8 +1,6 @@
-option(BUILD_EMULATOR_CMD       "Build ptx translator comand-line interface" ON)
-
-
 set(3RDPARTY_DIR     ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty)
 set(CORE_DIR         ${CMAKE_CURRENT_SOURCE_DIR}/core)
+set(TESTS_DIR        ${CMAKE_CURRENT_SOURCE_DIR}/test)
 set(UTILS_DIR        ${CORE_DIR}/../utils)
 set(EMULATOR_DIR     ${CORE_DIR}/emulator)
 set(INTERFACES_DIR   ${CORE_DIR}/interfaces)
@@ -25,4 +23,8 @@ set(EMULATOR_CMD_DIR ${INTERFACES_DIR}/emulator_cmd)
 if(BUILD_EMULATOR_CMD)
     add_subdirectory(${CMD_PARSER_DIR})
     add_subdirectory(${EMULATOR_CMD_DIR})
+endif()
+
+if(BUILD_TESTS)
+    add_subdirectory(${TESTS_DIR})
 endif()
