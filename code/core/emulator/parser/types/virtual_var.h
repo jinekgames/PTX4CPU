@@ -120,9 +120,9 @@ public:
                                                       src.second, dst.second);
     }
 
-    virtual bool AssignValue(void* pValue, char key = 'x') = 0;
+    virtual bool AssignValue(const void* pValue, char key = 'x') = 0;
 
-    static bool AssignValue(ArgumentPair& arg, void* pValue)
+    static bool AssignValue(ArgumentPair& arg, const void* pValue)
     {
         return arg.first->AssignValue(pValue, arg.second);
     }
@@ -137,7 +137,7 @@ private:
 
     template<PTXType ptxType>
     getVarType<ptxType>& GetByIdx(IndexType idx = 0) const {
-#ifdef COMPILE_SAFE_CHECKS
+#ifdef OPT_COMPILE_SAFE_CHECKS
         if (idx < 0 || idx >= GetVectorSize() && idx >= GetDynamicSize()) {
             PRINT_E("Invalid vector access index (should be 0..%d). Treat as 0", GetVectorSize());
             idx = 0;
@@ -150,7 +150,7 @@ private:
     getVarType<ptxType>& GetByKey(char key) const {
         constexpr std::array<char, 4> appropriateKeys = { 'x', 'y', 'z', 'w' };
         auto idx = static_cast<IndexType>(std::find(appropriateKeys.begin(), appropriateKeys.end(), key) - appropriateKeys.begin());
-#ifdef COMPILE_SAFE_CHECKS
+#ifdef OPT_COMPILE_SAFE_CHECKS
         if (idx < 0 || idx >= GetVectorSize() && idx >= GetDynamicSize()) {
             PRINT_E("Invalid vector access key (should be one of \"xyzw\"). Treat as x");
             idx = 0;
@@ -161,29 +161,26 @@ private:
 
 #ifdef DEBUG_BUILD
     void SetupDebugPtrs() {
-        auto rawPtr = pValue.get();
-        _debug_int8_ptr   = static_cast<decltype(_debug_int8_ptr)>(rawPtr);
-        _debug_uint8_ptr  = static_cast<decltype(_debug_uint8_ptr)>(rawPtr);
-        _debug_int16_ptr  = static_cast<decltype(_debug_int16_ptr)>(rawPtr);
-        _debug_uint16_ptr = static_cast<decltype(_debug_uint16_ptr)>(rawPtr);
-        _debug_int32_ptr  = static_cast<decltype(_debug_int32_ptr)>(rawPtr);
-        _debug_uint32_ptr = static_cast<decltype(_debug_uint32_ptr)>(rawPtr);
-        _debug_int64_ptr  = static_cast<decltype(_debug_int64_ptr)>(rawPtr);
-        _debug_uint64_ptr = static_cast<decltype(_debug_uint64_ptr)>(rawPtr);
-        _debug_float_ptr  = static_cast<decltype(_debug_float_ptr)>(rawPtr);
-        _debug_double_ptr = static_cast<decltype(_debug_double_ptr)>(rawPtr);
+        _debug_values = pValue.get();
     }
 
-    int8_t*   _debug_int8_ptr   = nullptr;
-    uint8_t*  _debug_uint8_ptr  = nullptr;
-    int16_t*  _debug_int16_ptr  = nullptr;
-    uint16_t* _debug_uint16_ptr = nullptr;
-    int32_t*  _debug_int32_ptr  = nullptr;
-    uint32_t* _debug_uint32_ptr = nullptr;
-    int64_t*  _debug_int64_ptr  = nullptr;
-    uint64_t* _debug_uint64_ptr = nullptr;
-    float*    _debug_float_ptr  = nullptr;
-    double*   _debug_double_ptr = nullptr;
+    union DebugValues
+    {
+        const void*     raw;
+        const int8_t*   int8_ptr;
+        const uint8_t*  uint8_ptr;
+        const int16_t*  int16_ptr;
+        const uint16_t* uint16_ptr;
+        const int32_t*  int32_ptr;
+        const uint32_t* uint32_ptr;
+        const int64_t*  int64_ptr;
+        const uint64_t* uint64_ptr;
+        const float*    float_ptr;
+        const double*   double_ptr;
+
+        DebugValues(const void* prt = nullptr) : raw{prt} {}
+        DebugValues& operator = (const void* ptr) { raw = ptr; return *this; }
+    } _debug_values;
 #endif
 };
 
@@ -256,14 +253,14 @@ public:
         return PTXVarPtr{new PTXVarTyped{pValue}};
     }
 
-    bool AssignValue(void* pValue, char key = 'x') override {
-#ifdef COMPILE_SAFE_CHECKS
+    bool AssignValue(const void* pValue, char key = 'x') override {
+#ifdef OPT_COMPILE_SAFE_CHECKS
         if (!pValue) {
             PRINT_E("Trying to assign a value with invalid pointer (nullptr)");
             return false;
         }
 #endif
-        Get(key) = *static_cast<RealType*>(pValue);
+        Get(key) = *static_cast<const RealType*>(pValue);
         return true;
     }
 
@@ -309,7 +306,7 @@ public:
 
     template<PTXType ptxType, IndexType VectorSize = 1>
     void AppendVar(const std::string& name) {
-#ifdef COMPILE_SAFE_CHECKS
+#ifdef OPT_COMPILE_SAFE_CHECKS
         if (virtualVars.contains(name)) {
             PRINT_W("Variable \"%s\" already exists in the current scope. "
                     "It will be overriden", name.c_str());
@@ -322,7 +319,7 @@ public:
 
     template<PTXType ptxType, IndexType VectorSize = 1>
     void AppendVar(const std::string& name, const getVarType<ptxType>* initValue) {
-#ifdef COMPILE_SAFE_CHECKS
+#ifdef OPT_COMPILE_SAFE_CHECKS
         if (virtualVars.contains(name)) {
             PRINT_W("Variable \"%s\" already exists in the current scope. "
                     "It will be overriden", name.c_str());

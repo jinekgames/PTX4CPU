@@ -5,11 +5,14 @@
 
 #include <charconv>
 
-#ifdef COMPILE_SAFE_CHECKS
+#ifdef OPT_COMPILE_SAFE_CHECKS
 #ifdef WIN32
+namespace Win32
+{
 #include <Windows.h>
+}  // namespace Win32
 #endif  // #ifdef WIN32
-#endif  // #ifdef COMPILE_SAFE_CHECKS
+#endif  // #ifdef OPT_COMPILE_SAFE_CHECKS
 
 
 namespace PTX4CPU {
@@ -24,7 +27,7 @@ uint64_t RegisterMemoryInternal(ThreadExecutor* pExecutor,
     for (i = 1; i <= count; ++i) {
         const std::string numberedName = name + std::to_string(i);
         pExecutor->GetTable()->AppendVar<ptxType>(numberedName);
-#ifdef EXTENDED_VARIABLES_LOGGING
+#ifdef OPT_EXTENDED_VARIABLES_LOGGING
         PRINT_V("Reg var %s : %s",
                 numberedName.c_str(),
                 std::to_string(
@@ -40,14 +43,14 @@ Result RegisterMemory(ThreadExecutor* pExecutor,
     // Sample instruction:
     // .reg   .b32   %r<5>;
 
-#ifdef COMPILE_SAFE_CHECKS
+#ifdef OPT_COMPILE_SAFE_CHECKS
     if (instruction.args.size() < 1) {
         PRINT_E("Missed variable registration type");
     }
     if (instruction.args.size() < 2) {
         PRINT_E("Missed variable registration name");
     }
-#endif  // #ifdef COMPILE_SAFE_CHECKS
+#endif  // #ifdef OPT_COMPILE_SAFE_CHECKS
 
     const auto& typeStr = instruction.args[0];
     const auto  type    = Types::StrToPTXType(typeStr);
@@ -89,17 +92,17 @@ Result Dereference(const Types::PTXVar &ptrVar,
 
     auto ptr = ptrVar.Get<ptrPtxType>(ptrKey);
 
-#ifdef COMPILE_SAFE_CHECKS
+#ifdef OPT_COMPILE_SAFE_CHECKS
     if (!ptr) {
         return { "Null pointer dereference" };
     }
 #ifdef WIN32
-    if (IsBadReadPtr(reinterpret_cast<void*>(ptr),
-                     static_cast<UINT_PTR>(sizeof(realType)))) {
+    if (Win32::IsBadReadPtr(reinterpret_cast<void*>(ptr),
+                            static_cast<Win32::UINT_PTR>(sizeof(realType)))) {
         return { "Invalid pointer. Possible reading access violation" };
     }
 #endif  // #ifdef WIN32
-#endif  // #ifdef COMPILE_SAFE_CHECKS
+#endif  // #ifdef OPT_COMPILE_SAFE_CHECKS
 
     value = *reinterpret_cast<realType*>(ptr);
 
@@ -117,17 +120,17 @@ Result DereferenceAndSet(Types::PTXVar* ptrVar,
 
     auto ptr = reinterpret_cast<realType*>(ptrVar->Get<PtrType>(ptrKey));
 
-#ifdef COMPILE_SAFE_CHECKS
+#ifdef OPT_COMPILE_SAFE_CHECKS
     if (!ptr) {
         return { "Null pointer dereference" };
     }
 #ifdef WIN32
-    if (IsBadReadPtr(reinterpret_cast<void*>(ptr),
-                     static_cast<UINT_PTR>(sizeof(realType)))) {
+    if (Win32::IsBadReadPtr(reinterpret_cast<void*>(ptr),
+                            static_cast<Win32::UINT_PTR>(sizeof(realType)))) {
         return { "Invalid pointer. Possible reading access violation" };
     }
 #endif  // #ifdef WIN32
-#endif  // #ifdef COMPILE_SAFE_CHECKS
+#endif  // #ifdef OPT_COMPILE_SAFE_CHECKS
 
     *ptr = value;
 
@@ -153,11 +156,11 @@ Result LoadParamInternal(ThreadExecutor* pExecutor,
 
     auto pPtrVar = pExecutor->GetTable()->FindVar(ptrDesc.name);
 
-#ifdef COMPILE_SAFE_CHECKS
+#ifdef OPT_COMPILE_SAFE_CHECKS
     if (!pPtrVar) {
         return { "Variable \"" + ptrFullName + "\" storing the pointer is undefined" };
     }
-#endif  // #ifdef COMPILE_SAFE_CHECKS
+#endif  // #ifdef OPT_COMPILE_SAFE_CHECKS
 
     Types::getVarType<ptxType> value;
     auto result = Dereference<ptxType>(*pPtrVar, value, ptrDesc.key);
@@ -167,11 +170,11 @@ Result LoadParamInternal(ThreadExecutor* pExecutor,
         return { "Loading of param " + ptrFullName + " failed" };
     }
 
-#ifdef COMPILE_SAFE_CHECKS
+#ifdef OPT_COMPILE_SAFE_CHECKS
     if (!pExecutor->GetTable()->FindVar(valueDesc.name)) {
         return { "Variable \"" + valueFullName + "\" storing the dereferanced value is undefined" };
     }
-#endif  // #ifdef COMPILE_SAFE_CHECKS
+#endif  // #ifdef OPT_COMPILE_SAFE_CHECKS
 
     pExecutor->GetTable()->GetValue<ptxType>(valueDesc.name, valueDesc.key) =
         value;
@@ -187,14 +190,14 @@ Result LoadParam(ThreadExecutor* pExecutor,
 
     const auto type = instruction.GetPtxType();
 
-#ifdef COMPILE_SAFE_CHECKS
+#ifdef OPT_COMPILE_SAFE_CHECKS
     if (instruction.args.size() < 1) {
         PRINT_E("Missed destination `ld` argumemt");
     }
     if (instruction.args.size() < 2) {
         PRINT_E("Missed source `ld` argumemt");
     }
-#endif  // #ifdef COMPILE_SAFE_CHECKS
+#endif  // #ifdef OPT_COMPILE_SAFE_CHECKS
 
     const auto  valueFullName = instruction.args[0];
     const auto& ptrFullName   = RemoveVarNameBrackets(instruction.args[1]);
@@ -221,11 +224,11 @@ Result SetParamInternal(ThreadExecutor* pExecutor,
     const auto ptrDesc   = Parser::ParseVectorName(ptrFullName);
 
     auto ptrVar = pExecutor->GetTable()->FindVar(ptrDesc.name);
-#ifdef COMPILE_SAFE_CHECKS
+#ifdef OPT_COMPILE_SAFE_CHECKS
     if (!ptrVar) {
         return { "Variable \"" + ptrFullName + "\" storing the pointer is undefined" };
     }
-#endif  // #ifdef COMPILE_SAFE_CHECKS
+#endif  // #ifdef OPT_COMPILE_SAFE_CHECKS
 
     auto value = pExecutor->GetTable()->GetValue<ptxType>(valueDesc.name, valueDesc.key);
     auto result = DereferenceAndSet<ptxType>(ptrVar.get(), value, ptrDesc.key);
@@ -235,11 +238,11 @@ Result SetParamInternal(ThreadExecutor* pExecutor,
         return { "Loading of param " + ptrFullName + " failed" };
     }
 
-#ifdef COMPILE_SAFE_CHECKS
+#ifdef OPT_COMPILE_SAFE_CHECKS
     if (!pExecutor->GetTable()->FindVar(valueDesc.name)) {
         return { "Variable \"" + valueFullName + "\" storing the dereferanced value is undefined" };
     }
-#endif  // #ifdef COMPILE_SAFE_CHECKS
+#endif  // #ifdef OPT_COMPILE_SAFE_CHECKS
 
     return {};
 }
@@ -252,14 +255,14 @@ Result SetParam(ThreadExecutor* pExecutor,
 
     const auto type = instruction.GetPtxType();
 
-#ifdef COMPILE_SAFE_CHECKS
+#ifdef OPT_COMPILE_SAFE_CHECKS
     if (instruction.args.size() < 1) {
         PRINT_E("Missed destination `ld` argumemt");
     }
     if (instruction.args.size() < 2) {
         PRINT_E("Missed source `ld` argumemt");
     }
-#endif  // #ifdef COMPILE_SAFE_CHECKS
+#endif  // #ifdef OPT_COMPILE_SAFE_CHECKS
 
     const auto& ptrFullName   = RemoveVarNameBrackets(instruction.args[0]);
     const auto  valueFullName = instruction.args[1];
@@ -284,7 +287,7 @@ Result CopyVarInternal(ThreadExecutor* pExecutor,
     const auto type = instruction.GetPtxType();
     auto args = pExecutor->RetrieveArgs(type, instruction.args);
 
-#ifdef COMPILE_SAFE_CHECKS
+#ifdef OPT_COMPILE_SAFE_CHECKS
     if (args.size() < 1 || !args[0].first) {
         return { "Variable \"" + instruction.args[0] + "\" storing the destination copy value is undefined" };
     }
@@ -294,7 +297,7 @@ Result CopyVarInternal(ThreadExecutor* pExecutor,
     if (args.size() > 2) {
         PRINT_E("Too much arguments passed");
     }
-#endif  // #ifdef COMPILE_SAFE_CHECKS
+#endif  // #ifdef OPT_COMPILE_SAFE_CHECKS
 
     auto& dst = args[0];
     auto& src = args[1];

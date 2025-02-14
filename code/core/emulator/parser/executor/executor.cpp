@@ -105,12 +105,12 @@ std::vector<Types::ArgumentPair> ThreadExecutor::RetrieveArgs(
 
     std::vector<Types::ArgumentPair> ret;
     ret.reserve(args.size());
-#ifdef EXTENDED_VARIABLES_LOGGING
+#ifdef OPT_EXTENDED_VARIABLES_LOGGING
     PRINT_V("Instruction args:");
 #endif
     for (const auto& arg : args) {
         ret.push_back(RetrieveArg(type, arg));
-#ifdef EXTENDED_VARIABLES_LOGGING
+#ifdef OPT_EXTENDED_VARIABLES_LOGGING
         PRINT_V("%s : %s", arg.c_str(), std::to_string(*ret.back().first).c_str());
 #endif
     }
@@ -118,7 +118,7 @@ std::vector<Types::ArgumentPair> ThreadExecutor::RetrieveArgs(
 }
 
 void ThreadExecutor::DebugLogVars() const {
-#ifdef EXTENDED_VARIABLES_LOGGING
+#ifdef OPT_EXTENDED_VARIABLES_LOGGING
     PRINT_V("Executor arguments\n%s", std::to_string(*m_pVarsTable).c_str());
 #endif
 }

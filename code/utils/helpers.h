@@ -9,7 +9,10 @@
 #include <thread>
 
 #ifdef WIN32
+namespace Win32
+{
 #include <Windows.h>
+}
 #endif
 
 

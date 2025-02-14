@@ -46,7 +46,9 @@ Result Emulator::ExecuteFunc(const std::string& funcName,
         return {"Can't execute the kernel"};
     }
 
+#ifndef OPT_SYNCHRONIZED_EXECUTION
     std::list<std::thread> threads;
+#endif  // #ifndef OPT_SYNCHRONIZED_EXECUTION
 
     Helpers::Timer overallTimer("Overall execution");
 
@@ -69,12 +71,18 @@ Result Emulator::ExecuteFunc(const std::string& funcName,
                 success = false;
             }
         }};
+#ifndef OPT_SYNCHRONIZED_EXECUTION
         threads.push_back(std::move(thread));
+#else  // OPT_SYNCHRONIZED_EXECUTION
+        thread.join();
+#endif  // #ifndef OPT_SYNCHRONIZED_EXECUTION
     }
 
+#ifndef OPT_SYNCHRONIZED_EXECUTION
     for (auto& thread : threads) {
         thread.join();
     }
+#endif  // #ifdef OPT_SYNCHRONIZED_EXECUTION
 
     // @todo implementation: destroy arguments descriptor data
 

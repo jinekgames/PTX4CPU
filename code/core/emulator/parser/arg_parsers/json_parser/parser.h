@@ -59,7 +59,7 @@ void InsertScalarVar(Types::PtxInputData& inputData,
     // Init var value
     auto value = valueParser.get<RealType>();
 
-#ifdef EXTENDED_VARIABLES_LOGGING
+#ifdef OPT_EXTENDED_VARIABLES_LOGGING
     PRINT_V("Arg value: %s", std::to_string(value).c_str());
 #endif
 
@@ -92,7 +92,7 @@ void InsertVectorVar(Types::PtxInputData& inputData,
         writeVectorData = false;
     }
 
-#ifdef EXTENDED_VARIABLES_LOGGING
+#ifdef OPT_EXTENDED_VARIABLES_LOGGING
     PRINT_V("Arg vector size: %s", std::to_string(vectorSize).c_str());
 #endif
 
@@ -102,7 +102,7 @@ void InsertVectorVar(Types::PtxInputData& inputData,
             auto& valueParser = vectorParser[i];
             auto value = valueParser.get<RealType>();
 
-#ifdef EXTENDED_VARIABLES_LOGGING
+#ifdef OPT_EXTENDED_VARIABLES_LOGGING
             PRINT_V("Arg value: [%llu] %s", i, std::to_string(value).c_str());
 #endif
 
@@ -208,7 +208,7 @@ inline static Result ParseJson(Types::PtxInputData& inputData,
                      "'vector' (for vector) field");
             }
 
-#ifdef EXTENDED_VARIABLES_LOGGING
+#ifdef OPT_EXTENDED_VARIABLES_LOGGING
             PRINT_V("Parsing %s json arg of type %s",
                     (isScalar) ? "scalar" : "vector", typeStr.c_str());
 #endif
