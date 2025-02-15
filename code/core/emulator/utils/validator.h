@@ -29,7 +29,7 @@ void CheckPointer(const Type* ptr) {
         return;
     }
 #else  // #ifdef WIN32
-#pragma message("Pointer validation is not supported on your platform");
+#pragma message("Pointer validation is not supported on your platform")
 #endif  // #ifdef WIN32
 #endif  // #ifdef OPT_COMPILE_SAFE_CHECKS
 }
