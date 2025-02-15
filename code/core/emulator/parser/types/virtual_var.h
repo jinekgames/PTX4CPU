@@ -374,7 +374,7 @@ private:
 
 struct PtxVarDesc {
     std::vector<std::string> attributes;
-    PTXType type;
+    PTXType type = PTXType::None;
 };
 
 template<PTXType type>

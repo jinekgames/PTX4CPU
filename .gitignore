@@ -7,7 +7,8 @@ build*/
 # Tests output dir
 ext/cuda_ptx_samples/output
 
-# VS Code profiles
+# VS (Code) profiles
+.vs/
 .vscode/*
 !.vscode/c_cpp_properties.json
 !.vscode/launch.json

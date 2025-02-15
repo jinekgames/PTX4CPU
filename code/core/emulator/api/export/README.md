@@ -42,9 +42,9 @@ Manual about using an API for it's general purpose:
 
 1. When the `Emulator` is successfully created we now need to prepare argumets for a kernel execution. Depending on the nature of arguments, they could be eigher a `void**` pointer (passed when using the library from a _CUDA Runtime_) or a configuration `json` file _(see the documentation for command-line tool)_. So, there are 2 correspondent ways of parsing arguments.
 
-   - To parse _Runtime_ `void**` arguments, you should use [`EMULATOR_ProcessArgs()`](./emulator_api.h). This function requires a kernel descriptor for non-typed args processing. To retrieve a descriptor you should call the `Emulator` method [`GetKernelDescriptor()`](./emulator/emulator_interface.h) with the name of a kernel the arguments are passed for.
+   - To parse _Runtime_ `void**` arguments, you should use [`EMULATOR_CreateArgs()`](./emulator_api.h). This function requires a kernel descriptor for non-typed args processing. To retrieve a descriptor you should call the `Emulator` method [`GetKernelDescriptor()`](./emulator/emulator_interface.h) with the name of a kernel the arguments are passed for.
 
-   - To parse arguments from a configuration `json` file, call [`EMULATOR_ParseArgsJson()`](./emulator_api.h) with the content of a configuration file.
+   - To parse arguments from a configuration `json` file, call [`EMULATOR_CreateArgsJson()`](./emulator_api.h) with the content of a configuration file.
 
    Both of the ways will produce a descriptor for the kernel execution arguments, which is used for executing the kernel.
 
@@ -55,3 +55,8 @@ Manual about using an API for it's general purpose:
    - If the arguments were passed from the _Runtime_, you need to do nothing, because the values are passed to the kernel via pointers. So, after the `Emulator` finished execution, all your application's data already contains modified values.
 
    - If you passed arguments by a _json_, you can serialize modified values back with [`EMULATOR_SerializeArgsJson()`](./emulator_api.h).
+
+1. Clean up
+
+  - Destroy arguments with [`EMULATOR_DestroyArgs()`](./emulator_api.h).
+  - Destroy Emulator with [`EMULATOR_DestroyEmulator()`](./emulator_api.h).

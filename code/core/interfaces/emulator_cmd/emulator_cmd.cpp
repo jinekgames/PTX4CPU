@@ -25,6 +25,8 @@ std::string ReadFile(const std::string& filepath) {
 
     std::stringstream input;
     input << sin.rdbuf();
+
+    sin.close();
     return input.str();
 }
 

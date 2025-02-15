@@ -8,9 +8,17 @@
 namespace TestCase {
 
 struct ITestCase {
-    virtual std::string     Name()        = 0;
-    virtual std::string     Description() = 0;
-    virtual PTX4CPU::Result Run()         = 0;
+    virtual std::string     Name()        const = 0;
+    virtual std::string     Description() const = 0;
+    virtual PTX4CPU::Result Run()         const = 0;
+
+    virtual ~ITestCase() = default;
+
+    ITestCase()                 = default;
+    ITestCase(const ITestCase&) = default;
+    ITestCase(ITestCase&&)      = default;
+    ITestCase& operator = (const ITestCase&) = default;
+    ITestCase& operator = (ITestCase&&)      = default;
 };
 
 }  // namespace TestCase
