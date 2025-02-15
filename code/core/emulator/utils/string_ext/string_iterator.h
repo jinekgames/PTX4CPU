@@ -17,22 +17,27 @@ enum class Bracket {
     Figure,
 };
 
-enum CloseType {
+enum class CloseType {
     No = 0,
     Close,
     Open,
 };
 
-using BracketType = std::pair<const Bracket, const CloseType>;
+using BracketType = std::pair<Bracket, CloseType>;
 
-inline static const std::map<char, BracketType> bracketsTable = {
-    { '(', { Bracket::Circle, Open  } },
-    { ')', { Bracket::Circle, Close } },
-    { '[', { Bracket::Square, Open  } },
-    { ']', { Bracket::Square, Close } },
-    { '{', { Bracket::Figure, Open  } },
-    { '}', { Bracket::Figure, Close } },
-};
+inline static BracketType GetBracketType(char bracket) {
+    switch (bracket)
+    {
+    case '(': return { Bracket::Circle, CloseType::Open  };
+    case ')': return { Bracket::Circle, CloseType::Close };
+    case '[': return { Bracket::Square, CloseType::Open  };
+    case ']': return { Bracket::Square, CloseType::Close };
+    case '{': return { Bracket::Figure, CloseType::Open  };
+    case '}': return { Bracket::Figure, CloseType::Close };
+    default: break;
+    }
+    return { Bracket::No, CloseType::No };
+}
 
 enum WordDelimiter {
 
@@ -69,15 +74,16 @@ enum WordDelimiter {
 };
 
 // Base delim type to it's possible chars
-inline static const std::unordered_map<WordDelimiter, std::string> baseDelimsTable = {
-    { Space,         " \t" },
-    { NewLine,       "\n\r" },
-    { Punct,         ",:;" },
-    { Dot,           "." },
-    { Brackets,      "()[]{}" },
-    { MathOperators, "+-/*^><=" },
-    { BackSlash,     "\\" },
-};
+inline static std::string_view GetBaseDelims(WordDelimiter delimiter) {
+    if(delimiter == Space)         return " \t";
+    if(delimiter == NewLine)       return "\n\r";
+    if(delimiter == Punct)         return ",:;";
+    if(delimiter == Dot)           return ".";
+    if(delimiter == Brackets)      return "()[]{}";
+    if(delimiter == MathOperators) return "+-/*^><=";
+    if(delimiter == BackSlash)     return "\\";
+    return {};
+}
 
 inline constexpr WordDelimiter operator & (WordDelimiter left, WordDelimiter right) {
     return static_cast<WordDelimiter>(static_cast<int>(left) & static_cast<int>(right));

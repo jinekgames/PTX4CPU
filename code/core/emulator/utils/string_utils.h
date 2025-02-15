@@ -2,6 +2,7 @@
 
 #include <regex>
 #include <string>
+#include <string_view>
 #include <sstream>
 #include <vector>
 #include <type_traits>
@@ -11,7 +12,7 @@
 #include "string_ext/string_types.h"
 
 
-static const std::string LINE_ENDING =
+inline constexpr std::string_view LINE_ENDING =
 #if defined(WIN32)
     "\n"; // "\r\n" is not used in PTX;
 #else
@@ -45,9 +46,9 @@ inline StringIter FindSpace(const StringIter& iter, const StringIter& end) {
 /**
  * Checks if string contains the `comp` from the `from`
 */
-template<BaseTypes::StringIter StringIter>
+template<BaseTypes::StringIter StringIter, BaseTypes::String StringType>
 inline bool ContainsFrom(const StringIter& from, const StringIter& end,
-                         const std::string& comp) {
+                         const StringType& comp) {
 
     auto compIter = comp.begin();
     for (auto sourceIter = from;

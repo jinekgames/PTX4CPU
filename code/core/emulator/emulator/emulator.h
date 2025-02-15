@@ -23,14 +23,15 @@ public:
 
 public:
 
-    Emulator();
     /**
      * @param source source code of a PTX
     */
-    Emulator(const std::string& source);
+    explicit Emulator(const std::string& source);
+
+    Emulator();
     Emulator(const Emulator&)  = delete;
     Emulator(Emulator&& right) = default;
-    ~Emulator() = default;
+    ~Emulator() override       = default;
 
     Emulator& operator = (const Emulator&)  = delete;
     Emulator& operator = (Emulator&& right) = default;

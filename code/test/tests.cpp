@@ -8,20 +8,16 @@
 #include "rel_add_op.h"
 
 
-using TestList = std::vector<TestCase::ITestCase*>;
+using TestList = std::vector<const TestCase::ITestCase*>;
 
 
 namespace {
 
-const TestList g_TestList = {
-    new TestCase::Runtime::RelAddOp{},
+TestList g_TestList = {
+    &TestCase::Runtime::test_RelAddOp,
 };
 
-void CleanUp() {
-    for (auto pTest : g_TestList) {
-        delete pTest;
-    }
-}
+void CleanUp() { g_TestList.clear(); }
 
 inline void PrintLineDelim() {
     std::cout << "============================================" << std::endl;

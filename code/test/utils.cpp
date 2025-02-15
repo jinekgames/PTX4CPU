@@ -6,12 +6,18 @@
 
 std::string ReadFile(const std::string& filepath) {
 
+    std::string ret;
+
     std::ifstream sin(filepath);
     if (!sin.is_open()) {
-        return "";
+        return ret;
     }
 
     std::stringstream input;
     input << sin.rdbuf();
-    return input.str();
+
+    sin.close();
+
+    ret = input.str();
+    return ret;
 }
