@@ -53,26 +53,24 @@ Result MulOpTyped(Types::ArgumentPair& dst, Types::ArgumentPair& left,
                                             MulResType,
                                             Types::getVarType<type>>;
 
-    decltype(auto) mulResult =
+    const auto mulResult =
         static_cast<MulResType>(Types::PTXVar::Get<type>(left)) *
         static_cast<MulResType>(Types::PTXVar::Get<type>(rght));
 
-    if constexpr (mode == MulMode::Wide) {
-        if (!Types::PTXVar::AssignValue(dst, &mulResult)) {
-            result = { "Failed to assign multiplication product" };
-        }
+    const void* pValue = nullptr;
+
+    if constexpr        (mode == MulMode::Wide) {
+        pValue = &mulResult;
     } else if constexpr (mode == MulMode::Lo) {
-        const auto pRes = reinterpret_cast<FinalResType*>(&mulResult);
-        const auto res = *pRes;
-        if (!Types::PTXVar::AssignValue(dst, &res)) {
-            result = { "Failed to assign multiplication product" };
-        }
-    } else { // mode == MulMode::Hi
-        const auto pRes = reinterpret_cast<FinalResType*>(&mulResult) + 1;
-        const auto res = *pRes;
-        if (!Types::PTXVar::AssignValue(dst, &res)) {
-            result = { "Failed to assign multiplication product" };
-        }
+        pValue = reinterpret_cast<const FinalResType*>(&mulResult);
+    } else if constexpr (mode == MulMode::Hi) {
+        pValue = reinterpret_cast<const FinalResType*>(&mulResult) + 1;
+    } else {
+        static_assert("invalid mul type");
+    }
+
+    if (!Types::PTXVar::AssignValue(dst, pValue)) {
+        result = { "Failed to assign multiplication product" };
     }
 
     return result;

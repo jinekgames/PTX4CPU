@@ -157,23 +157,23 @@ using getVarType =
     // default value
     uint64_t>>>>>>>>>>>>>>>>;
 
-#define PTX_Internal_TypedOp_Construct_First(runtimeType, constType, ...) \
-    if (runtimeType == constType) {                                       \
-        constexpr PTX4CPU::Types::PTXType _PtxType_ = constType;          \
-        __VA_ARGS__                                                       \
+#define PTX_Internal_TypedOp_Construct_First(_runtimeType, _constType, ...) \
+    if (_runtimeType == _constType) {                                       \
+        constexpr PTX4CPU::Types::PTXType _PtxType_ = _constType;           \
+        __VA_ARGS__                                                         \
     }
 
-#define PTX_Internal_TypedOp_Construct_Middle(runtimeType, constType, ...) \
-    else if (runtimeType == constType) {                                   \
-        constexpr PTX4CPU::Types::PTXType _PtxType_ = constType;           \
-        __VA_ARGS__                                                        \
+#define PTX_Internal_TypedOp_Construct_Middle(_runtimeType, _constType, ...) \
+    else if (_runtimeType == _constType) {                                   \
+        constexpr PTX4CPU::Types::PTXType _PtxType_ = _constType;            \
+        __VA_ARGS__                                                          \
     }
 
-#define PTX_Internal_TypedOp_Construct_Default(runtimeType, ...)                                 \
-    else {                                                                                       \
-        PRINT_E("Unknown type PTXType(%d). Casting to .s64", static_cast<int32_t>(runtimeType)); \
-        constexpr PTX4CPU::Types::PTXType _PtxType_ = PTX4CPU::Types::PTXType::S64;              \
-        __VA_ARGS__                                                                              \
+#define PTX_Internal_TypedOp_Construct_Default(_runtimeType, ...)                                 \
+    else {                                                                                        \
+        PRINT_E("Unknown type PTXType(%d). Casting to .s64", static_cast<int32_t>(_runtimeType)); \
+        constexpr PTX4CPU::Types::PTXType _PtxType_ = PTX4CPU::Types::PTXType::S64;               \
+        __VA_ARGS__                                                                               \
     }
 
 // Runs the passed code with a compile-time PTXType.

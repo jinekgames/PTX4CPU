@@ -108,6 +108,11 @@ public:
     */
     static ParsedPtxVectorName ParseVectorName(const std::string& name);
 
+    /// @brief Removes `[]` operator from name
+    /// @return `true` if there was dereferencing
+    /// @note There should be no spaces
+    static bool ExtractDereference(std::string& argName);
+
     static bool IsKernelFunction(const Types::Function& function);
 
 private:

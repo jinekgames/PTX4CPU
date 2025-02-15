@@ -2,14 +2,15 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <functional>
 #include <map>
 #include <memory>
 #include <string>
 #include <vector>
 
-#include "ptx_types.h"
-
 #include <logger/logger.h>
+#include <types/ptx_types.h>
+#include <validator.h>
 
 namespace PTX4CPU {
 namespace Types {
@@ -41,12 +42,13 @@ protected:
 
 public:
 
-    PTXVar(const PTXVar&) = delete;
-    PTXVar(PTXVar&& right);
-    ~PTXVar() = default;
-
+    PTXVar(const PTXVar&)              = delete;
     PTXVar& operator = (const PTXVar&) = delete;
+
+    PTXVar(PTXVar&& right);
     PTXVar& operator = (PTXVar&& right);
+
+    ~PTXVar() = default;
 
 private:
 
@@ -167,6 +169,7 @@ private:
     union DebugValues
     {
         const void*     raw;
+
         const int8_t*   int8_ptr;
         const uint8_t*  uint8_ptr;
         const int16_t*  int16_ptr;
@@ -178,13 +181,35 @@ private:
         const float*    float_ptr;
         const double*   double_ptr;
 
+        const int8_t**   ptr_int8_ptr;
+        const uint8_t**  ptr_uint8_ptr;
+        const int16_t**  ptr_int16_ptr;
+        const uint16_t** ptr_uint16_ptr;
+        const int32_t**  ptr_int32_ptr;
+        const uint32_t** ptr_uint32_ptr;
+        const int64_t**  ptr_int64_ptr;
+        const uint64_t** ptr_uint64_ptr;
+        const float**    ptr_float_ptr;
+        const double**   ptr_double_ptr;
+
         DebugValues(const void* prt = nullptr) : raw{prt} {}
         DebugValues& operator = (const void* ptr) { raw = ptr; return *this; }
     } _debug_values;
 #endif
 };
 
-template<PTXType ptxType, IndexType VectorSize = 1>
+template<PTXType ptxType>
+struct PTXVarMemDeleter {
+    using RealType = getVarType<ptxType>;
+    void operator () (void* ptr) { delete[] static_cast<RealType*>(ptr); }
+};
+
+struct PTXVarMemDeleterNull {
+    void operator () (void* ptr) {}
+};
+
+template<PTXType ptxType, IndexType VectorSize = 1,
+         class Deleter = PTXVarMemDeleter<ptxType>>
 class PTXVarTyped : public PTXVar {
 
 public:
@@ -192,30 +217,35 @@ public:
     using RealType = getVarType<ptxType>;
 
     PTXVarTyped()
-        : PTXVar{std::move(RawValuePtrType{
+        : _deleter{Deleter{}}
+        , PTXVar{std::move(RawValuePtrType{
             static_cast<void*>(new RealType[VectorSize]),
-            VarMemDeleter
+            std::bind(&Deleter::operator(), &_deleter, std::placeholders::_1)
         })} {}
     explicit PTXVarTyped(const RealType* pInitValue)
-        : PTXVar{std::move(RawValuePtrType{
+        : _deleter{Deleter{}}
+        , PTXVar{std::move(RawValuePtrType{
             static_cast<void*>(new RealType[VectorSize]),
-            VarMemDeleter
+            std::bind(&Deleter::operator(), &_deleter, std::placeholders::_1)
         })} {
         CopyVector(&Get(), pInitValue, std::make_integer_sequence<IndexType, VectorSize>{});
     }
     explicit PTXVarTyped(IndexType dynamicArraySize)
-        : PTXVar{std::move(RawValuePtrType{
+        : _deleter{Deleter{}}
+        , PTXVar{std::move(RawValuePtrType{
             static_cast<void*>(new RealType[dynamicArraySize]),
-            VarMemDeleter
+            std::bind(&Deleter::operator(), &_deleter, std::placeholders::_1)
         })} {
         dynamicSize = dynamicArraySize;
     }
-    PTXVarTyped(const PTXVarTyped&) = delete;
-    PTXVarTyped(PTXVarTyped&& right) {}
-    ~PTXVarTyped() = default;
 
+    PTXVarTyped(const PTXVarTyped&)              = delete;
     PTXVarTyped& operator = (const PTXVarTyped&) = delete;
-    PTXVarTyped& operator = (PTXVarTyped&& right) {}
+
+    PTXVarTyped(PTXVarTyped&& right)              = default;
+    PTXVarTyped& operator = (PTXVarTyped&& right) = default;
+
+    ~PTXVarTyped() = default;
 
     constexpr PTXType   GetPTXType()    const override { return ptxType; }
     constexpr IndexType GetVectorSize() const override { return VectorSize; }
@@ -270,10 +300,6 @@ private:
     PTXVarTyped(RawValuePtrType pInitValue)
         : PTXVar{std::move(pInitValue)} {}
 
-    static void VarMemDeleter(void* rawPtr) {
-        delete[] static_cast<RealType*>(rawPtr);
-    }
-
     template<IndexType... size>
     static void CopyVector(RealType* dst, const RealType* src,
                            std::integer_sequence<IndexType, size...> int_seq) {
@@ -281,6 +307,8 @@ private:
     }
 
     IndexType dynamicSize = 1;
+
+    Deleter _deleter;
 };
 
 class VarsTable {
@@ -385,6 +413,18 @@ PTXVarPtr CreateTempValueVarTyped(const std::string& value) {
     ss >> realValue;
 
     return PTXVarPtr{new PTXVarTyped<type>{&realValue}};
+}
+
+template<PTXType type>
+PTXVarPtr CreateTempVarFromPointerTyped(void* ptr) {
+
+    auto* realPointer = reinterpret_cast<getVarType<type>*>(ptr);
+
+    Validator::CheckPointer(realPointer);
+
+    return PTXVarPtr{
+        new Types::PTXVarTyped<type, 1, Types::PTXVarMemDeleterNull>{
+            realPointer}};
 }
 
 }  // namespace Types

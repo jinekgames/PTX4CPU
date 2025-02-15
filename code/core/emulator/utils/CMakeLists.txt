@@ -9,6 +9,7 @@ set(sources
     ${EMULATOR_UTILS_DIR}/string_ext/string_iterator.inl
     ${EMULATOR_UTILS_DIR}/string_ext/string_types.h
     ${EMULATOR_UTILS_DIR}/string_utils.h
+    ${EMULATOR_UTILS_DIR}/validator.h
     ${EMULATOR_UTILS_DIR}/version.h
 )
 

@@ -142,6 +142,16 @@ Parser::ParsedPtxVectorName Parser::ParseVectorName(const std::string& name) {
     return ret;
 }
 
+bool Parser::ExtractDereference(std::string& argName) {
+
+    StringIteration::SmartIterator iter{const_cast<const std::string&>(argName)};
+    if (iter.IsBracket()) {
+        argName = iter.ReadWord(false, StringIteration::Brackets);
+        return true;
+    }
+    return false;
+}
+
 // Private realizations
 
 void Parser::ClearCodeComments(std::string& code) {
