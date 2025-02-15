@@ -7,11 +7,25 @@ namespace TestCase {
 
 namespace Runtime {
 
+inline constexpr auto kNamePrefix = "[Runtime] ";
+
 struct RelAddOp final : public ITestCase {
-    std::string     Name()        override;
-    std::string     Description() override;
-    PTX4CPU::Result Run()         override;
+
+    static constexpr auto kName = "rel_add_op (vadd)";
+
+    std::string     Name()        const override;
+    std::string     Description() const override;
+    PTX4CPU::Result Run()         const override;
+
+    RelAddOp()                = default;
+    RelAddOp(const RelAddOp&) = default;
+    RelAddOp(RelAddOp&&)      = default;
+    ~RelAddOp()               = default;
+    RelAddOp& operator = (const RelAddOp&) = default;
+    RelAddOp& operator = (RelAddOp&&)      = default;
 };
+
+inline const RelAddOp test_RelAddOp;
 
 }  // namespace Runtime
 

@@ -19,15 +19,15 @@ namespace TestCase {
 
 namespace Runtime {
 
-std::string RelAddOp::Name() {
-    return "[Runtime] rel_add_op (vadd)";
+std::string RelAddOp::Name() const {
+    return kNamePrefix + std::string{kName};
 }
 
-std::string RelAddOp::Description() {
-    return "Testing rel_add_op (vadd) PTX with emulated CUDA Runtime";
+std::string RelAddOp::Description() const {
+    return std::string{"Testing "} + kName + " PTX with emulated CUDA Runtime";
 }
 
-PTX4CPU::Result RelAddOp::Run() {
+PTX4CPU::Result RelAddOp::Run() const {
 
     // Read PTX file
 

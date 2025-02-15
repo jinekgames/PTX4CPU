@@ -45,9 +45,9 @@ inline StringIter FindSpace(const StringIter& iter, const StringIter& end) {
 /**
  * Checks if string contains the `comp` from the `from`
 */
-template<BaseTypes::StringIter StringIter>
+template<BaseTypes::StringIter StringIter, BaseTypes::String StringType>
 inline bool ContainsFrom(const StringIter& from, const StringIter& end,
-                         const std::string& comp) {
+                         const StringType& comp) {
 
     auto compIter = comp.begin();
     for (auto sourceIter = from;

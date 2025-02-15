@@ -1,13 +1,18 @@
 #pragma once
 
-#define COLOR_ESCAPE "\033"
 
-#define COLOR_RESET   COLOR_ESCAPE "[0m"
-#define COLOR_BLACK   COLOR_ESCAPE "[30m"
-#define COLOR_RED     COLOR_ESCAPE "[31m"
-#define COLOR_GREEN   COLOR_ESCAPE "[32m"
-#define COLOR_YELLOW  COLOR_ESCAPE "[33m"
-#define COLOR_BLUE    COLOR_ESCAPE "[34m"
-#define COLOR_MAGENTA COLOR_ESCAPE "[35m"
-#define COLOR_CYAN    COLOR_ESCAPE "[36m"
-#define COLOR_WHITE   COLOR_ESCAPE "[37m"
+namespace LogColor {
+
+#define _LOG_COLOR_COLOR_ESCAPE "\033"
+
+inline constexpr auto COLOR_RESET   = _LOG_COLOR_COLOR_ESCAPE "[0m";
+inline constexpr auto COLOR_BLACK   = _LOG_COLOR_COLOR_ESCAPE "[30m";
+inline constexpr auto COLOR_RED     = _LOG_COLOR_COLOR_ESCAPE "[31m";
+inline constexpr auto COLOR_GREEN   = _LOG_COLOR_COLOR_ESCAPE "[32m";
+inline constexpr auto COLOR_YELLOW  = _LOG_COLOR_COLOR_ESCAPE "[33m";
+inline constexpr auto COLOR_BLUE    = _LOG_COLOR_COLOR_ESCAPE "[34m";
+inline constexpr auto COLOR_MAGENTA = _LOG_COLOR_COLOR_ESCAPE "[35m";
+inline constexpr auto COLOR_CYAN    = _LOG_COLOR_COLOR_ESCAPE "[36m";
+inline constexpr auto COLOR_WHITE   = _LOG_COLOR_COLOR_ESCAPE "[37m";
+
+}  // namespace LogColor

@@ -1,9 +1,11 @@
 #pragma once
 
+#include <array>
 #include <list>
 #include <map>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <tuple>
 #include <vector>
 
@@ -41,7 +43,7 @@ public:
     */
     Parser(const std::string& source);
     Parser(const Parser&) = delete;
-    Parser(Parser&& right)
+    Parser(Parser&& right) noexcept
         : m_DataIter        {std::move(right.m_DataIter)}
         , m_State           {std::move(right.m_State)}
         , m_PtxProps        {std::move(right.m_PtxProps)}
@@ -53,7 +55,7 @@ public:
     ~Parser() = default;
 
     Parser& operator = (const Parser&) = delete;
-    Parser& operator = (Parser&& right) {
+    Parser& operator = (Parser&& right) noexcept {
         if (&right == this)
             return *this;
 
@@ -164,16 +166,16 @@ private:
     mutable Types::PtxProperties m_PtxProps;
 
     struct Dirictives {
-        inline static const auto VERSION      = ".version";
-        inline static const auto TARGET       = ".target";
-        inline static const auto ADDRESS_SIZE = ".address_size";
-        inline static const auto DWARF        = "@@DWARF";
-        inline static const auto LOC          = ".loc";
-        inline static const auto C_STYLE      = "#";
+        static constexpr auto VERSION      = ".version";
+        static constexpr auto TARGET       = ".target";
+        static constexpr auto ADDRESS_SIZE = ".address_size";
+        static constexpr auto DWARF        = "@@DWARF";
+        static constexpr auto LOC          = ".loc";
+        static constexpr auto C_STYLE      = "#";
     };
 
     // list of dirictives which are not trailed by {} of ;
-    inline static const std::vector<std::string> m_FreeDirictives = {
+    static constexpr std::array<std::string_view, 3> m_FreeDirictives {
         Dirictives::VERSION,
         Dirictives::TARGET,
         Dirictives::ADDRESS_SIZE,
@@ -188,15 +190,15 @@ private:
     };
 
     struct KernelAttributes {
-        inline static const auto ENTRY          = ".entry";
-        inline static const auto FUNC           = ".func";
-        inline static const auto FUNCTION       = ".function";
-        inline static const auto CALLPROTOTYPE  = ".callprototype";
-        inline static const auto ALIAS          = ".alias";
+        static constexpr auto ENTRY          = ".entry";
+        static constexpr auto FUNC           = ".func";
+        static constexpr auto FUNCTION       = ".function";
+        static constexpr auto CALLPROTOTYPE  = ".callprototype";
+        static constexpr auto ALIAS          = ".alias";
     };
 
     // list of dirictives which are efining a fucntion
-    inline static const std::vector<std::string> m_FuncDefDirictives = {
+    static constexpr std::array<std::string_view, 3> m_FuncDefDirictives {
         KernelAttributes::ENTRY,
         KernelAttributes::FUNC,
         KernelAttributes::FUNCTION,

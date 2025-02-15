@@ -28,9 +28,9 @@ SmartIterator<Str>::Next() const {
     using Iter = SmartIterator<Str>::P::IterType;
 
     if (IsBracket(P::m_CurIter)) {
-        auto bracket = bracketsTable.at(*P::m_CurIter);
+        auto bracket = GetBracketType(*P::m_CurIter);
         constexpr auto openType = BaseTypes::IsReverseStringIter<Iter>
-                                  ? Close : Open;
+                                  ? CloseType::Close : CloseType::Open;
         if (bracket.second == openType) {
             m_BracketsStack.push_back(bracket.first);
         }
@@ -56,9 +56,9 @@ SmartIterator<Str>::Prev() const {
     }
 
     if ((P::m_CurIter < End()) && IsBracket(P::m_CurIter)) {
-        auto bracket = bracketsTable.at(*P::m_CurIter);
+        auto bracket = GetBracketType(*P::m_CurIter);
         constexpr auto openType = BaseTypes::IsReverseStringIter<Iter>
-                                  ? Open : Close;
+                                  ? CloseType::Open : CloseType::Close;
         if (bracket.second == openType) {
             m_BracketsStack.push_back(bracket.first);
         }
@@ -81,17 +81,13 @@ SmartIterator<Str>::Erase() {
 template<BaseTypes::String Str>
 bool SmartIterator<Str>::IsBracket(const typename P::IterType& iter) {
 
-    return bracketsTable.find(*iter) != bracketsTable.end();
+    return WhichBracket(iter) != BracketType( Bracket::No, CloseType::No );
 }
 
 template<BaseTypes::String Str>
 BracketType SmartIterator<Str>::WhichBracket(const typename P::IterType& iter) {
 
-    auto found = bracketsTable.find(*iter);
-    if (found != bracketsTable.end()) {
-        return found->second;
-    }
-    return {};
+    return GetBracketType(*iter);
 }
 
 template<BaseTypes::String Str>
@@ -138,7 +134,7 @@ SmartIterator<Str>::EnterBracket(bool reverse, bool recursive) const {
     auto CheckBracket = [=](const Iter& iter) {
         const auto openType =
             BaseTypes::IsReverseStringIter<Iter> && reverse
-            ? Close : Open;
+            ? CloseType::Close : CloseType::Open;
         return WhichBracket(iter).second == openType;
     };
 
@@ -163,7 +159,7 @@ SmartIterator<Str>::ExitBracket(bool enterFirst) const {
     using Iter = SmartIterator<Str>::P::IterType;
 
     constexpr auto openType = BaseTypes::IsReverseStringIter<Iter>
-                              ? Close : Open;
+                              ? CloseType::Close : CloseType::Open;
     if (enterFirst && (WhichBracket(P::m_CurIter).second == openType)) {
         EnterBracket();
     }

@@ -1,13 +1,16 @@
 #pragma once
 
 #include <string>
+#include <string_view>
 #include <type_traits>
 
 
 namespace BaseTypes {
 
 template<class T>
-concept String = std::is_same_v<std::remove_cvref_t<std::remove_all_extents_t<T>>, std::string>;
+concept String = std::disjunction_v<
+    std::is_same<std::remove_cvref_t<std::remove_all_extents_t<T>>, std::string>,
+    std::is_same<std::remove_cvref_t<std::remove_all_extents_t<T>>, std::string_view>>;
 
 template<class T>
 struct IsStringIter_t {
