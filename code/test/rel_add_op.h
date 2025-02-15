@@ -13,9 +13,9 @@ struct RelAddOp final : public ITestCase {
 
     static constexpr auto kName = "rel_add_op (vadd)";
 
-    std::string     Name()        const override;
-    std::string     Description() const override;
-    PTX4CPU::Result Run()         const override;
+    std::string     Name()                                const override;
+    std::string     Description()                         const override;
+    PTX4CPU::Result Run(const std::string& testAssetPath) const override;
 
     RelAddOp()                = default;
     RelAddOp(const RelAddOp&) = default;

@@ -2,10 +2,16 @@
 
 #include <algorithm>
 #include <iostream>
+#include <map>
 #include <memory>
 #include <vector>
 
 #include "rel_add_op.h"
+
+
+#ifndef DEFAULT_TESTS_ASSET_DIR
+#error "Empty tests directory compile-time constant"
+#endif
 
 
 using TestList = std::vector<const TestCase::ITestCase*>;
@@ -45,10 +51,24 @@ static std::string ModifyDescription(const std::string& description) {
     return ret;
 }
 
+static std::string GetAssetPath(int argc, char** argv) {
+
+    if (argc > 1) {
+        return std::string{argv[1]};
+    }
+
+    return DEFAULT_TESTS_ASSET_DIR;
+}
+
 
 int main(int argc, char** argv) {
 
+    std::map<std::string, std::string> fails;
+
     std::cout << "Running automatic tests for PTX4CPU library" << std::endl;
+
+    const auto assetPath = GetAssetPath(argc, argv);
+    std::cout << "Assets directory: " << assetPath.c_str() << std::endl;
 
     for (auto &pTest : g_TestList) {
 
@@ -63,10 +83,11 @@ int main(int argc, char** argv) {
                   << std::endl << ModifyDescription(pTest->Description())
                   << std::endl << std::endl << std::endl;
 
-        const auto res = pTest->Run();
+        const auto res = pTest->Run(assetPath);
 
         std::cout << std::endl;
         if (!res) {
+            fails[pTest->Name()] = res.msg;
             std::cout << "Test Failed. Error: "
                       << res.msg << std::endl;
         } else {
@@ -76,5 +97,19 @@ int main(int argc, char** argv) {
 
     CleanUp();
 
-    return 0;
+    if (fails.empty()) {
+        return 0;
+    }
+
+    std::cout << std::endl
+              << "Test failed. "
+              << fails.size() << " test cases failed:" << std::endl;
+
+    for (const auto& el : fails) {
+        std::cout << " - " << el.first << " : " << el.second <<  std::endl;
+    }
+
+    std::cout << std::endl;
+
+    return 1;
 }
