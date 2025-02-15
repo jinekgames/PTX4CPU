@@ -32,23 +32,18 @@ auto CreateEmulator(const std::string& src) {
     PTX4CPU::IEmulator* rawPtr = nullptr;
     EMULATOR_CreateEmulator(&rawPtr, src);
 
-    return std::unique_ptr<PTX4CPU::IEmulator>{rawPtr};
+    return rawPtr;
 }
 
 auto ParseArgsJson(const std::string& json) {
-    using RetType = std::unique_ptr<PtxExecArgs>;
+    PTX4CPU::PtxExecArgs rawPtr = PTX4CPU_NULL_HANDLE;
+    EMULATOR_CreateArgsJson(&rawPtr, json);
 
-    auto rawPtr = new PtxExecArgs;
-    EMULATOR_ParseArgsJson(rawPtr, json);
-
-    if (*rawPtr)
-        return RetType{rawPtr};
-
-    delete rawPtr;
-    return RetType{nullptr};
+    return rawPtr;
 }
 
-bool SaveOutputData(const std::string& filepath, PtxExecArgs& execArgs) {
+bool SaveOutputData(const std::string& filepath,
+                    PTX4CPU::PtxExecArgs& execArgs) {
 
     std::string output;
     EMULATOR_SerializeArgsJson(execArgs, output);
@@ -69,7 +64,7 @@ bool SaveOutputData(const std::string& filepath, PtxExecArgs& execArgs) {
         fout.open(filepath);
         if (fout.is_open()) {
             pOut = &fout;
-            std::cout << "Saving execion output to '" << filepath << "'" << std::endl;
+            std::cout << "Saving execution output to '" << filepath << "'" << std::endl;
         } else {
             std::cout << "ERROR: File '" << filepath << "' opening failed. "
                       << "Execution output will be printed to console:" << std::endl << std::endl;
@@ -79,6 +74,16 @@ bool SaveOutputData(const std::string& filepath, PtxExecArgs& execArgs) {
 
     *pOut << output;
     return ret;
+}
+
+void CleanUp(PTX4CPU::PtxExecArgs args, PTX4CPU::IEmulator* pEmulator)
+{
+    if(args != PTX4CPU_NULL_HANDLE) {
+        EMULATOR_DestroyArgs(args);
+    }
+    if(pEmulator != nullptr) {
+        EMULATOR_DestroyEmulator(pEmulator);
+    }
 }
 
 } // anonimous namespace
@@ -135,27 +140,33 @@ Commands:
             return 1;
         }
 
-        auto pEmulator{std::move(CreateEmulator(input))};
+        auto pEmulator = CreateEmulator(input);
 
-        if (!pEmulator) {
+        if (pEmulator == PTX4CPU_NULL_HANDLE) {
             std::cout << "ERROR: Failed to create a Emulator object" << std::endl;
             return 1;
         }
 
         std::cout << "Emulator was successfully created" << std::endl;
+
+        CleanUp(PTX4CPU_NULL_HANDLE, pEmulator);
+
         return 0;
 
     } else if (args.Contains("test-json")) {
 
         std::string argsJsonPath = args["test-json"];
 
-        auto pExecVars = ParseArgsJson(ReadFile(argsJsonPath));
-        if (!pExecVars) {
+        auto execVars = ParseArgsJson(ReadFile(argsJsonPath));
+        if (execVars == PTX4CPU_NULL_HANDLE) {
             std::cout << "ERROR: Parsing of the execution arguments json failed" << std::endl;
             return 1;
         }
 
         std::cout << "Json is Valid" << std::endl;
+
+        CleanUp(execVars, nullptr);
+
         return 0;
 
     } else if (args.Contains("test-run")) {
@@ -193,8 +204,8 @@ Commands:
         std::cout << "Using argument from '" << argsJsonPath << "'"
                   << std::endl;
 
-        auto pExecVars = ParseArgsJson(ReadFile(argsJsonPath));
-        if (!pExecVars) {
+        auto execVars = ParseArgsJson(ReadFile(argsJsonPath));
+        if (execVars == PTX4CPU_NULL_HANDLE) {
             std::cout << "ERROR: Parsing of the execution arguments json failed" << std::endl;
             return 1;
         }
@@ -207,9 +218,9 @@ Commands:
             return 1;
         }
 
-        auto pEmulator{std::move(CreateEmulator(input))};
+        auto pEmulator = CreateEmulator(input);
 
-        if (!pEmulator) {
+        if (pEmulator == PTX4CPU_NULL_HANDLE) {
             std::cout << "ERROR: Failed to create an Emulator object" << std::endl;
             return 1;
         }
@@ -220,24 +231,26 @@ Commands:
 
         BaseTypes::uint3_32 gridSize = { threadsCount, 1, 1 };
 
-        auto res = pEmulator->ExecuteFunc(kernelName, *pExecVars, gridSize);
+        auto res = pEmulator->ExecuteFunc(kernelName, execVars, gridSize);
 
         if (res) {
             std::cout << "Kernel finished execution" << std::endl;
-            auto res = SaveOutputData(outputJsonPath, *pExecVars);
+            auto res = SaveOutputData(outputJsonPath, execVars);
             return (res) ? 0 : 1;
         }
+
+        CleanUp(execVars, pEmulator);
 
         std::cout << "Function execution faled. Error: " << res.msg << std::endl;
         return 1;
 
     }
 
-        std::cout <<
+    std::cout <<
 R"(Invalid command was specified.
 
 Run with '--help' to see available commands
 )" << std::endl;
 
-        return 1;
+    return 1;
 }

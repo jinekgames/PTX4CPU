@@ -9,37 +9,25 @@
 extern "C" {
 
 EMULATOR_EXPORT_API void EMULATOR_CC
-EMULATOR_CreateEmulator(PTX4CPU::IEmulator** ppEmulator,
-                        const std::string& sourceCode) {
+EMULATOR_CreateEmulator(
+    PTX4CPU::IEmulator** ppEmulator,
+    const std::string&   sourceCode) {
 
     *ppEmulator = new PTX4CPU::Emulator(sourceCode);
 }
 
 EMULATOR_EXPORT_API void EMULATOR_CC
-EMULATOR_ParseArgsJson(PtxExecArgs* pInputData, const std::string& jsonStr) {
+EMULATOR_DestroyEmulator(
+    PTX4CPU::IEmulator* pEmulator) {
 
-    if(!pInputData) {
-        PRINT_E("Null Input data object passed");
-        return;
-    }
-
-    PTX4CPU::Types::PtxInputData retData;
-    auto res = PTX4CPU::ParseJson(retData, jsonStr);
-
-    if (!res) {
-        PRINT_E(res.msg.c_str());
-        *pInputData = nullptr;
-        return;
-    }
-
-    *pInputData = new PTX4CPU::Types::PtxInputData{std::move(retData)};
+    delete pEmulator;
 }
 
-
 EMULATOR_EXPORT_API void EMULATOR_CC
-EMULATOR_ProcessArgs(PtxExecArgs* pInputData,
-                     const PtxFuncDescriptor kernel,
-                     const void* const* ppArgs) {
+EMULATOR_CreateArgs(
+    PTX4CPU::PtxExecArgs*            pInputData,
+    const PTX4CPU::PtxFuncDescriptor kernel,
+    const void* const*               ppArgs) {
 
     if(!pInputData) {
         PRINT_E("Null Input data object passed");
@@ -67,7 +55,38 @@ EMULATOR_ProcessArgs(PtxExecArgs* pInputData,
 }
 
 EMULATOR_EXPORT_API void EMULATOR_CC
-EMULATOR_SerializeArgsJson(const PtxExecArgs& inputData, std::string& jsonStr) {
+EMULATOR_CreateArgsJson(
+    PTX4CPU::PtxExecArgs* pInputData,
+    const std::string&    jsonStr) {
+
+    if(!pInputData) {
+        PRINT_E("Null Input data object passed");
+        return;
+    }
+
+    PTX4CPU::Types::PtxInputData retData;
+    auto res = PTX4CPU::ParseJson(retData, jsonStr);
+
+    if (!res) {
+        PRINT_E(res.msg.c_str());
+        *pInputData = nullptr;
+        return;
+    }
+
+    *pInputData = new PTX4CPU::Types::PtxInputData{std::move(retData)};
+}
+
+EMULATOR_EXPORT_API void EMULATOR_CC
+EMULATOR_DestroyArgs(
+    PTX4CPU::PtxExecArgs inputData) {
+
+    delete inputData;
+}
+
+EMULATOR_EXPORT_API void EMULATOR_CC
+EMULATOR_SerializeArgsJson(
+    PTX4CPU::PtxExecArgs inputData,
+    std::string&         jsonStr) {
 
     std::string retStr;
     auto res = PTX4CPU::ExtractJson(*inputData, retStr);

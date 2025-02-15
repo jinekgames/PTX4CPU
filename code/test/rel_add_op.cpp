@@ -78,7 +78,7 @@ PTX4CPU::Result RelAddOp::Run() {
 
     // Retrieve kernel descriptor
 
-    PtxFuncDescriptor kernelDescriptor = NULL;
+    PTX4CPU::PtxFuncDescriptor kernelDescriptor = PTX4CPU_NULL_HANDLE;
     auto result =
         pEmulator->GetKernelDescriptor(KERNEL_NAME, &kernelDescriptor);
 
@@ -89,8 +89,8 @@ PTX4CPU::Result RelAddOp::Run() {
 
     // Process PTX arguments
 
-    PtxExecArgs ptxArgs = NULL;
-    EMULATOR_ProcessArgs(&ptxArgs, kernelDescriptor, ppArgs);
+    PTX4CPU::PtxExecArgs ptxArgs = PTX4CPU_NULL_HANDLE;
+    EMULATOR_CreateArgs(&ptxArgs, kernelDescriptor, ppArgs);
 
     if (!ptxArgs) {
         return { "Failed to process kernel execution arguments" };
@@ -106,6 +106,15 @@ PTX4CPU::Result RelAddOp::Run() {
     if (!result) {
         return result;
     }
+
+
+    // Clean up
+
+    EMULATOR_DestroyArgs(ptxArgs);
+    ptxArgs = PTX4CPU_NULL_HANDLE;
+
+    EMULATOR_DestroyEmulator(pEmulator);
+    pEmulator = nullptr;
 
 
     // Check values

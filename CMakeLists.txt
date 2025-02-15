@@ -5,7 +5,7 @@ if(UNIX)
 endif()
 
 project(PTX4CPU
-        VERSION 0.2.0
+        VERSION 0.3.0
         DESCRIPTION "Emulator for running CUDA code on CPU"
         LANGUAGES CXX)
 
