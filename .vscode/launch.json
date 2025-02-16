@@ -5,6 +5,61 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "(gcc-Linux) EmulatorCmd Test Run",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/EmulatorCmd",
+            "args": [
+                "--test-run",    "${workspaceFolder}/ext/cuda_ptx_samples/rel_add_op.ptx",
+                "--kernel",      "_Z9addKernelPiPKiS1_",
+                "--args",        "${workspaceFolder}/ext/cuda_ptx_samples/rel_add_op.json",
+                "--threads",     "1",
+                "--save-output", "${workspaceFolder}/ext/cuda_ptx_samples/output/rel_add_op_out.json"
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/build/bin/",
+            "environment": [],
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "(gcc-Linux) Emulator Auto Test",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/autotests",
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/build/bin",
+            "environment": [],
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "(msvc-Win32) EmulatorCmd Test Parse",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/Debug/EmulatorCmd.exe",
+            "args": [
+                "--test-load",
+                "${workspaceFolder}/ext/cuda_ptx_samples/rel_add_op.ptx",
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/build/bin/Debug",
+            "environment": [],
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "(msvc-Win32) EmulatorCmd Test Json",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/Debug/EmulatorCmd.exe",
+            "args": [
+                "--test-json",
+                "${workspaceFolder}/ext/cuda_ptx_samples/rel_add_op.json",
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/build/bin/Debug",
+            "environment": [],
+            "console": "integratedTerminal"
+        },
+        {
             "name": "(msvc-Win32) EmulatorCmd Test Run",
             "type": "cppvsdbg",
             "request": "launch",
@@ -22,67 +77,7 @@
             "console": "integratedTerminal"
         },
         {
-            "name": "(gcc-Linux) EmulatorCmd Test Run",
-            "type": "cppdbg",
-            "request": "launch",
-            "program": "${workspaceFolder}/build/bin/EmulatorCmd",
-            "args": [
-                "--test-run",    "${workspaceFolder}/ext/cuda_ptx_samples/rel_add_op.ptx",
-                "--kernel",      "_Z9addKernelPiPKiS1_",
-                "--args",        "${workspaceFolder}/ext/cuda_ptx_samples/rel_add_op.json",
-                "--threads",     "1",
-                "--save-output", "${workspaceFolder}/ext/cuda_ptx_samples/output/rel_add_op_out.json"
-            ],
-            "stopAtEntry": false,
-            "cwd": "${workspaceFolder}/build/bin/",
-            "environment": []
-        },
-        {
-            "name": "(gcc-Linux) EmulatorCmd Test Run",
-            "type": "cppdbg",
-            "request": "launch",
-            "program": "${workspaceFolder}/build/bin/EmulatorCmd",
-            "args": [
-                "--test-run",    "${workspaceFolder}/ext/cuda_ptx_samples/rel_add_op.ptx",
-                "--kernel",      "_Z9addKernelPiPKiS1_",
-                "--args",        "${workspaceFolder}/ext/cuda_ptx_samples/rel_add_op.json",
-                "--threads",     "1",
-                "--save-output", "${workspaceFolder}/ext/cuda_ptx_samples/output/rel_add_op_out.json"
-            ],
-            "stopAtEntry": false,
-            "cwd": "${workspaceFolder}/build/bin/",
-            "environment": []
-        },
-        {
-            "name": "(msvc) EmulatorCmd Test Parse",
-            "type": "cppvsdbg",
-            "request": "launch",
-            "program": "${workspaceFolder}/build/bin/Debug/EmulatorCmd.exe",
-            "args": [
-                "--test-load",
-                "${workspaceFolder}/ext/cuda_ptx_samples/rel_add_op.ptx",
-            ],
-            "stopAtEntry": false,
-            "cwd": "${workspaceFolder}/build/bin/Debug",
-            "environment": [],
-            "console": "integratedTerminal"
-        },
-        {
-            "name": "(msvc) EmulatorCmd Test Json",
-            "type": "cppvsdbg",
-            "request": "launch",
-            "program": "${workspaceFolder}/build/bin/Debug/EmulatorCmd.exe",
-            "args": [
-                "--test-json",
-                "${workspaceFolder}/ext/cuda_ptx_samples/rel_add_op.json",
-            ],
-            "stopAtEntry": false,
-            "cwd": "${workspaceFolder}/build/bin/Debug",
-            "environment": [],
-            "console": "integratedTerminal"
-        },
-        {
-            "name": "(msvc) Emulator Auto Test",
+            "name": "(msvc-Win32) Emulator Auto Test",
             "type": "cppvsdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/bin/Debug/autotests.exe",

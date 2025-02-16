@@ -8,9 +8,9 @@
 namespace TestCase {
 
 struct ITestCase {
-    virtual std::string     Name()        const = 0;
-    virtual std::string     Description() const = 0;
-    virtual PTX4CPU::Result Run()         const = 0;
+    virtual std::string     Name()                                const = 0;
+    virtual std::string     Description()                         const = 0;
+    virtual PTX4CPU::Result Run(const std::string& testAssetPath) const = 0;
 
     virtual ~ITestCase() = default;
 

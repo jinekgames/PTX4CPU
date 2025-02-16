@@ -33,4 +33,4 @@ add_custom_command(TARGET autotests PRE_BUILD
                    ${TESTS_EXT_DIR}/cuda_ptx_samples)
 
 target_compile_definitions(autotests PRIVATE
-                           -DTESTS_EXT_DIR="${TESTS_EXT_DIR}")
+                           -DDEFAULT_TESTS_ASSET_DIR="${TESTS_EXT_DIR}")
