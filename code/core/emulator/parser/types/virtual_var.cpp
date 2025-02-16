@@ -135,8 +135,9 @@ void VarsTable::Clear() {
 
 PTXVarPtr VarsTable::FindVar(const std::string& name) {
     for (const auto* pTable = this; pTable; pTable = pTable->parent) {
-        if (pTable->virtualVars.contains(name))
-            return pTable->virtualVars.at(name);
+        const auto it = pTable->virtualVars.find(name);
+        if (it != pTable->virtualVars.end())
+            return it->second;
     }
     return nullptr;
 }

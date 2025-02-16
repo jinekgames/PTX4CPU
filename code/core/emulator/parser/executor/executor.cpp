@@ -81,20 +81,43 @@ Result ThreadExecutor::Run(Data::Iterator::SizeType instructionsCount) {
 Types::ArgumentPair ThreadExecutor::RetrieveArg(
     Types::PTXType type, const std::string& arg) const {
 
-    const auto desc  = Parser::ParseVectorName(arg);
+    Types::ArgumentPair ret;
+
+    std::string argName = arg;
+
+    const bool isDereference = Parser::ExtractDereference(argName);
+
+    if(argName.contains('+')) {
+        PRINT_E("Inline offset shift is not supported");
+    }
+
+    const auto desc  = Parser::ParseVectorName(argName);
     Types::PTXVarPtr pVar{m_pVarsTable->FindVar(desc.name)};
 
     constexpr auto VAR_NAME_PREFIX = '%';
     if (!pVar) {
-        if (arg.front() != VAR_NAME_PREFIX) {
+        // number constant
+        if (argName.front() != VAR_NAME_PREFIX) {
             Types::PTXVarPtr pTempVar;
             PTXTypedOp(type,
-                pTempVar = Types::CreateTempValueVarTyped<_PtxType_>(arg);
+                pTempVar = Types::CreateTempValueVarTyped<_PtxType_>(argName);
             )
             pVar.swap(pTempVar);
         } else {
-            PRINT_E("Failed to retrieve argument \"%s\"", arg.c_str());
+            PRINT_E("Failed to retrieve argument \"%s\"", argName.c_str());
         }
+    }
+    // pointer dereference
+    else if (isDereference) {
+        constexpr auto systemPtrType = Types::GetSystemPtrType();
+        auto ptr = reinterpret_cast<void *>(
+            pVar->Get<systemPtrType>());
+
+        Types::PTXVarPtr pTempVar;
+        PTXTypedOp(type,
+            pTempVar = Types::CreateTempVarFromPointerTyped<_PtxType_>(ptr);
+        )
+        pVar.swap(pTempVar);
     }
 
     return { std::move(pVar), desc.key };

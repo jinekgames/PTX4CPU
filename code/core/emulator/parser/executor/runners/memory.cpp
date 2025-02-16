@@ -5,14 +5,7 @@
 
 #include <charconv>
 
-#ifdef OPT_COMPILE_SAFE_CHECKS
-#ifdef WIN32
-namespace Win32
-{
-#include <Windows.h>
-}  // namespace Win32
-#endif  // #ifdef WIN32
-#endif  // #ifdef OPT_COMPILE_SAFE_CHECKS
+#include <validator.h>
 
 
 namespace PTX4CPU {
@@ -82,34 +75,6 @@ Result RegisterMemory(ThreadExecutor* pExecutor,
 namespace {
 
 template<Types::PTXType ptxType>
-Result Dereference(const Types::PTXVar &ptrVar,
-                   Types::getVarType<ptxType>& value,
-                   char ptrKey = 'x') {
-
-    using realType = std::remove_cvref_t<decltype(value)>;
-
-    constexpr auto ptrPtxType = Types::GetSystemPtrType();
-
-    auto ptr = ptrVar.Get<ptrPtxType>(ptrKey);
-
-#ifdef OPT_COMPILE_SAFE_CHECKS
-    if (!ptr) {
-        return { "Null pointer dereference" };
-    }
-#ifdef WIN32
-    if (Win32::IsBadReadPtr(reinterpret_cast<void*>(ptr),
-                            static_cast<Win32::UINT_PTR>(sizeof(realType)))) {
-        return { "Invalid pointer. Possible reading access violation" };
-    }
-#endif  // #ifdef WIN32
-#endif  // #ifdef OPT_COMPILE_SAFE_CHECKS
-
-    value = *reinterpret_cast<realType*>(ptr);
-
-    return {};
-}
-
-template<Types::PTXType ptxType>
 Result DereferenceAndSet(Types::PTXVar* ptrVar,
                          const Types::getVarType<ptxType>& value,
                          char ptrKey = 'x') {
@@ -118,19 +83,9 @@ Result DereferenceAndSet(Types::PTXVar* ptrVar,
 
     constexpr auto PtrType = Types::GetSystemPtrType();
 
-    auto ptr = reinterpret_cast<realType*>(ptrVar->Get<PtrType>(ptrKey));
+    auto* ptr = reinterpret_cast<realType*>(ptrVar->Get<PtrType>(ptrKey));
 
-#ifdef OPT_COMPILE_SAFE_CHECKS
-    if (!ptr) {
-        return { "Null pointer dereference" };
-    }
-#ifdef WIN32
-    if (Win32::IsBadReadPtr(reinterpret_cast<void*>(ptr),
-                            static_cast<Win32::UINT_PTR>(sizeof(realType)))) {
-        return { "Invalid pointer. Possible reading access violation" };
-    }
-#endif  // #ifdef WIN32
-#endif  // #ifdef OPT_COMPILE_SAFE_CHECKS
+    Validator::CheckPointer(ptr);
 
     *ptr = value;
 
@@ -147,39 +102,15 @@ std::string RemoveVarNameBrackets(const std::string& name)
 }  // anonimous namespace
 
 template<Types::PTXType ptxType>
-Result LoadParamInternal(ThreadExecutor* pExecutor,
-                         const std::string& valueFullName,
-                         const std::string& ptrFullName) {
+Result LoadParamInternal(Types::ArgumentPair& dst, Types::ArgumentPair& src) {
 
-    const auto valueDesc = Parser::ParseVectorName(valueFullName);
-    const auto ptrDesc   = Parser::ParseVectorName(ptrFullName);
+    Result result;
 
-    auto pPtrVar = pExecutor->GetTable()->FindVar(ptrDesc.name);
-
-#ifdef OPT_COMPILE_SAFE_CHECKS
-    if (!pPtrVar) {
-        return { "Variable \"" + ptrFullName + "\" storing the pointer is undefined" };
-    }
-#endif  // #ifdef OPT_COMPILE_SAFE_CHECKS
-
-    Types::getVarType<ptxType> value;
-    auto result = Dereference<ptxType>(*pPtrVar, value, ptrDesc.key);
-
-    if (!result) {
-        PRINT_E(result.msg.c_str());
-        return { "Loading of param " + ptrFullName + " failed" };
+    if (!Types::PTXVar::AssignValue<ptxType, false>(dst, src)) {
+        result = { "Failed to assign load product" };
     }
 
-#ifdef OPT_COMPILE_SAFE_CHECKS
-    if (!pExecutor->GetTable()->FindVar(valueDesc.name)) {
-        return { "Variable \"" + valueFullName + "\" storing the dereferanced value is undefined" };
-    }
-#endif  // #ifdef OPT_COMPILE_SAFE_CHECKS
-
-    pExecutor->GetTable()->GetValue<ptxType>(valueDesc.name, valueDesc.key) =
-        value;
-
-    return {};
+    return result;
 }
 
 Result LoadParam(ThreadExecutor* pExecutor,
@@ -190,27 +121,31 @@ Result LoadParam(ThreadExecutor* pExecutor,
 
     const auto type = instruction.GetPtxType();
 
+    auto args = pExecutor->RetrieveArgs(type, instruction.args);
+
 #ifdef OPT_COMPILE_SAFE_CHECKS
-    if (instruction.args.size() < 1) {
+    if (args.size() < 1 || !args[0].first) {
         PRINT_E("Missed destination `ld` argumemt");
     }
-    if (instruction.args.size() < 2) {
+    if (args.size() < 2 || !args[0].second) {
         PRINT_E("Missed source `ld` argumemt");
+    }
+    if (args.size() > 3) {
+        PRINT_E("Too much arguments passed");
     }
 #endif  // #ifdef OPT_COMPILE_SAFE_CHECKS
 
-    const auto  valueFullName = instruction.args[0];
-    const auto& ptrFullName   = RemoveVarNameBrackets(instruction.args[1]);
+    auto& dst = args[0];
+    auto& src = args[1];
 
     Result result;
     PTXTypedOp(type,
-        result =
-            LoadParamInternal<_PtxType_>(pExecutor, valueFullName, ptrFullName);
+        result = LoadParamInternal<_PtxType_>(dst, src);
     )
 
     if (!result) {
         PRINT_E("%s", result.msg.c_str());
-        return { "Dereference of " + ptrFullName + " failed" };
+        return { "Loading of " + instruction.args[1] + " failed" };
     }
     return {};
 }
@@ -254,6 +189,8 @@ Result SetParam(ThreadExecutor* pExecutor,
     // st.global.u32   [%rd10],   %r4;
 
     const auto type = instruction.GetPtxType();
+
+    // @todo implementation: use new retrie API
 
 #ifdef OPT_COMPILE_SAFE_CHECKS
     if (instruction.args.size() < 1) {

@@ -96,7 +96,7 @@ public:
     /**
      * Parses a PTX var from the input string `entry`
     */
-    static std::pair<std::string, Types::PtxVarDesc> ParsePtxVar(const std::string& entry);
+    static Types::Function::ArgWithName ParsePtxVar(const std::string& entry);
 
     struct ParsedPtxVectorName {
         char        key = 'x';
@@ -107,6 +107,11 @@ public:
      * Extracts an access key (should be one of xyzw) and real variable name
     */
     static ParsedPtxVectorName ParseVectorName(const std::string& name);
+
+    /// @brief Removes `[]` operator from name
+    /// @return `true` if there was dereferencing
+    /// @note There should be no spaces
+    static bool ExtractDereference(std::string& argName);
 
     static bool IsKernelFunction(const Types::Function& function);
 

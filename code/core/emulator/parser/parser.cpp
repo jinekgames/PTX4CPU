@@ -109,7 +109,7 @@ Parser::MakeThreadExecutors(const std::string& funcName,
     return ret;
 }
 
-std::pair<std::string, Types::PtxVarDesc> Parser::ParsePtxVar(const std::string& entry) {
+Types::Function::ArgWithName Parser::ParsePtxVar(const std::string& entry) {
 
     std::string name;
     Types::PtxVarDesc desc;
@@ -140,6 +140,16 @@ Parser::ParsedPtxVectorName Parser::ParseVectorName(const std::string& name) {
         ret.key = 'x';
     }
     return ret;
+}
+
+bool Parser::ExtractDereference(std::string& argName) {
+
+    StringIteration::SmartIterator iter{const_cast<const std::string&>(argName)};
+    if (iter.IsBracket()) {
+        argName = iter.ReadWord(false, StringIteration::Brackets);
+        return true;
+    }
+    return false;
 }
 
 // Private realizations
@@ -350,7 +360,7 @@ bool Parser::InitVTable() {
             // return (it is single)
             auto startIter = lineIter.Current();
             auto endIter   = lineIter.ExitBracket();
-            func.returns.emplace(ParsePtxVar({startIter, endIter}));
+            func.returns.emplace_back(ParsePtxVar({startIter, endIter}));
         }
         // now it is the name
         func.name = lineIter.ReadWord();
@@ -360,7 +370,7 @@ bool Parser::InitVTable() {
         // arguments
         while (lineIter.IsInBracket() && lineIter.IsValid()) {
             auto argStr = lineIter.ReadWord(false, Brackets | Punct);
-            func.arguments.emplace(ParsePtxVar(argStr));
+            func.arguments.emplace_back(ParsePtxVar(argStr));
             lineIter.Skip(AllSpaces | Brackets);
         }
 

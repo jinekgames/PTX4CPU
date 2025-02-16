@@ -49,13 +49,6 @@ static uint64_t RegisterMemoryInternal(ThreadExecutor* pExecutor,
                                        const uint64_t count);
 RegisterRunner(".reg", RegisterMemory);
 
-/**
- * Dereference var with name `ptrName` into the var named `storeName`
-*/
-template<Types::PTXType ptxType>
-static Result LoadParamInternal(ThreadExecutor* pExecutor,
-                                const std::string& valueName,
-                                const std::string& ptrName);
 RegisterRunner("ld.param", LoadParam);
 MapRunner("ld.global", LoadParam);
 
