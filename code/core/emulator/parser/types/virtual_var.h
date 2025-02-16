@@ -204,8 +204,10 @@ struct PTXVarMemDeleter {
     void operator () (void* ptr) { delete[] static_cast<RealType*>(ptr); }
 };
 
+inline static void _PTXVarMemDeleterNullInternal(void*) {}
+
 struct PTXVarMemDeleterNull {
-    void operator () (void* ptr) {}
+    void operator () (void* ptr) { _PTXVarMemDeleterNullInternal(ptr); }
 };
 
 template<PTXType ptxType, IndexType VectorSize = 1,
@@ -421,6 +423,9 @@ PTXVarPtr CreateTempVarFromPointerTyped(void* ptr) {
     auto* realPointer = reinterpret_cast<getVarType<type>*>(ptr);
 
     Validator::CheckPointer(realPointer);
+
+    // @todo implementation: make it able for output value
+    // (write ptr directly to virtual variable, not copy real value)
 
     return PTXVarPtr{
         new Types::PTXVarTyped<type, 1, Types::PTXVarMemDeleterNull>{

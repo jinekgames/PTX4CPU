@@ -190,6 +190,8 @@ Result SetParam(ThreadExecutor* pExecutor,
 
     const auto type = instruction.GetPtxType();
 
+    // @todo implementation: use new retrie API
+
 #ifdef OPT_COMPILE_SAFE_CHECKS
     if (instruction.args.size() < 1) {
         PRINT_E("Missed destination `ld` argumemt");

@@ -39,7 +39,8 @@ Result Emulator::ExecuteFunc(const std::string& funcName,
     PRINT_I("Executing kernel \"%s\" in block [%lu,%lu,%lu]",
             funcName.c_str(), gridSize.x, gridSize.y, gridSize.z);
 
-    auto execs = m_Parser.MakeThreadExecutors(funcName, args->execArgs, gridSize);
+    auto execs =
+        m_Parser.MakeThreadExecutors(funcName, args->execArgs, gridSize);
 
     if (execs.empty()) {
         PRINT_E("Failed to create kernel executors");
@@ -55,7 +56,7 @@ Result Emulator::ExecuteFunc(const std::string& funcName,
     bool success = true;
 
     for (auto& exec : execs) {
-        auto thread = std::thread{[&] {
+        const auto threadFunc = [&] {
             Helpers::Timer threadTimer(
                 FormatString("Thread [{},{},{}]",
                              exec.GetTID().x, exec.GetTID().y, exec.GetTID().z));
@@ -70,11 +71,11 @@ Result Emulator::ExecuteFunc(const std::string& funcName,
                         res.msg.c_str());
                 success = false;
             }
-        }};
+        };
 #ifndef OPT_SYNCHRONIZED_EXECUTION
-        threads.push_back(std::move(thread));
-#else  // OPT_SYNCHRONIZED_EXECUTION
-        thread.join();
+        threads.emplace_back(std::move(threadFunc));
+#else  // #ifndef OPT_SYNCHRONIZED_EXECUTION
+        threadFunc();
 #endif  // #ifndef OPT_SYNCHRONIZED_EXECUTION
     }
 

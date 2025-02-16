@@ -72,10 +72,12 @@ public:
 
     // function attribute to it's optional value
     using Attributes   = std::unordered_map<std::string, std::string>;
+    // name of argument with argument description
+    using ArgWithName  = std::pair<std::string, PtxVarDesc>;
     // argument name to it's type
-    using Arguments    = std::unordered_map<std::string, PtxVarDesc>;
+    using Arguments    = std::vector<ArgWithName>;
     // returning value name to it's type
-    using Returns      = std::unordered_map<std::string, PtxVarDesc>;
+    using Returns      = std::vector<ArgWithName>;
     // List of function's instructions
     using Instructions = std::vector<Instruction>;
 

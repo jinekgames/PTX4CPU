@@ -96,7 +96,7 @@ public:
     /**
      * Parses a PTX var from the input string `entry`
     */
-    static std::pair<std::string, Types::PtxVarDesc> ParsePtxVar(const std::string& entry);
+    static Types::Function::ArgWithName ParsePtxVar(const std::string& entry);
 
     struct ParsedPtxVectorName {
         char        key = 'x';
