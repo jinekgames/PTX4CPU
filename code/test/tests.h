@@ -21,4 +21,10 @@ struct ITestCase {
     ITestCase& operator = (ITestCase&&)      = default;
 };
 
+namespace Runtime {
+
+inline constexpr auto kNamePrefix = "[Runtime] ";
+
+}  // namespace Runtime
+
 }  // namespace TestCase
