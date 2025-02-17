@@ -85,6 +85,9 @@ int main(int argc, char** argv) {
                   << std::endl << ModifyDescription(pTest->Description())
                   << std::endl << std::endl << std::endl;
 
+        std::cout << "0, " << assetPath.c_str() << "test: " << (void*)pTest
+                  << "test func: " << (void*)(&pTest->Run) << std::endl;
+
         const auto res = pTest->Run(assetPath);
 
         std::cout << std::endl;
