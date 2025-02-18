@@ -115,6 +115,8 @@ public:
 
     static bool IsKernelFunction(const Types::Function& function);
 
+    static bool IsLabel(const std::string& instructionStr);
+
 private:
 
     /**
@@ -214,6 +216,8 @@ private:
     };
 
     static bool IsFuncDefDirictive(const std::string& dirictive);
+
+    static constexpr char m_LabelFrontSymbol = '$';
 
     // Global file variables
     mutable Types::VarsTable m_GlobalVarsTable;

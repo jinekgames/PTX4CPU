@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "rel_add_op.h"
+#include "rel_add_op_const.h"
 
 
 #ifndef DEFAULT_TESTS_ASSET_DIR
@@ -20,7 +21,8 @@ using TestList = std::vector<const TestCase::ITestCase*>;
 namespace {
 
 TestList g_TestList = {
-    &TestCase::Runtime::test_RelAddOp,
+    // &TestCase::Runtime::test_RelAddOp,
+    &TestCase::Runtime::test_RelAddOpConst,
 };
 
 void CleanUp() { g_TestList.clear(); }

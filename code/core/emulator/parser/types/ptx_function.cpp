@@ -1,5 +1,6 @@
 #include "ptx_function.h"
 
+#include <parser.h>
 #include "utils/string_ext/string_iterator.h"
 
 
@@ -35,6 +36,23 @@ Instruction::Instruction(const std::string& intructionStr) {
     }
 }
 
+std::optional<Instruction>
+Instruction::Make(const std::string& intructionStr) {
+
+    if (intructionStr.empty()) {
+        PRINT_E("Got empty intruction string");
+        return {};
+    }
+
+    // handle lable
+    if (Parser::IsLabel(intructionStr)) {
+        PRINT_E("Got lable instead of an intruction");
+        return {};
+    }
+
+    return Instruction{intructionStr};
+}
+
 Instruction::Predicate::Predicate(const std::string& predicateStr) {
 
     if (predicateStr.empty()) {
@@ -53,8 +71,11 @@ Instruction::Predicate::Predicate(const std::string& predicateStr) {
         isNegative = false;
     }
 
-    // Read 'till ':'
-    varName = iter.ReadWord(false, StringIteration::WordDelimiter::Punct);
+    // Read from '@' till ':'
+    varName = iter.ReadWord(
+        false, StringIteration::WordDelimiter::Punct);
+    if (!varName.empty())
+        varName.erase(varName.begin());
 }
 
 std::string Instruction::GetStrType() const
@@ -67,12 +88,31 @@ Types::PTXType Instruction::GetPtxType() const
     return Types::StrToPTXType(GetStrType());
 }
 
-void Function::InsertInstructions(Data::Iterator& iter) {
-    while (!iter.IsBlockEnd()) {
+void Function::ProcessInstructions(Data::Iterator& iter) {
+
+    for (; !iter.IsBlockEnd(); ++iter) {
+
         decltype(auto) instructionStr = iter.ReadInstruction();
-        const Types::Instruction instruction{instructionStr};
-        instructions.push_back(instruction);
-        ++iter;
+
+        if (Parser::IsLabel(instructionStr)) {
+            const StringIteration::SmartIterator instuctionIt{instructionStr};
+            const auto labelName = instuctionIt.ReadWord();
+
+            IndexType offset = instructions.size();
+
+            labels[labelName] = offset;
+            continue;
+        }
+
+        const auto instruction = Types::Instruction::Make(instructionStr);
+
+        if (instruction.has_value()) {
+            instructions.push_back(instruction.value());
+        }
+        else {
+            PRINT_E("Failed to parse isntruction \"%s\"",
+                    instructionStr.c_str());
+        }
     }
 }
 

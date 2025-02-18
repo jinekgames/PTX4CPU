@@ -1,6 +1,8 @@
 set(tests
     rel_add_op.cpp
-    rel_add_op.h)
+    rel_add_op.h
+    rel_add_op_const.cpp
+    rel_add_op_const.h)
 
 
 set(sources

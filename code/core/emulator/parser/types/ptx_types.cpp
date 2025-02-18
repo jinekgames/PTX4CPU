@@ -39,7 +39,7 @@ inline static const std::unordered_map<std::string, PTXType> StrTable = {
     { ".f32",   PTXType::F32   },
     { ".f64",   PTXType::F64   },
 
-    // { ".pred",  PTXType::Pred  }, // unsupported
+    { ".pred",  PTXType::Pred  },
 };
 
 }  // anonimous namespace
@@ -63,8 +63,10 @@ std::string PTXTypeToStr(PTXType type) {
     if (found != StrTable.end()) {
         return found->first;
     }
-    PRINT_E("Unknown type of variable: PTXType(%lu)", static_cast<uint32_t>(type));
-    return {};
+
+    using BaseType = std::underlying_type_t<PTXType>;
+    PRINT_E("Unknown type of variable: PTXType(%lu)", static_cast<BaseType>(type));
+    return "PTXType(" + std::to_string(static_cast<BaseType>(type)) + ")";
 }
 
 }  // namespace Types

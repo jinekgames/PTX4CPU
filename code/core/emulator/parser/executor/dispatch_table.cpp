@@ -34,48 +34,34 @@ namespace DispatchTable {
 
 // runners/base.cpp
 
+RegisterRunner("bra", Branch);
+
 RegisterRunner("ret", Return);
 
 
 // runners/memory.cpp
 
-/**
- * Allocates given `count` of vars with given `name`
- * Returns count of allocated vars
-*/
-template<Types::PTXType ptxType>
-static uint64_t RegisterMemoryInternal(ThreadExecutor* pExecutor,
-                                       const std::string& name,
-                                       const uint64_t count);
 RegisterRunner(".reg", RegisterMemory);
 
-RegisterRunner("ld.param", LoadParam);
-MapRunner("ld.global", LoadParam);
+RegisterRunner("cvta.to.global", CopyVarAsReference);
 
-/**
- * Dereference var with name `ptrName` and store there variable from the var
- * named `storeName`
-*/
-template<Types::PTXType ptxType>
-static Result SetParamInternal(ThreadExecutor* pExecutor,
-                               const std::string& valueName,
-                               const std::string& ptrName);
+RegisterRunner("ld.global", LoadParam);
+MapRunner("ld.param", LoadParam);
+
+RegisterRunner("mov", CopyVarAsValue);
+
 RegisterRunner("st.global", SetParam);
 
-template<bool copyAsReference>
-static Result CopyVarInternal(ThreadExecutor* pExecutor,
-                              const Types::Instruction& instruction);
-RegisterRunner("cvta.to.global", CopyVarAsReference);
-RegisterRunner("mov",            CopyVarAsValue);
 
+// runners/math.cpp
 
-// runners/memory.cpp
+RegisterRunner("add", Add);
 
 RegisterRunner("mul.hi",   MulHi);
 RegisterRunner("mul.lo",   MulLo);
 RegisterRunner("mul.wide", MulWide);
 
-RegisterRunner("add", Add);
+RegisterRunner("setp.ge", LogicalGE);
 
 }  // namespace DispatchTable
 

@@ -4,6 +4,7 @@
 
 #include <instruction_runner.h>
 #include <parser.h>
+#include <utils/string_utils.h>
 
 
 using namespace PTX4CPU;
@@ -32,7 +33,7 @@ void ThreadExecutor::Finish() const {
     m_InstructionPosition = m_pFunc->instructions.size();
 }
 
-Result ThreadExecutor::Run(Data::Iterator::SizeType instructionsCount) {
+Result ThreadExecutor::Run(Types::Function::IndexType instructionsCount) {
 
     const std::string logPrefix = FormatString("ThreadExecutor[{},{},{}]",
         m_ThreadId.x, m_ThreadId.y, m_ThreadId.z);
@@ -43,7 +44,7 @@ Result ThreadExecutor::Run(Data::Iterator::SizeType instructionsCount) {
 
     DebugLogVars();
 
-    Data::Iterator::SizeType runIdx = 0;
+    Types::Function::IndexType runIdx = 0;
 
     for (; m_InstructionPosition < m_pFunc->instructions.size() &&
            runIdx < instructionsCount;
@@ -51,6 +52,20 @@ Result ThreadExecutor::Run(Data::Iterator::SizeType instructionsCount) {
 
         decltype(auto) instruction =
             m_pFunc->instructions[m_InstructionPosition];
+
+        if (instruction.predicate.has_value()) {
+            const auto& predicate = instruction.predicate.value();
+            if (CheckPredicate(predicate)) {
+                PRINT_V("Predicate '%s%s' succeeded",
+                        (predicate.isNegative) ? "!" : "",
+                        predicate.varName.c_str());
+            } else {
+                PRINT_V("Predicate '%s%s' failed",
+                        (predicate.isNegative) ? "!" : "",
+                        predicate.varName.c_str());
+                continue;
+            }
+        }
 
         InstructionRunner runner{instruction, this};
         auto res = runner.Run();
@@ -76,6 +91,27 @@ Result ThreadExecutor::Run(Data::Iterator::SizeType instructionsCount) {
             m_InstructionPosition, m_pFunc->instructions.size());
 
     return {};
+}
+
+Result ThreadExecutor::Jump(InstructionIndexType offset) {
+
+    if (offset > m_pFunc->instructions.size()) {
+        return { "Jump offset is out of range" };
+    }
+
+    m_InstructionPosition = offset - 1;
+
+    return {};
+}
+
+Result ThreadExecutor::Jump(const std::string& label) {
+
+    const auto labelIt = m_pFunc->labels.find(label);
+    if (labelIt == m_pFunc->labels.end()) {
+        return { FormatString("Label \"{}\" not found", label) };
+    }
+
+    return Jump(labelIt->second);
 }
 
 Types::ArgumentPair ThreadExecutor::RetrieveArg(
@@ -144,6 +180,24 @@ void ThreadExecutor::DebugLogVars() const {
 #ifdef OPT_EXTENDED_VARIABLES_LOGGING
     PRINT_V("Executor arguments\n%s", std::to_string(*m_pVarsTable).c_str());
 #endif
+}
+
+
+bool ThreadExecutor::CheckPredicate(
+    const Types::Instruction::Predicate& predicate) const {
+
+    const auto pVar = m_pVarsTable->FindVar(predicate.varName);
+    if (!pVar) {
+        PRINT_E("Predicate \"%s\" not found", predicate.varName.c_str());
+        return true;
+    }
+
+    const bool value = static_cast<bool>(
+        pVar->Get<Types::PTXType::Pred>());
+
+    PRINT_V("Predicate value: %d", static_cast<int>(value));
+
+    return value;
 }
 
 void ThreadExecutor::AppendConstants() const {

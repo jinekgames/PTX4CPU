@@ -36,7 +36,7 @@ jobs:
         timeout: # optional, еhe timeout for installation of one tool (in minutes), default is 20
 
     - name: Prepare build project
-      run: cmake -S . -B ./build -DBUILD_TESTS=ON -DUSE_DEBUG_FEATURES=ON
+      run: cmake -S . -B ./build -DBUILD_TESTS=ON -DUSE_DEBUG_FEATURES=ON -DEXTENDED_VARIABLES_LOGGING=ON -DSYNCHRONIZED_EXECUTION=ON
 
     - name: Build
       run: cmake --build ./build

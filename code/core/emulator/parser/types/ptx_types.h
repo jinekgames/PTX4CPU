@@ -154,8 +154,11 @@ using getVarType =
     std::conditional_t<ptxType == PTXType::F64,    double,
 #endif
 
+    // predicate type
+    std::conditional_t<ptxType == PTXType::Pred,   bool,
+
     // default value
-    uint64_t>>>>>>>>>>>>>>>>;
+    uint64_t>>>>>>>>>>>>>>>>>;
 
 #define PTX_Internal_TypedOp_Construct_First(_runtimeType, _constType, ...) \
     if (_runtimeType == _constType) {                                       \
@@ -171,7 +174,8 @@ using getVarType =
 
 #define PTX_Internal_TypedOp_Construct_Default(_runtimeType, ...)                                 \
     else {                                                                                        \
-        PRINT_E("Unknown type PTXType(%d). Casting to .s64", static_cast<int32_t>(_runtimeType)); \
+        PRINT_E("Unknown type %s. Casting to .s64",                                               \
+        Types::PTXTypeToStr(_runtimeType).c_str());                                               \
         constexpr PTX4CPU::Types::PTXType _PtxType_ = PTX4CPU::Types::PTXType::S64;               \
         __VA_ARGS__                                                                               \
     }
@@ -199,7 +203,7 @@ using getVarType =
         PTX_Internal_TypedOp_Construct_Middle(type, PTX4CPU::Types::PTXType::F16X2, __VA_ARGS__)     \
         PTX_Internal_TypedOp_Construct_Middle(type, PTX4CPU::Types::PTXType::F32,   __VA_ARGS__)     \
         PTX_Internal_TypedOp_Construct_Middle(type, PTX4CPU::Types::PTXType::F64,   __VA_ARGS__)     \
-        /*PTX_Internal_TypedOp_Construct_Middle(type, PTX4CPU::Types::PTXType::Pred,  __VA_ARGS__)*/ \
+        PTX_Internal_TypedOp_Construct_Middle(type, PTX4CPU::Types::PTXType::Pred,  __VA_ARGS__)     \
         PTX_Internal_TypedOp_Construct_Default(type, __VA_ARGS__)                                    \
     } while (0);
 

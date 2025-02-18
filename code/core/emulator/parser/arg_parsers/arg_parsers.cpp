@@ -3,6 +3,7 @@
 #include <logger/logger.h>
 #include <parser_types.h>
 #include <utils/string_utils.h>
+#include <utils/validator.h>
 
 #include <type_traits>
 
@@ -14,21 +15,17 @@ namespace {
 template<Types::PTXType type>
 void InsertTypedArg(const void* const ptxArg, Types::PtxInputData& inputData) {
 
-    if constexpr (type != Types::GetSystemPtrType()) {
-        PRINT_E("Using non-pointer type %s as PTX kernel argument. "
-                "Possible types mismatching (System pointer type: %s)",
-                Types::PTXTypeToStr(type).c_str(),
-                Types::PTXTypeToStr(Types::GetSystemPtrType()).c_str());
-    }
+    constexpr auto ptxPtrType = Types::GetSystemPtrType();
 
-    // C++ arg type
-    using realType = Types::getVarType<type>;
+    using realType = Types::getVarType<ptxPtrType>;
     // variable storing the address, which is a ptx kernel argument
-    decltype(auto) pPtxArgReal = reinterpret_cast<const realType *>(&ptxArg);
+    const auto* pPtxArgReal = reinterpret_cast<const realType*>(&ptxArg);
+
+    Validator::CheckPointer(pPtxArgReal);
 
     // Pass to the virtual var constructor pointer to the value,
     // which need to be stored in the variables
-    Types::PTXVar* pPtxArg = new Types::PTXVarTyped<type>(pPtxArgReal);
+    Types::PTXVar* pPtxArg = new Types::PTXVarTyped<ptxPtrType>(pPtxArgReal);
 
     inputData.execArgs.emplace_back(pPtxArg);
 }

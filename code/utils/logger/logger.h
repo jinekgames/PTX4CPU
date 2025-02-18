@@ -9,6 +9,7 @@
 #include <linux/limits.h>
 #endif
 
+#include "../debug.h"
 #include "log_color.h"
 
 
@@ -109,6 +110,14 @@ void _app_log_message(const char* tag, const char* file, int line,
                                            LogColor::COLOR_RESET));
 
     std::printf("%s\n", output.c_str());
+
+#ifdef DEBUG_BUILD
+
+    if constexpr (type == Logs::Type::Error) {
+        PTX4CPU::Debug::UnconditionalBreakpoint();
+    }
+
+#endif  // DEBUG_BUILD
 }
 
 #else

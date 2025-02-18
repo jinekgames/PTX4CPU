@@ -7,8 +7,6 @@ namespace TestCase {
 
 namespace Runtime {
 
-inline constexpr auto kNamePrefix = "[Runtime] ";
-
 struct RelAddOp final : public ITestCase {
 
     static constexpr auto kName = "rel_add_op (vadd)";
