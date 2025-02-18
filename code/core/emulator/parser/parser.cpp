@@ -3,6 +3,8 @@
 #include <logger/logger.h>
 #include <string_utils.h>
 
+#include <algorithm>
+#include <string_view>
 
 using namespace PTX4CPU;
 
@@ -206,16 +208,19 @@ void Parser::ProcessLineTransfer(std::string& code) {
 
 Parser::PreprocessData Parser::ConvertCode(std::string& code) {
 
+    constexpr auto separator = ';';
+
     // Hack: wrap all {} symbols inside a ; to treat them as instruction
-    std::string symbList = "{}";
-    const auto separator = ';';
-    for (auto i = code.begin(); i < code.end(); ++i) {
-        if (symbList.find(*i) != std::string::npos) {
-            i = code.insert(i, separator) + 1;
-            i = code.insert(i + 1, separator);
+    {
+        constexpr std::string_view symbList = "{}";
+        for (auto i = code.begin(); i < code.end(); ++i) {
+            if (symbList.find(*i) != std::string::npos) {
+                i = code.insert(i, separator) + 1;
+                i = code.insert(i + 1, separator);
+            }
         }
     }
-    // Hack: make preprocess instructions separator-terminted
+    // Hack: make preprocess instructions separator-terminated
     for (auto i = code.begin();; ++i) {
         i = SkipSpaces(i, code.end());
         bool needClose = false;
@@ -230,6 +235,25 @@ Parser::PreprocessData Parser::ConvertCode(std::string& code) {
             i = code.insert(i, separator) + 1;
         if (i == code.end())
             break;
+    }
+    // Hack: make labels definitions separator-terminated
+    {
+        const auto &codeRef = code;
+        std::vector<size_t> insertOffsets;
+        {
+            const StringIteration::SmartIterator codeIter(codeRef);
+            while (codeIter.Current() != codeIter.End()) {
+                const auto word = codeIter.ReadWord(
+                    false, StringIteration::WordDelimiter::AllSpaces);
+                if (IsLabel(word) && word.back() == ':') {
+                    insertOffsets.push_back(codeIter.Offset());
+                }
+            }
+        }
+        std::for_each(insertOffsets.rbegin(), insertOffsets.rend(),
+                      [&](size_t offset) {
+                        code.insert(code.begin() + offset, separator);
+                      });
     }
 
     Parser::PreprocessData ret;
@@ -398,7 +422,7 @@ bool Parser::InitVTable() {
         if (m_DataIter.IsBlockStart()) {
             ++m_DataIter;
             // We are inside the body
-            func.InsertInstructions(m_DataIter);
+            func.ProcessInstructions(m_DataIter);
             if (!m_DataIter.IsBlockEnd()) {
                 PRINT_E("Function is not fully initialized. "
                         "Intructions list is not complete.");
@@ -438,14 +462,6 @@ Parser::FindFunction(const std::string& funcName,
             if (func.arguments.size() != arguments.size()) {
                 return false;
             }
-            Types::PTXVarList::size_type i = 0;
-            for (auto& arg : func.arguments) {
-                if (!arguments[i] ||
-                    arg.second.type != arguments[i]->GetPTXType()) {
-                    return false;
-                }
-                ++i;
-            }
             return true;
         });
 }
@@ -462,4 +478,11 @@ bool Parser::IsKernelFunction(const Types::Function& function) {
 
     return
         function.attributes.contains(KernelAttributes::ENTRY);
+}
+
+bool Parser::IsLabel(const std::string& instructionStr) {
+
+    const StringIteration::SmartIterator iter{instructionStr};
+    const auto word = iter.ReadWord();
+    return (!word.empty() && word.front() == m_LabelFrontSymbol);
 }

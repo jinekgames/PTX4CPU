@@ -23,7 +23,9 @@ std::string RelAddOpConst::Name() const {
 }
 
 std::string RelAddOpConst::Description() const {
-    return std::string{"Testing "} + kName + " PTX with emulated CUDA Runtime";
+    return std::string{"Testing "} + kName + " PTX with emulated CUDA "
+           "Runtime.\n"
+           "Tests constant argument and predicates with >= compare.";
 }
 
 PTX4CPU::Result RelAddOpConst::Run(const std::string& testAssetPath) const {
@@ -59,32 +61,28 @@ PTX4CPU::Result RelAddOpConst::Run(const std::string& testAssetPath) const {
 
     // Setup Runtime arguments (this emulates arguments passed by the CUDA Runtime)
 
-    constexpr size_t arraySize = 2;
+    constexpr size_t arraySize = 10;
 
     using TestType = uint32_t;
 
     // arg arrays
-    std::array<TestType, arraySize> out, left;
-    TestType right = 10;
-    for (TestType i = 0; i < arraySize; ++i)  left[i] = i + 1;
+    TestType left = 5;
+    std::array<TestType, arraySize> right;
+    for (TestType i = 0; i < arraySize; ++i)  right[i] = 0;
 
-    std::array<TestType, arraySize> expectedOut, expectedLeft;
-    TestType expectedRight = right;
-    expectedLeft = left;
-    for (size_t i = 0; i < arraySize; ++i)  expectedOut[i] = left[i] + right;
+    TestType expectedLeft = left;
+    std::array<TestType, arraySize> expectedRight;
+    for (size_t i = 0; i < arraySize; ++i) {
+        if (i >= left)  expectedRight[i] = right[i];
+        else            expectedRight[i] = right[i] + static_cast<TestType>(i);
+    }
 
-    // real args - pointers to arrays
-    const std::vector<TestType*> argsList = {
-        out.data(),
-        left.data(),
-        &right,
-    };
+    const auto arrPtr = right.data();
 
     // runtime args - pointers to each real arg
-    const std::vector<TestType* const*> modArgsList = {
-        &argsList[0],
-        &argsList[1],
-        &argsList[2],
+    const std::vector<void*> modArgsList = {
+        (void*)&left,
+        (void*)&arrPtr,
     };
 
     // real runtime arg - pointer to array of of runtime args
@@ -139,33 +137,28 @@ PTX4CPU::Result RelAddOpConst::Run(const std::string& testAssetPath) const {
     std::cout << std::endl << "Check:" << std::endl;
 
     const auto printCompare = [](
-        std::string first, std::string second, int i = -1) {
+        std::string first, int i = -1) {
 
         std::cout << std::setw(0);
         constexpr size_t shift = 25;
         if (i >= 0)  first = "[" + std::to_string(i) + "] " + first;
 
         std::cout << std::setw(shift) << first;
-        std::cout << std::setw(shift) << second;
 
         std::cout << std::setw(0) << std::endl;
     };
 
-    printCompare("out", "left");
-    success &= (expectedRight == right);
+    printCompare("right");
+    success &= (expectedLeft == left);
     for (size_t i = 0; i < gridSize.x; ++i) {
 
-        std::stringstream outStr;
-        outStr << "expected: " << expectedOut[i]
-               << " got: "     << out[i];
-        std::stringstream leftStr;
-        leftStr << "expected: " << expectedLeft[i]
-                << " got: "     << left[i];
+        std::stringstream rightStr;
+        rightStr << "expected: " << expectedRight[i]
+                 << " got: "     << right[i];
 
-        printCompare(outStr.str(), leftStr.str(), i);
+        printCompare(rightStr.str(), static_cast<int>(i));
 
-        success &= (expectedOut[i]   == out[i]);
-        success &= (expectedLeft[i]  == left[i]);
+        success &= (expectedRight[i] == right[i]);
     }
 
     if (!success) {
