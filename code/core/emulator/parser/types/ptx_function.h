@@ -14,9 +14,21 @@
 namespace PTX4CPU {
 namespace Types {
 
-struct Instruction {
+struct Instruction final {
+
+public:
+
+    Instruction() = default;
+
+private:
 
     explicit Instruction(const std::string& intructionStr);
+
+public:
+
+    static std::optional<Instruction> Make(const std::string& intructionStr);
+
+public:
 
     struct Predicate {
 
@@ -63,7 +75,7 @@ public:
 public:
 
     // Insert isntructions from current position till the end of the block
-    void InsertInstructions(Data::Iterator& iter);
+    void ProcessInstructions(Data::Iterator& iter);
 
 public:
 
@@ -81,10 +93,16 @@ public:
     // List of function's instructions
     using Instructions = std::vector<Instruction>;
 
+    using IndexType = Instructions::size_type;
+
+    // Map of labels to instruction offset
+    using LabelsMap = std::unordered_map<std::string, IndexType>;
+
     Attributes   attributes;
     Arguments    arguments;
     Returns      returns;
     Instructions instructions;
+    LabelsMap    labels;
 
 };
 

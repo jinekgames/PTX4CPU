@@ -11,6 +11,10 @@ namespace PTX4CPU {
 
 class ThreadExecutor final {
 
+public:
+
+    using InstructionIndexType = Types::Function::IndexType;
+
 private:
 
     ThreadExecutor() = default;
@@ -37,7 +41,7 @@ public:
     /**
      * Run a given count of instruction from the last break point
     */
-    Result Run(Data::Iterator::SizeType instructionsCount);
+    Result Run(InstructionIndexType instructionsCount);
 
     /**
      * Run a function till the end
@@ -45,6 +49,16 @@ public:
     Result Run() {
         return Run(m_pFunc->instructions.size());
     }
+
+    /**
+     * @brief Jumps before a given offset from the function beginning
+     */
+    Result Jump(InstructionIndexType offset);
+
+    /**
+     * @brief Jumps before a given label
+     */
+    Result Jump(const std::string& label);
 
     /**
      * @brief
@@ -76,6 +90,10 @@ public:
 
 private:
 
+    bool CheckPredicate(const Types::Instruction::Predicate& predicate) const;
+
+private:
+
     /**
      * Inserts predefined constants to the vars table
      * (e.g. `%tid`)
@@ -87,7 +105,7 @@ private:
     const Types::Function* m_pFunc;
 
     // Position of instrunction in the given fucntion.
-    mutable Types::Function::Instructions::size_type m_InstructionPosition = 0;
+    mutable InstructionIndexType m_InstructionPosition = 0;
 
     // Stored for keeping an ownershit
     const std::shared_ptr<Types::VarsTable> m_pArguments;
