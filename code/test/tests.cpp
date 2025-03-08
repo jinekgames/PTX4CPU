@@ -31,16 +31,14 @@ inline void PrintLineDelim() {
     std::cout << "============================================" << std::endl;
 }
 
-}  // anonimous namespace
 
-
-static std::string ModifyDescription(const std::string& description) {
+std::string ModifyDescription(const std::string& description) {
 
     auto ret = description;
 
     auto iter = ret.begin();
     for (;;) {
-        ret.insert(iter, '\t');
+        iter = ret.insert(iter, '\t');
 
         iter = std::find(iter, ret.end(), '\n');
 
@@ -53,7 +51,7 @@ static std::string ModifyDescription(const std::string& description) {
     return ret;
 }
 
-static std::string GetAssetPath(int argc, char** argv) {
+std::string GetAssetPath(int argc, char** argv) {
 
     if (argc > 1) {
         return std::string{argv[1]};
@@ -61,6 +59,8 @@ static std::string GetAssetPath(int argc, char** argv) {
 
     return DEFAULT_TESTS_ASSET_DIR;
 }
+
+}  // anonimous namespace
 
 
 int main(int argc, char** argv) {
