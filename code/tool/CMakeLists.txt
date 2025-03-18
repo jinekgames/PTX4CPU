@@ -1,10 +1,13 @@
 set(EMULATOR_EXECUTABLE_NAME "emulator")
 
-if(UNIX)
-    add_executable(${EMULATOR_EXECUTABLE_NAME}
-        ${CMAKE_CURRENT_SOURCE_DIR}/emulator_main.cpp
-    )
+if(!UNIX)
+    message(ERROR "Emulator runtime supports UNIX systems only")
+    return()
 endif()
+
+add_executable(${EMULATOR_EXECUTABLE_NAME}
+    ${CMAKE_CURRENT_SOURCE_DIR}/emulator_main.cpp
+)
 
 target_link_libraries(${EMULATOR_EXECUTABLE_NAME} PUBLIC
     emulator_host

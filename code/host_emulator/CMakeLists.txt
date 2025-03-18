@@ -1,11 +1,14 @@
 set(RUNTIME_LIB_NAME "emulator_host")
 
-if(UNIX)
-    add_library(${RUNTIME_LIB_NAME} SHARED
-        ${CMAKE_CURRENT_SOURCE_DIR}/runtime_def.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/event_handler.cpp
-    )
+if(NOT UNIX)
+    message(ERROR "Emulator runtime supports UNIX systems only")
+    return()
 endif()
+
+add_library(${RUNTIME_LIB_NAME} SHARED
+    ${CMAKE_CURRENT_SOURCE_DIR}/runtime_def.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/event_handler.cpp
+)
 
 target_include_directories(${RUNTIME_LIB_NAME} PUBLIC
     ${UTILS_DIR}
