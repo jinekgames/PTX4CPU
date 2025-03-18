@@ -1,5 +1,7 @@
 set(3RDPARTY_DIR     ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty)
 set(CORE_DIR         ${CMAKE_CURRENT_SOURCE_DIR}/core)
+set(RUNTIME_LIB_DIR  ${CMAKE_CURRENT_SOURCE_DIR}/host_emulator)
+set(TOOL_DIR         ${CMAKE_CURRENT_SOURCE_DIR}/tool)
 set(TESTS_DIR        ${CMAKE_CURRENT_SOURCE_DIR}/test)
 set(UTILS_DIR        ${CORE_DIR}/../utils)
 set(EMULATOR_DIR     ${CORE_DIR}/emulator)
@@ -16,6 +18,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 # build emulator library
 add_subdirectory(${EMULATOR_DIR})
+add_subdirectory(${RUNTIME_LIB_DIR})
+add_subdirectory(${TOOL_DIR})
 
 
 set(EMULATOR_CMD_DIR ${INTERFACES_DIR}/emulator_cmd)
