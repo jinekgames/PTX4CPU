@@ -1,28 +1,8 @@
 #pragma once
 
-typedef void *cudaStream_t;
-typedef uint8_t uint3;
+#include "utils/base_types.h"
 
-enum cudaError_t
-{
-    cudaSuccess,
-    cudaErrorMemoryAllocation,
-};
-
-enum class cudaMemcpyKind
-{
-    cudaMemcpyHostToDevice = 0,
-    cudaMemcpyDeviceToHost = 1,
-    cudaMemcpyDeviceToDevice = 2,
-    cudaMemcpyHostToHost = 3
-};
-
-struct dim3
-{
-    uint32_t x, y, z;
-    dim3(uint32_t _x = 1, uint32_t _y = 1, uint32_t _z = 1) : x(_x), y(_y), z(_z) {}
-};
-
+using namespace CudaTypes;
 
 extern "C"
 {

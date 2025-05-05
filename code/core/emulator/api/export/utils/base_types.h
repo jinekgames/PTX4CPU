@@ -2,6 +2,36 @@
 
 #include <cstdint>
 
+namespace CudaTypes {
+
+typedef void *cudaStream_t;
+typedef uint8_t uint3;
+
+
+// From cuda-toolkit/include/driver_types.h
+enum cudaError_t
+{
+    cudaSuccess,
+    cudaErrorMemoryAllocation,
+};
+
+// From cuda-toolkit/include/driver_types.h
+enum class cudaMemcpyKind
+{
+    cudaMemcpyHostToDevice = 0,
+    cudaMemcpyDeviceToHost = 1,
+    cudaMemcpyDeviceToDevice = 2,
+    cudaMemcpyHostToHost = 3
+};
+
+struct dim3
+{
+    uint32_t x, y, z;
+    dim3(uint32_t _x = 1, uint32_t _y = 1, uint32_t _z = 1) : x(_x), y(_y), z(_z) {}
+};
+
+} // namespace CudaTypes
+
 
 namespace BaseTypes {
 
