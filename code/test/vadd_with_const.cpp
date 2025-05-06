@@ -1,4 +1,4 @@
-#include "rel_add_op_const.h"
+#include "vadd_with_const.h"
 
 #include "utils.h"
 
@@ -10,7 +10,7 @@
 #include <vector>
 
 
-constexpr auto PTX_FILE_PATH = "/cuda_ptx_samples/rel_add_op_const.ptx";
+constexpr auto PTX_FILE_PATH = "/cuda_ptx_samples/vadd_with_const.ptx";
 constexpr auto KERNEL_NAME   = "_Z12taxpy_kerneliPi";
 
 
