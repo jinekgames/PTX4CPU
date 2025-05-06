@@ -77,7 +77,7 @@ Parser::GetKernelDescription(const std::string& name) const {
 std::vector<ThreadExecutor>
 Parser::MakeThreadExecutors(const std::string& funcName,
                             const Types::PTXVarList& arguments,
-                            BaseTypes::uint3_32 threadsCount) const {
+                            CudaTypes::uint3 threadsCount) const {
 
     // Find kernel
     auto funcIter = FindFunction(funcName, arguments);
@@ -98,9 +98,9 @@ Parser::MakeThreadExecutors(const std::string& funcName,
 
     // Create executors
     std::vector<ThreadExecutor> ret;
-    for (BaseTypes::uint3_32::type x = 0; x < threadsCount.x; ++x) {
-        for (BaseTypes::uint3_32::type y = 0; y < threadsCount.y; ++y) {
-            for (BaseTypes::uint3_32::type z = 0; z < threadsCount.z; ++z) {
+    for (CudaTypes::uint3::type x = 0; x < threadsCount.x; ++x) {
+        for (CudaTypes::uint3::type y = 0; y < threadsCount.y; ++y) {
+            for (CudaTypes::uint3::type z = 0; z < threadsCount.z; ++z) {
                 ret.push_back(std::move(
                     ThreadExecutor{&func, pAgumentsTable, {x, y, z}}
                 ));

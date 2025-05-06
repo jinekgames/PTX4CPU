@@ -4,7 +4,6 @@
 #include <memory>
 #include <sstream>
 #include <tuple>
-#include <filesystem>
 
 #include <cmd_parser.h>
 #include <emulator_api.h>
@@ -31,6 +30,7 @@ std::string ReadFile(const std::string& filepath) {
     return input.str();
 }
 
+#ifdef __linux__
 int SimulateFatBinary(const std::string& file) {
     auto cmd = std::string("LD_PRELOAD=libemulator_host.so EMU_OBJ_PATH=");
     cmd += file;
@@ -38,6 +38,7 @@ int SimulateFatBinary(const std::string& file) {
     cmd += file;
     return system(cmd.c_str());
 }
+#endif
 
 auto CreateEmulator(const std::string& src) {
     PTX4CPU::IEmulator* rawPtr = nullptr;
@@ -241,7 +242,7 @@ Commands:
 
         // Execute PTX
 
-        BaseTypes::uint3_32 gridSize = { threadsCount, 1, 1 };
+        CudaTypes::uint3 gridSize = { threadsCount, 1, 1 };
 
         auto res = pEmulator->ExecuteFunc(kernelName, execVars, gridSize);
 

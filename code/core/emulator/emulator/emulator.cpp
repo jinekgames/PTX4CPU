@@ -29,7 +29,7 @@ Emulator::Emulator(const std::string& source)
 
 Result Emulator::ExecuteFunc(const std::string& funcName,
                              PtxExecArgs args,
-                             const BaseTypes::uint3_32& gridSize) {
+                             const CudaTypes::uint3& gridSize) {
 
     if (m_Parser.GetState() != Parser::State::Ready) {
         PRINT_E("Parser is not ready for execution");

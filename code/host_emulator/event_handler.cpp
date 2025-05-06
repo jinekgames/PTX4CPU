@@ -58,7 +58,7 @@ void EventHandler::SetArgs(void** args)
     }
 }
 
-void EventHandler::SetGridSize(const BaseTypes::uint3_32& grid_size)
+void EventHandler::SetGridSize(const CudaTypes::uint3& grid_size)
 {
     grid_size_ = grid_size;
 }

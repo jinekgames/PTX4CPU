@@ -9,7 +9,7 @@ private:
     PTX4CPU::IEmulator* emulator_core_ = nullptr;
 
     PTX4CPU::PtxExecArgs args_;
-    BaseTypes::uint3_32 grid_size_;
+    CudaTypes::uint3 grid_size_;
 
     std::string ptx_assembly_;
     std::string kernel_name_;
@@ -26,7 +26,7 @@ public:
     void LoadPtx();
     void SetArgs(void** args);
     void SetKernelName(const std::string name);
-    void SetGridSize(const BaseTypes::uint3_32& grid_size);
+    void SetGridSize(const CudaTypes::uint3& grid_size);
 
     void EmuKernelLaunch() const;
 
