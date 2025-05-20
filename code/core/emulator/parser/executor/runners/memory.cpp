@@ -7,6 +7,8 @@
 
 #include <validator.h>
 
+#include <iostream>
+
 
 namespace PTX4CPU {
 namespace DispatchTable {
@@ -203,6 +205,7 @@ Result SetParam(ThreadExecutor* pExecutor,
 
     const auto& ptrFullName   = RemoveVarNameBrackets(instruction.args[0]);
     const auto  valueFullName = instruction.args[1];
+    auto args = pExecutor->RetrieveArgs(Types::PTXType::S64, {ptrFullName, valueFullName});
 
     Result result;
     PTXTypedOp(type,

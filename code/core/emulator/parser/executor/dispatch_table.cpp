@@ -56,12 +56,25 @@ RegisterRunner("st.global", SetParam);
 // runners/math.cpp
 
 RegisterRunner("add", Add);
+RegisterRunner("and", And);
+RegisterRunner("shl", Shl);
+RegisterRunner("sub", Sub);
+RegisterRunner("div", Div);
 
 RegisterRunner("mul.hi",   MulHi);
 RegisterRunner("mul.lo",   MulLo);
 RegisterRunner("mul.wide", MulWide);
 
+RegisterRunner("mad.hi",   MaddHi);
+RegisterRunner("mad.lo",   MaddLo);
+RegisterRunner("mad.wide", MaddWide);
+
 RegisterRunner("setp.ge", LogicalGE);
+RegisterRunner("setp.eq", LogicalEQ);
+RegisterRunner("setp.lt", LogicalLT);
+RegisterRunner("setp.ne", LogicalNE);
+
+RegisterRunner("fma.rn", FmaRn);
 
 }  // namespace DispatchTable
 
