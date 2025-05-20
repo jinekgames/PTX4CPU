@@ -13,8 +13,11 @@ namespace {
 cudaError_t cudaMalloc(void **devPtr, size_t size)
 {
     *devPtr = malloc(size);
+<<<<<<< HEAD
     PRINT_V("src: %p", *devPtr);
     PRINT_V("size: %llu", size);
+=======
+>>>>>>> main
     if (*devPtr == nullptr)
     {
         return cudaError_t::cudaErrorMemoryAllocation;

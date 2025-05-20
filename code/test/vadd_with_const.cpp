@@ -1,4 +1,4 @@
-#include "rel_add_op_const.h"
+#include "vadd_with_const.h"
 
 #include "utils.h"
 
@@ -10,7 +10,7 @@
 #include <vector>
 
 
-constexpr auto PTX_FILE_PATH = "/cuda_ptx_samples/rel_add_op_const.ptx";
+constexpr auto PTX_FILE_PATH = "/cuda_ptx_samples/vadd_with_const.ptx";
 constexpr auto KERNEL_NAME   = "_Z12taxpy_kerneliPi";
 
 
@@ -112,7 +112,7 @@ PTX4CPU::Result RelAddOpConst::Run(const std::string& testAssetPath) const {
 
     // Run kernel
 
-    constexpr BaseTypes::uint3_32 gridSize = { arraySize, 1, 1 };
+    CudaTypes::uint3 gridSize = { arraySize, 1, 1 };
 
     result = pEmulator->ExecuteFunc(KERNEL_NAME, ptxArgs, gridSize);
 

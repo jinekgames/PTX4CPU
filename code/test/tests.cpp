@@ -7,7 +7,7 @@
 #include <vector>
 
 #include "rel_add_op.h"
-#include "rel_add_op_const.h"
+#include "vadd_with_const.h"
 
 
 #ifndef DEFAULT_TESTS_ASSET_DIR

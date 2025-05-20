@@ -93,24 +93,6 @@ add_library(emulatorLib SHARED ${sources} ${objs})
 
 set_target_properties(emulatorLib PROPERTIES OUTPUT_NAME ${EMULATOR_LIB_NAME})
 
-# Getting a commit hash
-
-if(EXISTS "${CMAKE_SOURCE_DIR}/.git")
-    execute_process(
-        COMMAND git rev-parse HEAD
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-        OUTPUT_VARIABLE GIT_HASH
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-    )
-endif()
-if(NOT GIT_HASH)
-    set(GIT_HASH "NO_COMMIT_INFORMATION")
-endif()
-string(STRIP ${GIT_HASH} GIT_HASH)
-message(STATUS "Building from commit: ${GIT_HASH}")
-
-add_compile_definitions(PROJECT_GIT_COMMIT="${GIT_HASH}")
-
 # Install API headers to build directory
 add_custom_command(TARGET emulatorLib PRE_BUILD
                    COMMAND ${CMAKE_COMMAND} -E copy_directory

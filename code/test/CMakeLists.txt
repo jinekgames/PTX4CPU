@@ -1,8 +1,8 @@
 set(tests
     rel_add_op.cpp
     rel_add_op.h
-    rel_add_op_const.cpp
-    rel_add_op_const.h)
+    vadd_with_const.cpp
+    vadd_with_const.h)
 
 
 set(sources

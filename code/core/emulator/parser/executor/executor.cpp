@@ -11,7 +11,7 @@ using namespace PTX4CPU;
 
 ThreadExecutor::ThreadExecutor(const Types::Function* pFunc,
                                const std::shared_ptr<Types::VarsTable>& pArguments,
-                               const BaseTypes::uint3_32& threadId)
+                               const CudaTypes::uint3& threadId)
     : m_ThreadId{threadId}
     , m_pFunc{pFunc}
     , m_pArguments{pArguments} {
