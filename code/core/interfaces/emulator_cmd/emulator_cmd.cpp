@@ -246,8 +246,6 @@ Commands:
         std::cout << "Function execution faled. Error: " << res.msg << std::endl;
         return 1;
 
-<<<<<<< Updated upstream
-=======
     } else if (args.Contains("run-executable")) {
         #ifdef __linux__
 
@@ -261,7 +259,6 @@ Commands:
         return 1;
 
         #endif  // defined __linux__
->>>>>>> Stashed changes
     }
 
     std::cout <<
