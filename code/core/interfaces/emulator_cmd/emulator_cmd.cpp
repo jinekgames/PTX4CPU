@@ -30,6 +30,16 @@ std::string ReadFile(const std::string& filepath) {
     return input.str();
 }
 
+#ifdef __linux__
+int SimulateFatBinary(const std::string& file) {
+    auto cmd = std::string("LD_PRELOAD=libemulator_host.so EMU_OBJ_PATH=");
+    cmd += file;
+    cmd += " ";
+    cmd += file;
+    return system(cmd.c_str());
+}
+#endif
+
 auto CreateEmulator(const std::string& src) {
     PTX4CPU::IEmulator* rawPtr = nullptr;
     EMULATOR_CreateEmulator(&rawPtr, src);
@@ -113,6 +123,7 @@ Commands:
                                          if argument was specified with empty value, original arguments .json will be used
                     Example:
                         EmulatorCmd.exe --test-run input_file.ptx --kernel _Z9addKernelPiPKiS1_ --args arguments.json --save-output
+   --run-executable Run cuda fat binary executable on cpu.
    --test-load    - do a test load and preparsing of a .ptx file
                     Example:
                         EmulatorCmd.exe --test-load input_file.ptx
@@ -231,7 +242,7 @@ Commands:
 
         // Execute PTX
 
-        BaseTypes::uint3_32 gridSize = { threadsCount, 1, 1 };
+        CudaTypes::uint3 gridSize = { threadsCount, 1, 1 };
 
         auto res = pEmulator->ExecuteFunc(kernelName, execVars, gridSize);
 
@@ -246,6 +257,18 @@ Commands:
         std::cout << "Function execution faled. Error: " << res.msg << std::endl;
         return 1;
 
+    } else if (args.Contains("run-executable")) {
+        #ifdef __linux__
+
+        const auto FatBinaryCmd = args["run-executable"];
+        SimulateFatBinary(FatBinaryCmd);
+
+        #else  // !defined __linux__
+
+        #pragma message("Fat-binary simulation is not supported on target platform")
+        std::cout<<"ERROR: Fat-binary simulation is not supported on target platform"<<std::endl;
+
+        #endif  // defined __linux__
     }
 
     std::cout <<

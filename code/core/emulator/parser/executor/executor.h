@@ -23,7 +23,7 @@ public:
 
     ThreadExecutor(const Types::Function* pFunc,
                    const std::shared_ptr<Types::VarsTable>& pArguments,
-                   const BaseTypes::uint3_32& threadId);
+                   const CudaTypes::uint3& threadId);
     ThreadExecutor(const ThreadExecutor&)  = delete;
     ThreadExecutor(ThreadExecutor&& right) = default;
     ~ThreadExecutor()                      = default;
@@ -100,7 +100,7 @@ private:
     */
     void AppendConstants() const;
 
-    BaseTypes::uint4_32 m_ThreadId;
+    CudaTypes::uint3 m_ThreadId;
 
     const Types::Function* m_pFunc;
 

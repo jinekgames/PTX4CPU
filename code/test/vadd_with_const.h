@@ -9,7 +9,7 @@ namespace Runtime {
 
 struct RelAddOpConst final : public ITestCase {
 
-    static constexpr auto kName = "rel_add_op_const (vadd 1 argument)";
+    static constexpr auto kName = "vadd_with_const (vadd 1 argument)";
 
     std::string     Name()                                const override;
     std::string     Description()                         const override;

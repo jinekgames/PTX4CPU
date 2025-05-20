@@ -91,7 +91,7 @@ public:
     */
     std::vector<ThreadExecutor> MakeThreadExecutors(const std::string& funcName,
                                                     const Types::PTXVarList& arguments,
-                                                    BaseTypes::uint3_32 threadsCount) const;
+                                                    CudaTypes::uint3 threadsCount) const;
 
     /**
      * Parses a PTX var from the input string `entry`

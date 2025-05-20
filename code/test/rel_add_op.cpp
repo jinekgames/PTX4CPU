@@ -106,7 +106,7 @@ PTX4CPU::Result RelAddOp::Run(const std::string& testAssetPath) const {
 
     // Run kernel
 
-    constexpr BaseTypes::uint3_32 gridSize = { arraySize, 1, 1 };
+    CudaTypes::uint3 gridSize = { arraySize, 1, 1 };
 
     result = pEmulator->ExecuteFunc(KERNEL_NAME, ptxArgs, gridSize);
 

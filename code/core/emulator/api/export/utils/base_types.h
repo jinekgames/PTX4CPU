@@ -2,6 +2,38 @@
 
 #include <cstdint>
 
+// Declarations extracted from CUDA API
+namespace CudaTypes {
+
+typedef void *cudaStream_t;
+
+// From cuda-toolkit/include/driver_types.h
+enum cudaError_t
+{
+    cudaSuccess,
+    cudaErrorMemoryAllocation,
+};
+
+// From cuda-toolkit/include/driver_types.h
+enum class cudaMemcpyKind
+{
+    cudaMemcpyHostToDevice = 0,
+    cudaMemcpyDeviceToHost = 1,
+    cudaMemcpyDeviceToDevice = 2,
+    cudaMemcpyHostToHost = 3
+};
+
+struct dim3
+{
+    using type = uint32_t;
+    uint32_t x, y, z;
+    dim3(uint32_t _x = 1, uint32_t _y = 1, uint32_t _z = 1) : x(_x), y(_y), z(_z) {}
+};
+
+typedef dim3 uint3;
+
+} // namespace CudaTypes
+
 
 namespace BaseTypes {
 
@@ -13,10 +45,6 @@ struct _v3 {
     type y = 0;
     type z = 0;
 };
-
-using int3     = _v3<int64_t>;
-using uint3    = _v3<uint64_t>;
-using uint3_32 = _v3<uint32_t>;
 
 template<class T>
 struct _v4 {

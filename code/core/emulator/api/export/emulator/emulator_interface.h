@@ -32,7 +32,7 @@ struct IEmulator {
     virtual Result ExecuteFunc(
         const std::string& funcName,
         PtxExecArgs args,
-        const BaseTypes::uint3_32& gridSize) = 0;
+        const CudaTypes::uint3& gridSize) = 0;
 
     /**
      * Retrieves the descriptor of a kernel with the given name.
