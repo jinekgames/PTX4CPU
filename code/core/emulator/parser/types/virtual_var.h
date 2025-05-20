@@ -116,6 +116,11 @@ public:
         return CopyValue<type, type, copyAsReference>(src, *this, srcKey, dstKey);
     }
 
+    template<PTXType SrcType, PTXType DstType, bool copyAsReference>
+    bool AssignValue(PTXVar& src, char srcKey = 'x', char dstKey = 'x') {
+        return CopyValue<SrcType, DstType, copyAsReference>(src, *this, srcKey, dstKey);
+    }
+
     template<PTXType type, bool copyAsReference>
     static bool AssignValue(ArgumentPair& dst, const ArgumentPair& src) {
         return CopyValue<type, type, copyAsReference>(*src.first, *dst.first,

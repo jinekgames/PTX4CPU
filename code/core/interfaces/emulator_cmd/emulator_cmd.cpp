@@ -262,11 +262,12 @@ Commands:
 
         const auto FatBinaryCmd = args["run-executable"];
         SimulateFatBinary(FatBinaryCmd);
-
+        return 0;
         #else  // !defined __linux__
 
         #pragma message("Fat-binary simulation is not supported on target platform")
         std::cout<<"ERROR: Fat-binary simulation is not supported on target platform"<<std::endl;
+        return 1;
 
         #endif  // defined __linux__
     }

@@ -13,6 +13,8 @@ namespace {
 cudaError_t cudaMalloc(void **devPtr, size_t size)
 {
     *devPtr = malloc(size);
+    PRINT_V("src: %p", *devPtr);
+    PRINT_V("size: %llu", size);
     if (*devPtr == nullptr)
     {
         return cudaError_t::cudaErrorMemoryAllocation;
@@ -31,6 +33,9 @@ cudaError_t cudaFree(void *devPtr)
 cudaError_t cudaMemcpy(void *dst, const void *src, size_t count, cudaMemcpyKind kind)
 {
     PRINT_V("cudaMemcpy Intercepted");
+    PRINT_V("src: %p", src);
+    PRINT_V("dst: %p", dst);
+    PRINT_V("count: %llu", count);
     memcpy(dst, src, count);
     return cudaError_t::cudaSuccess;
 }

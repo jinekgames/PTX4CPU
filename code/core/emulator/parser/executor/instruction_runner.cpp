@@ -48,6 +48,17 @@ void InstructionRunner::FindRunner() {
     auto found = m_DispatchTable.find(command);
     if (found != m_DispatchTable.end()) {
         m_Runner = found->second;
+        return;
+    }
+
+    dotIdx = command.find_last_of('.');
+    while (dotIdx != 0 && dotIdx != std::string::npos) {
+        command.erase(dotIdx);
+        dotIdx = command.find_last_of('.');
+    }
+    found = m_DispatchTable.find(command);
+    if (found != m_DispatchTable.end()) {
+        m_Runner = found->second;
     }
 }
 
